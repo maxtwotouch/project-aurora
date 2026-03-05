@@ -1,0 +1,192 @@
+[
+  {
+    "id": "ersfjordbotn",
+    "name": "Ersfjordbotn",
+    "lat": 69.6626,
+    "lon": 18.3738,
+    "distanceKm": 25,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Classic fjord aurora spot with mountains and reflections."
+  },
+  {
+    "id": "kattfjordvatnet",
+    "name": "Kattfjordvatnet",
+    "lat": 69.6667,
+    "lon": 18.2,
+    "distanceKm": 35,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Large lake offering unobstructed sky views and aurora reflections."
+  },
+  {
+    "id": "grotfjord",
+    "name": "Grotfjord",
+    "lat": 69.75,
+    "lon": 18.2167,
+    "distanceKm": 45,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Dark fjord area north of Kvaloya with wide northern horizon."
+  },
+  {
+    "id": "sommaroy",
+    "name": "Sommarøy",
+    "lat": 69.6353,
+    "lon": 17.9927,
+    "distanceKm": 55,
+    "lightPollution": 1,
+    "horizon": "northwest",
+    "description": "Small island with extremely dark skies and ocean horizon."
+  },
+  {
+    "id": "sandvika_beach",
+    "name": "Sandvika Beach",
+    "lat": 69.6439,
+    "lon": 18.0061,
+    "distanceKm": 55,
+    "lightPollution": 1,
+    "horizon": "northwest",
+    "description": "Wide beach near Sommarøy with open sky views."
+  },
+  {
+    "id": "skulsfjord",
+    "name": "Skulsfjord",
+    "lat": 69.728,
+    "lon": 18.284,
+    "distanceKm": 35,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Quiet fjord area popular with aurora photographers."
+  },
+  {
+    "id": "tromvik",
+    "name": "Tromvik",
+    "lat": 69.7766,
+    "lon": 18.1322,
+    "distanceKm": 50,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Small fishing village with minimal light pollution."
+  },
+  {
+    "id": "grunnfjord",
+    "name": "Grunnfjord",
+    "lat": 69.772,
+    "lon": 18.198,
+    "distanceKm": 45,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Remote fjord location with little traffic or lighting."
+  },
+  {
+    "id": "telegrafbukta",
+    "name": "Telegrafbukta",
+    "lat": 69.6311,
+    "lon": 18.9317,
+    "distanceKm": 3,
+    "lightPollution": 3,
+    "horizon": "north",
+    "description": "Popular aurora viewing spot close to Tromsø city center."
+  },
+  {
+    "id": "prestvannet",
+    "name": "Prestvannet",
+    "lat": 69.6533,
+    "lon": 18.9339,
+    "distanceKm": 2,
+    "lightPollution": 3,
+    "horizon": "north",
+    "description": "Lake in Tromsø with darker skies than downtown."
+  },
+  {
+    "id": "fjellheisen_storsteinen",
+    "name": "Fjellheisen / Storsteinen",
+    "lat": 69.6408,
+    "lon": 18.9873,
+    "distanceKm": 2,
+    "lightPollution": 3,
+    "horizon": "north",
+    "description": "Cable car viewpoint overlooking Tromsø with panoramic sky."
+  },
+  {
+    "id": "floya",
+    "name": "Fløya",
+    "lat": 69.6415,
+    "lon": 18.995,
+    "distanceKm": 3,
+    "lightPollution": 2,
+    "horizon": "north",
+    "description": "Mountain above Tromsø with 360-degree sky visibility."
+  },
+  {
+    "id": "vardentoppen",
+    "name": "Vardentoppen",
+    "lat": 69.665,
+    "lon": 18.935,
+    "distanceKm": 4,
+    "lightPollution": 3,
+    "horizon": "north",
+    "description": "Hilltop viewpoint with wide night sky visibility."
+  },
+  {
+    "id": "breivikeidet_valley",
+    "name": "Breivikeidet Valley",
+    "lat": 69.636,
+    "lon": 19.616,
+    "distanceKm": 45,
+    "lightPollution": 1,
+    "horizon": "northeast",
+    "description": "Dark valley east of Tromsø often used by aurora tours."
+  },
+  {
+    "id": "oldervik",
+    "name": "Oldervik",
+    "lat": 69.7617,
+    "lon": 19.5306,
+    "distanceKm": 40,
+    "lightPollution": 2,
+    "horizon": "north",
+    "description": "Quiet coastal village with good northern sky exposure."
+  },
+  {
+    "id": "lyngseidet",
+    "name": "Lyngseidet",
+    "lat": 69.5763,
+    "lon": 20.2186,
+    "distanceKm": 75,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Lyngen Alps region with dramatic mountain aurora views."
+  },
+  {
+    "id": "skibotn",
+    "name": "Skibotn",
+    "lat": 69.3917,
+    "lon": 20.2667,
+    "distanceKm": 90,
+    "lightPollution": 1,
+    "horizon": "northeast",
+    "description": "Dry inland valley known for clearer skies than the coast."
+  },
+  {
+    "id": "signaldalen",
+    "name": "Signaldalen",
+    "lat": 69.3333,
+    "lon": 20.2833,
+    "distanceKm": 100,
+    "lightPollution": 1,
+    "horizon": "northeast",
+    "description": "Dark inland valley often used as a cloud-escape aurora location."
+  },
+  {
+    "id": "kilpisjarvi",
+    "name": "Kilpisjärvi",
+    "lat": 69.0444,
+    "lon": 20.7992,
+    "distanceKm": 160,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "High elevation Finnish Lapland aurora hotspot."
+  }
+]
