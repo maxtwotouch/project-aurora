@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 
 import { palette } from '../theme/palette';
@@ -59,6 +59,16 @@ export function AuroraMapScreen({ kp }: Props) {
     });
   }, [peakIndex]);
 
+  useEffect(() => {
+    // Prevent permanent spinner if image callbacks fail or hang.
+    setLoadingImage(true);
+    const timeout = setTimeout(() => {
+      setLoadingImage(false);
+    }, 12000);
+
+    return () => clearTimeout(timeout);
+  }, [frameUrl]);
+
   return (
     <View style={styles.container}>
       <View style={styles.summaryCard}>
@@ -74,6 +84,7 @@ export function AuroraMapScreen({ kp }: Props) {
           resizeMode="cover"
           onLoadStart={() => setLoadingImage(true)}
           onLoadEnd={() => setLoadingImage(false)}
+          onError={() => setLoadingImage(false)}
         />
         {loadingImage ? (
           <View style={styles.loadingOverlay}>
