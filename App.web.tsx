@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Pressable, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -198,7 +199,16 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen
           name="SpotDetail"
-          options={({ route }) => ({ title: spotsById[route.params.spotId]?.name ?? 'Spot Details' })}
+          options={({ route, navigation }) => ({
+            title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
+            headerBackVisible: false,
+            headerLeft: () => (
+              <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => navigation.goBack()}>
+                <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                <Text style={{ color: palette.textPrimary, fontWeight: '700' }}>Back</Text>
+              </Pressable>
+            )
+          })}
         >
           {({ route }) => (
             <SpotDetailScreen
