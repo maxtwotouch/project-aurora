@@ -61,6 +61,34 @@ npm run start
 
 Then open in Expo Go (iOS/Android emulator or physical device).
 
+## Backend (Fastify)
+
+A backend MVP is included in `backend/` with:
+
+- `GET /v1/tonight`
+- `GET /v1/spots/:id`
+- `GET /v1/health`
+- `POST /v1/admin/refresh`
+
+Run it:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Default backend URL: `http://localhost:8080`
+
+To make the app use backend snapshot mode, set Expo env vars:
+
+```bash
+EXPO_PUBLIC_USE_BACKEND=true
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+If backend mode is off (or unset), the app keeps using direct MET/NOAA APIs.
+
 ## API Configuration
 
 No API key is required for current MVP endpoints.

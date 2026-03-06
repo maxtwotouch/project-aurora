@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 
 import { ScoreBadge } from '../components/ScoreBadge';
+import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { Spot, SpotScoreResult } from '../types';
 
@@ -34,7 +35,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={TROMSO_CENTER}>
+      <MapView style={styles.map} initialRegion={TROMSO_CENTER} customMapStyle={mapDarkStyle}>
         {spots.map((spot) => (
           <Marker
             key={spot.id}

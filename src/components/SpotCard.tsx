@@ -13,15 +13,15 @@ type Props = {
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
   });
-
-const estimateDriveMinutes = (distanceKm: number) => Math.round(distanceKm * 1.15);
 
 function trendLabel(trend: SpotScoreResult['trend']) {
   if (trend === 'good_now') return 'Good now';
-  if (trend === 'improving') return 'Improving';
-  return 'Getting worse';
+  if (trend === 'improving') return 'Better later';
+  return 'Limited tonight';
 }
 
 function trendStyle(trend: SpotScoreResult['trend']) {
@@ -53,8 +53,8 @@ export function SpotCard({ spot, result, onPress }: Props) {
         </Text>
       </View>
       <View style={styles.metaRow}>
-        <Text style={styles.metaKey}>Drive</Text>
-        <Text style={styles.metaValue}>{estimateDriveMinutes(spot.distanceKm)} min</Text>
+        <Text style={styles.metaKey}>Distance</Text>
+        <Text style={styles.metaValue}>{spot.distanceKm} km from city center</Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaKey}>Trend</Text>

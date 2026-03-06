@@ -3,6 +3,7 @@ import MapView, { Marker } from 'react-native-maps';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
+import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
 
@@ -15,8 +16,16 @@ type Props = {
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
   });
+
+function trendLabel(trend: SpotScoreResult['trend'] | undefined): string {
+  if (trend === 'good_now') return 'Good now';
+  if (trend === 'improving') return 'Better later';
+  return 'Limited tonight';
+}
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
@@ -38,16 +47,37 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           <ScoreBadge score={result?.score ?? 0} size="lg" />
         </View>
 
-        <Text style={styles.infoLine}>
-          Best window:{' '}
-          {result ? `${formatLocalTime(result.bestWindowStart)}-${formatLocalTime(result.bestWindowEnd)}` : '-'}
+        <Text style={styles.windowText}>
+          Best window: {result ? `${formatLocalTime(result.bestWindowStart)}-${formatLocalTime(result.bestWindowEnd)}` : '-'}
         </Text>
-        <Text style={styles.infoLine}>Cloud cover (best hour): {result?.cloudCoverAtBestHour ?? '-'}%</Text>
-        <Text style={styles.infoLine}>Temp at best hour: {result?.temperatureAtBestHour ?? '-'}°C</Text>
-        <Text style={styles.infoLine}>Wind at best hour: {result?.windSpeedAtBestHour ?? '-'} m/s</Text>
-        <Text style={styles.infoLine}>Cold score: {result?.coldScore ?? '-'} / 100</Text>
-        <Text style={styles.infoLine}>Trend: {result?.trend === 'good_now' ? 'Good now' : result?.trend === 'improving' ? 'Improving' : 'Getting worse'}</Text>
-        <Text style={styles.infoLine}>Distance from Tromsø center: {spot.distanceKm} km</Text>
+
+        <View style={styles.metricsGrid}>
+          <View style={styles.metricTile}>
+            <Text style={styles.metricLabel}>Cloud</Text>
+            <Text style={styles.metricValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
+          </View>
+          <View style={styles.metricTile}>
+            <Text style={styles.metricLabel}>Temp</Text>
+            <Text style={styles.metricValue}>{result?.temperatureAtBestHour ?? '-'}°C</Text>
+          </View>
+          <View style={styles.metricTile}>
+            <Text style={styles.metricLabel}>Wind</Text>
+            <Text style={styles.metricValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
+          </View>
+          <View style={styles.metricTile}>
+            <Text style={styles.metricLabel}>Cold Score</Text>
+            <Text style={styles.metricValue}>{result?.coldScore ?? '-'} / 100</Text>
+          </View>
+        </View>
+
+        <View style={styles.inlineRow}>
+          <Text style={styles.inlineLabel}>Trend</Text>
+          <Text style={styles.inlineValue}>{trendLabel(result?.trend)}</Text>
+        </View>
+        <View style={styles.inlineRow}>
+          <Text style={styles.inlineLabel}>Distance</Text>
+          <Text style={styles.inlineValue}>{spot.distanceKm} km from city center</Text>
+        </View>
       </View>
 
       <View style={styles.sectionCard}>
@@ -59,6 +89,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         <MapView
           pointerEvents="none"
           style={styles.map}
+          customMapStyle={mapDarkStyle}
           initialRegion={{
             latitude: spot.lat,
             longitude: spot.lon,
@@ -87,12 +118,15 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         ))}
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>Cloud cover next hours</Text>
-      {(forecast ?? []).slice(0, 6).map((hour) => (
-        <Text key={hour.time} style={styles.hourLine}>
-          {formatLocalTime(hour.time)} - {Math.round(hour.cloudCover)}%
-        </Text>
-      ))}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Cloud Cover Next Hours</Text>
+        {(forecast ?? []).slice(0, 6).map((hour) => (
+          <View key={hour.time} style={styles.hourRow}>
+            <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
+            <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
+          </View>
+        ))}
+      </View>
 
       <Pressable style={styles.navigateBtn} onPress={navigateToSpot}>
         <Text style={styles.navigateText}>Navigate</Text>
@@ -115,38 +149,80 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: palette.textMuted,
-    marginBottom: 14
+    marginBottom: 16,
+    fontSize: 14
   },
   heroCard: {
-    backgroundColor: palette.cardElevated,
-    borderRadius: 18,
+    backgroundColor: '#0d1a30',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2d466b',
+    marginBottom: 14
+  },
+  sectionCard: {
+    backgroundColor: palette.card,
+    borderRadius: 16,
     padding: 14,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     marginBottom: 12
   },
-  sectionCard: {
-    backgroundColor: palette.card,
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: palette.cardBorder,
-    marginBottom: 10
-  },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12
+    marginBottom: 10
   },
   label: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: palette.textSecondary
   },
-  infoLine: {
+  windowText: {
+    color: palette.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 10
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10
+  },
+  metricTile: {
+    width: '48%',
+    backgroundColor: '#101f38',
+    borderWidth: 1,
+    borderColor: '#2d466b',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10
+  },
+  metricLabel: {
+    color: palette.textMuted,
+    fontSize: 11,
+    marginBottom: 4
+  },
+  metricValue: {
+    color: palette.textPrimary,
+    fontSize: 17,
+    fontWeight: '700'
+  },
+  inlineRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4
+  },
+  inlineLabel: {
     color: palette.textSecondary,
-    marginBottom: 5
+    fontSize: 14
+  },
+  inlineValue: {
+    color: palette.textPrimary,
+    fontSize: 14,
+    fontWeight: '600'
   },
   mapWrap: {
     height: 180,
@@ -169,11 +245,23 @@ const styles = StyleSheet.create({
   },
   description: {
     color: palette.textSecondary,
-    lineHeight: 20
+    lineHeight: 21,
+    fontSize: 14
   },
-  hourLine: {
+  hourRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1c2d49'
+  },
+  hourTime: {
+    color: palette.textPrimary,
+    fontWeight: '600'
+  },
+  hourCloud: {
     color: palette.textSecondary,
-    marginBottom: 4
+    fontWeight: '600'
   },
   imagesRow: {
     marginBottom: 8

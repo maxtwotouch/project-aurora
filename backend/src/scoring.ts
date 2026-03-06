@@ -1,12 +1,11 @@
-import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from '../types';
+import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from './types.js';
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
-export function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
+function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
   const cloudFactor = 100 - cloudCover;
   const kpFactor = kp * 15;
   const estimatedDriveMinutes = distanceKm * 1.15;
-  // No distance penalty unless drive time is longer than 2 hours.
   const distancePenalty = estimatedDriveMinutes > 120 ? (estimatedDriveMinutes - 120) * 0.35 : 0;
   const lightPenalty = lightPollution * 8;
 
@@ -14,7 +13,6 @@ export function computeScore(cloudCover: number, kp: number, distanceKm: number,
 }
 
 function computeColdScore(temperature: number, windSpeed: number): number {
-  // Simple perceived-cold index based on air temperature and wind contribution.
   const perceived = temperature - windSpeed * 0.9;
   return clamp(Math.round((2 - perceived) * 6.5), 0, 100);
 }
@@ -53,7 +51,6 @@ function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] 
 }
 
 function findBestWindow(hourlyScores: SpotHourlyScore[]) {
-  // Pick the best 3-hour rolling average window for practical tonight guidance.
   let bestStart = 0;
   let bestWindowScore = -1;
 
@@ -96,7 +93,7 @@ function findBestWindow(hourlyScores: SpotHourlyScore[]) {
   };
 }
 
-export function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): SpotScoreResult {
+function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): SpotScoreResult {
   const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => ({
     time: hour.time,
     cloudCover: hour.cloudCover,
@@ -137,7 +134,11 @@ function applyCloudGate(result: SpotScoreResult): SpotScoreResult {
   };
 }
 
-export function rankSpots(spots: Spot[], forecastsBySpotId: Record<string, HourlyForecast[]>, kpByHour: number[]) {
+export function rankSpots(
+  spots: Spot[],
+  forecastsBySpotId: Record<string, HourlyForecast[]>,
+  kpByHour: number[]
+): SpotScoreResult[] {
   return spots
     .map((spot) => applyCloudGate(scoreSpot(spot, forecastsBySpotId[spot.id] ?? [], kpByHour)))
     .sort((a, b) => b.score - a.score);

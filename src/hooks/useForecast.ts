@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { fetchTonightSnapshotFromBackend, shouldUseBackend } from '../api/backend';
 import { fetchKpTrend } from '../api/kp';
 import { fetchSpotForecast } from '../api/yr';
 import spots from '../data/spots.json';
@@ -9,6 +10,11 @@ import type { AuroraLevel, HourlyForecast, KpTrend, Spot, SpotScoreResult } from
 type UseForecastResult = {
   loading: boolean;
   error: string | null;
+  lastUpdatedAt: string | null;
+  dataQuality: {
+    usingFallbackKp: boolean;
+    fallbackWeatherSpotIds: string[];
+  };
   kp: KpTrend;
   rankedSpots: SpotScoreResult[];
   topSpots: SpotScoreResult[];
@@ -37,6 +43,11 @@ function recommendationFromLevel(level: AuroraLevel): string {
 export function useForecast(): UseForecastResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [dataQuality, setDataQuality] = useState<UseForecastResult['dataQuality']>({
+    usingFallbackKp: false,
+    fallbackWeatherSpotIds: []
+  });
   const [kp, setKp] = useState<KpTrend>({
     current: 2,
     peakNext12h: 5,
@@ -55,6 +66,16 @@ export function useForecast(): UseForecastResult {
     setError(null);
 
     try {
+      if (shouldUseBackend()) {
+        const snapshot = await fetchTonightSnapshotFromBackend();
+        setKp(snapshot.kp);
+        setForecastsBySpotId(snapshot.forecastsBySpotId);
+        setRankedSpots(snapshot.rankings);
+        setLastUpdatedAt(snapshot.updatedAt);
+        setDataQuality(snapshot.dataQuality);
+        return;
+      }
+
       const kpTrend = await fetchKpTrend();
       setKp(kpTrend);
 
@@ -78,6 +99,11 @@ export function useForecast(): UseForecastResult {
 
       setForecastsBySpotId(forecastMap);
       setRankedSpots(ranked);
+      setLastUpdatedAt(new Date().toISOString());
+      setDataQuality({
+        usingFallbackKp: false,
+        fallbackWeatherSpotIds: []
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load forecast.';
       setError(message);
@@ -99,6 +125,8 @@ export function useForecast(): UseForecastResult {
   return {
     loading,
     error,
+    lastUpdatedAt,
+    dataQuality,
     kp,
     rankedSpots,
     topSpots,

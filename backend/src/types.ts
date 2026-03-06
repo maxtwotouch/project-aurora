@@ -1,0 +1,60 @@
+export type Spot = {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  distanceKm: number;
+  lightPollution: number;
+  horizon: string;
+  description: string;
+};
+
+export type HourlyForecast = {
+  time: string;
+  cloudCover: number;
+  temperature: number;
+  windSpeed: number;
+};
+
+export type SpotHourlyScore = {
+  time: string;
+  score: number;
+  cloudCover: number;
+  temperature: number;
+  windSpeed: number;
+};
+
+export type SpotScoreResult = {
+  spotId: string;
+  spotName: string;
+  score: number;
+  trend: 'good_now' | 'improving' | 'worse';
+  bestWindowStart: string;
+  bestWindowEnd: string;
+  hourlyScores: SpotHourlyScore[];
+  cloudCoverAtBestHour: number;
+  temperatureAtBestHour: number;
+  windSpeedAtBestHour: number;
+  coldScore: number;
+  dressAdvice: string;
+};
+
+export type KpTrend = {
+  current: number;
+  peakNext12h: number;
+  hourly: number[];
+};
+
+export type DataQuality = {
+  usingFallbackKp: boolean;
+  fallbackWeatherSpotIds: string[];
+};
+
+export type TonightSnapshot = {
+  updatedAt: string;
+  kp: KpTrend;
+  topSpots: SpotScoreResult[];
+  rankings: SpotScoreResult[];
+  forecastsBySpotId: Record<string, HourlyForecast[]>;
+  dataQuality: DataQuality;
+};

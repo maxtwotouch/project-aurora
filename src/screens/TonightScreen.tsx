@@ -1,4 +1,4 @@
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SpotCard } from '../components/SpotCard';
 import { palette } from '../theme/palette';
@@ -8,6 +8,7 @@ type Props = {
   onOpenSpot: (spotId: string) => void;
   loading: boolean;
   error: string | null;
+  lastUpdatedAt: string | null;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
@@ -19,13 +20,53 @@ type Props = {
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
+  });
+
+function whyTitleFromScore(score: number): string {
+  if (score >= 70) return 'Why This Looks Good';
+  if (score >= 45) return 'Why Conditions Are Mixed';
+  return 'Why Visibility Is Low';
+}
+
+function chanceLabelFromScore(score: number): string {
+  if (score >= 70) return 'High';
+  if (score >= 45) return 'Medium';
+  return 'Low';
+}
+
+function decisionLabel(score: number, bestCloudCover?: number): 'Go Now' | 'Wait' | 'Best Later' {
+  if (typeof bestCloudCover === 'number' && bestCloudCover > 80) return 'Best Later';
+  if (score >= 65) return 'Go Now';
+  if (score >= 40) return 'Wait';
+  return 'Best Later';
+}
+
+function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later') {
+  if (label === 'Go Now') {
+    return { bg: '#123c2f', border: '#2adf92', text: '#9affda' };
+  }
+  if (label === 'Wait') {
+    return { bg: '#2b2410', border: '#facc15', text: '#fde68a' };
+  }
+  return { bg: '#3a1a24', border: '#fb7185', text: '#ffc1ce' };
+}
+
+const formatUpdatedAt = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
   });
 
 export function TonightScreen({
   onOpenSpot,
   loading,
   error,
+  lastUpdatedAt,
   kp,
   topSpots,
   spotsById,
@@ -34,6 +75,16 @@ export function TonightScreen({
   refresh
 }: Props) {
   const bestSpot = topSpots[0];
+  const decision = decisionLabel(auroraTonightScore, bestSpot?.cloudCoverAtBestHour);
+  const decisionColors = decisionStyle(decision);
+  const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
+
+  const navigateToBestSpot = () => {
+    if (!bestSpotData) return;
+
+    const url = `https://www.google.com/maps/search/?api=1&query=${bestSpotData.lat},${bestSpotData.lon}`;
+    void Linking.openURL(url);
+  };
 
   if (loading && topSpots.length === 0) {
     return (
@@ -53,16 +104,32 @@ export function TonightScreen({
       <View style={styles.auroraGlowBottom} />
       <View style={styles.hero}>
         <Text style={styles.overline}>Tonight in Tromso</Text>
-        <Text style={styles.heroTitle}>Aurora Score</Text>
-        <Text style={styles.score}>{auroraTonightScore}</Text>
-        <Text style={styles.recommendation}>{recommendation}</Text>
+        <Text style={styles.heroTitle}>Aurora Chance Tonight</Text>
+        <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
+          <Text style={[styles.decisionText, { color: decisionColors.text }]}>{decision}</Text>
+        </View>
+        <Text style={styles.recommendation}>{chanceLabelFromScore(auroraTonightScore)}</Text>
+        <Text style={styles.score}>{auroraTonightScore} / 100</Text>
+        <Text style={styles.helper}>
+          Data updated: {lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '-'}
+        </Text>
 
         {bestSpot ? (
-          <Text style={styles.helper}>Best window: {formatLocalTime(bestSpot.bestWindowStart)}-{formatLocalTime(bestSpot.bestWindowEnd)}</Text>
+          <View style={styles.bestSpotBox}>
+            <Text style={styles.bestSpotLabel}>Best Spot Right Now</Text>
+            <Text style={styles.bestSpotName}>{bestSpot.spotName}</Text>
+            <Text style={styles.helper}>
+              Best time: {formatLocalTime(bestSpot.bestWindowStart)}-{formatLocalTime(bestSpot.bestWindowEnd)}
+            </Text>
+            <Text style={styles.helper}>Cloud cover: {bestSpot.cloudCoverAtBestHour}%</Text>
+            <Pressable style={styles.navigateBtn} onPress={navigateToBestSpot}>
+              <Text style={styles.navigateText}>Navigate</Text>
+            </Pressable>
+          </View>
         ) : null}
 
         <View style={styles.whyBox}>
-          <Text style={styles.whyTitle}>Why This Looks Good</Text>
+          <Text style={styles.whyTitle}>{whyTitleFromScore(auroraTonightScore)}</Text>
           <View style={styles.metricRow}>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Cloud</Text>
@@ -148,20 +215,64 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   score: {
-    color: palette.auroraMint,
-    fontSize: 54,
-    fontWeight: '800',
-    letterSpacing: 0.5
+    color: palette.textSecondary,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6
   },
   recommendation: {
-    color: palette.textPrimary,
-    fontSize: 19,
+    color: palette.auroraMint,
+    fontSize: 31,
     fontWeight: '600',
-    marginBottom: 10
+    marginBottom: 4
+  },
+  decisionPill: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: 8
+  },
+  decisionText: {
+    fontSize: 12,
+    fontWeight: '800'
   },
   helper: {
     color: palette.textSecondary,
     fontSize: 14
+  },
+  bestSpotBox: {
+    marginTop: 12,
+    backgroundColor: '#0d1a30',
+    borderWidth: 1,
+    borderColor: '#2d466b',
+    borderRadius: 14,
+    padding: 12
+  },
+  bestSpotLabel: {
+    color: palette.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    marginBottom: 3
+  },
+  bestSpotName: {
+    color: palette.textPrimary,
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 6
+  },
+  navigateBtn: {
+    marginTop: 10,
+    backgroundColor: palette.auroraGreen,
+    borderRadius: 10,
+    paddingVertical: 11,
+    alignItems: 'center'
+  },
+  navigateText: {
+    color: palette.night,
+    fontWeight: '800'
   },
   whyBox: {
     marginTop: 14,

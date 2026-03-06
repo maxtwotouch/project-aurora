@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test:kp": "node scripts/test-kp-fetch.mjs"
+    "test:kp": "node scripts/test-kp-fetch.mjs",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:typecheck": "npm --prefix backend run typecheck"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.5",

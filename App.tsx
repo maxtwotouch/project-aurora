@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import spots from './src/data/spots.json';
 import { useForecast } from './src/hooks/useForecast';
@@ -49,6 +50,7 @@ type TabsRootProps = {
   rankedSpots: SpotScoreResult[];
   loading: boolean;
   error: string | null;
+  lastUpdatedAt: string | null;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
@@ -62,6 +64,7 @@ function TabsRoot({
   rankedSpots,
   loading,
   error,
+  lastUpdatedAt,
   kp,
   topSpots,
   spotsById,
@@ -71,19 +74,40 @@ function TabsRoot({
 }: TabsRootProps) {
   return (
     <Tabs.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: palette.auroraGreen,
         tabBarInactiveTintColor: palette.textSecondary,
+        tabBarIcon: ({ color, size, focused }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'ellipse';
+
+          if (route.name === 'Tonight') {
+            iconName = focused ? 'moon' : 'moon-outline';
+          } else if (route.name === 'SpotsMap') {
+            iconName = focused ? 'map' : 'map-outline';
+          } else if (route.name === 'AllSpots') {
+            iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'AuroraMap') {
+            iconName = focused ? 'color-wand' : 'color-wand-outline';
+          } else if (route.name === 'Live') {
+            iconName = focused ? 'videocam' : 'videocam-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
         tabBarStyle: {
           backgroundColor: palette.nightSoft,
           borderTopColor: palette.cardBorder,
           height: 66,
+          paddingHorizontal: 6,
           paddingTop: 8,
           paddingBottom: 8
         },
+        tabBarItemStyle: {
+          minWidth: 0
+        },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '700'
+          fontSize: 11,
+          fontWeight: '600'
         },
         headerStyle: {
           backgroundColor: palette.nightSoft
@@ -93,7 +117,7 @@ function TabsRoot({
           fontSize: 18,
           fontWeight: '700'
         }
-      }}
+      })}
     >
       <Tabs.Screen name="Tonight" options={{ title: 'Tonight' }}>
         {() => (
@@ -101,6 +125,7 @@ function TabsRoot({
             onOpenSpot={onOpenSpot}
             loading={loading}
             error={error}
+            lastUpdatedAt={lastUpdatedAt}
             kp={kp}
             topSpots={topSpots}
             spotsById={spotsById}
@@ -161,6 +186,7 @@ export default function App() {
               rankedSpots={forecast.rankedSpots}
               loading={forecast.loading}
               error={forecast.error}
+              lastUpdatedAt={forecast.lastUpdatedAt}
               kp={forecast.kp}
               topSpots={forecast.topSpots}
               spotsById={forecast.spotsById}

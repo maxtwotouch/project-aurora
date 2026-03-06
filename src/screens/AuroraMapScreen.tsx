@@ -43,9 +43,30 @@ export function AuroraMapScreen({ kp }: Props) {
   }, [hourOffset, kp.current, kp.hourly]);
 
   const frameUrl = useMemo(() => buildFrameUrl(hourOffset), [hourOffset]);
+  const overheadNow = kp.current >= 5 ? 'Likely' : kp.current >= 3.5 ? 'Possible' : 'Low';
+  const peakIndex = kp.hourly.reduce((bestIndex, value, index, values) => {
+    return value > values[bestIndex] ? index : bestIndex;
+  }, 0);
+  const peakTime = useMemo(() => {
+    const date = new Date();
+    date.setMinutes(0, 0, 0);
+    date.setHours(date.getHours() + peakIndex);
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      hourCycle: 'h23'
+    });
+  }, [peakIndex]);
 
   return (
     <View style={styles.container}>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Tromso Aurora Outlook</Text>
+        <Text style={styles.summaryLine}>Overhead now: {overheadNow}</Text>
+        <Text style={styles.summaryLine}>Next peak: {peakTime}</Text>
+      </View>
+
       <View style={styles.frameWrap}>
         <Image
           source={{ uri: frameUrl }}
@@ -109,6 +130,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.cardElevated
+  },
+  summaryCard: {
+    marginBottom: 10,
+    backgroundColor: '#101a2fd9',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#2d466b'
+  },
+  summaryTitle: {
+    color: palette.textPrimary,
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 2
+  },
+  summaryLine: {
+    color: palette.textSecondary,
+    fontSize: 14
   },
   frameImage: {
     width: '100%',
