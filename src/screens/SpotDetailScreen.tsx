@@ -1,4 +1,4 @@
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { ScoreBadge } from '../components/ScoreBadge';
@@ -25,6 +25,13 @@ function trendLabel(trend: SpotScoreResult['trend'] | undefined): string {
   if (trend === 'good_now') return 'Good now';
   if (trend === 'improving') return 'Better later';
   return 'Limited tonight';
+}
+
+function chanceLabel(score: number | undefined): string {
+  if (typeof score !== 'number') return '-';
+  if (score >= 70) return 'High';
+  if (score >= 45) return 'Medium';
+  return 'Low';
 }
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
@@ -75,6 +82,10 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           <Text style={styles.inlineValue}>{trendLabel(result?.trend)}</Text>
         </View>
         <View style={styles.inlineRow}>
+          <Text style={styles.inlineLabel}>Chance</Text>
+          <Text style={styles.inlineValue}>{chanceLabel(result?.score)}</Text>
+        </View>
+        <View style={styles.inlineRow}>
           <Text style={styles.inlineLabel}>Distance</Text>
           <Text style={styles.inlineValue}>{spot.distanceKm} km from city center</Text>
         </View>
@@ -86,19 +97,28 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
       </View>
 
       <View style={styles.mapWrap}>
-        <MapView
-          pointerEvents="none"
-          style={styles.map}
-          customMapStyle={mapDarkStyle}
-          initialRegion={{
-            latitude: spot.lat,
-            longitude: spot.lon,
-            latitudeDelta: 0.08,
-            longitudeDelta: 0.08
-          }}
-        >
-          <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
-        </MapView>
+        {Platform.OS === 'web' ? (
+          <View style={styles.webMapFallback}>
+            <Text style={styles.description}>Map preview is simplified on web beta.</Text>
+            <Pressable style={styles.webMapBtn} onPress={navigateToSpot}>
+              <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <MapView
+            pointerEvents="none"
+            style={styles.map}
+            customMapStyle={mapDarkStyle}
+            initialRegion={{
+              latitude: spot.lat,
+              longitude: spot.lon,
+              latitudeDelta: 0.08,
+              longitudeDelta: 0.08
+            }}
+          >
+            <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
+          </MapView>
+        )}
       </View>
 
       <View style={styles.sectionCard}>
@@ -111,12 +131,18 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         <Text style={styles.description}>{parking}</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Spot Images</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
-        {imageUrls.map((url) => (
-          <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
-        ))}
-      </ScrollView>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Spot Images</Text>
+        {imageUrls.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
+            {imageUrls.map((url) => (
+              <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
+        )}
+      </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Cloud Cover Next Hours</Text>
@@ -235,6 +261,25 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1
+  },
+  webMapFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#0d1a30'
+  },
+  webMapBtn: {
+    backgroundColor: '#1f324f',
+    borderWidth: 1,
+    borderColor: '#35527d',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14
+  },
+  webMapBtnText: {
+    color: palette.textPrimary,
+    fontWeight: '700'
   },
   sectionTitle: {
     marginTop: 2,

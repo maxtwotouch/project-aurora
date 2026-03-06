@@ -24,6 +24,12 @@ function trendLabel(trend: SpotScoreResult['trend']) {
   return 'Limited tonight';
 }
 
+function chanceLabel(score: number): string {
+  if (score >= 70) return 'High';
+  if (score >= 45) return 'Medium';
+  return 'Low';
+}
+
 function trendStyle(trend: SpotScoreResult['trend']) {
   if (trend === 'good_now') {
     return { backgroundColor: '#123c2f', borderColor: '#2adf92', color: '#9affda' };
@@ -51,6 +57,10 @@ export function SpotCard({ spot, result, onPress }: Props) {
         <Text style={styles.metaValue}>
           {formatLocalTime(result.bestWindowStart)}-{formatLocalTime(result.bestWindowEnd)}
         </Text>
+      </View>
+      <View style={styles.metaRow}>
+        <Text style={styles.metaKey}>Chance</Text>
+        <Text style={styles.metaValue}>{chanceLabel(result.score)}</Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaKey}>Distance</Text>

@@ -9,13 +9,27 @@ const app = Fastify({ logger: true });
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = process.env.HOST ?? '0.0.0.0';
 const REFRESH_MS = Number(process.env.REFRESH_MS ?? 5 * 60 * 1000);
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? '';
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:8081,http://127.0.0.1:8081')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 async function refreshSnapshot(): Promise<void> {
   const snapshot = await buildTonightSnapshot();
   await setLatestSnapshot(snapshot);
 }
 
-app.register(cors, { origin: true });
+app.register(cors, {
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, CORS_ORIGINS.includes(origin));
+  }
+});
 
 app.get('/v1/health', async () => {
   const snapshot = getLatestSnapshot();
@@ -71,7 +85,12 @@ app.get('/v1/spots/:id', async (request: FastifyRequest<{ Params: { id: string }
   };
 });
 
-app.post('/v1/admin/refresh', async () => {
+app.post('/v1/admin/refresh', async (request: FastifyRequest, reply: FastifyReply) => {
+  if (!ADMIN_TOKEN || request.headers['x-admin-token'] !== ADMIN_TOKEN) {
+    reply.code(401);
+    return { ok: false, message: 'Unauthorized' };
+  }
+
   await refreshSnapshot();
   const snapshot = getLatestSnapshot();
   return { ok: true, updatedAt: snapshot?.updatedAt ?? null };

@@ -67,13 +67,17 @@ export function useForecast(): UseForecastResult {
 
     try {
       if (shouldUseBackend()) {
-        const snapshot = await fetchTonightSnapshotFromBackend();
-        setKp(snapshot.kp);
-        setForecastsBySpotId(snapshot.forecastsBySpotId);
-        setRankedSpots(snapshot.rankings);
-        setLastUpdatedAt(snapshot.updatedAt);
-        setDataQuality(snapshot.dataQuality);
-        return;
+        try {
+          const snapshot = await fetchTonightSnapshotFromBackend();
+          setKp(snapshot.kp);
+          setForecastsBySpotId(snapshot.forecastsBySpotId);
+          setRankedSpots(snapshot.rankings);
+          setLastUpdatedAt(snapshot.updatedAt);
+          setDataQuality(snapshot.dataQuality);
+          return;
+        } catch {
+          // Graceful fallback for beta reliability if backend is temporarily unavailable.
+        }
       }
 
       const kpTrend = await fetchKpTrend();

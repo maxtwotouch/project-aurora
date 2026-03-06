@@ -1,4 +1,4 @@
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useMemo, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 
@@ -35,17 +35,32 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={TROMSO_CENTER} customMapStyle={mapDarkStyle}>
-        {spots.map((spot) => (
-          <Marker
-            key={spot.id}
-            coordinate={{ latitude: spot.lat, longitude: spot.lon }}
-            title={spot.name}
-            description={`Score ${scoreBySpot[spot.id] ?? 0}`}
-            onPress={() => setSelected(spot)}
-          />
-        ))}
-      </MapView>
+      {Platform.OS === 'web' ? (
+        <ScrollView contentContainerStyle={styles.webList}>
+          <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
+          {spots.map((spot) => (
+            <Pressable key={spot.id} style={styles.webItem} onPress={() => setSelected(spot)}>
+              <View>
+                <Text style={styles.webItemName}>{spot.name}</Text>
+                <Text style={styles.webItemMeta}>{spot.distanceKm} km from city center</Text>
+              </View>
+              <ScoreBadge score={scoreBySpot[spot.id] ?? 0} />
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : (
+        <MapView style={styles.map} initialRegion={TROMSO_CENTER} customMapStyle={mapDarkStyle}>
+          {spots.map((spot) => (
+            <Marker
+              key={spot.id}
+              coordinate={{ latitude: spot.lat, longitude: spot.lon }}
+              title={spot.name}
+              description={`Score ${scoreBySpot[spot.id] ?? 0}`}
+              onPress={() => setSelected(spot)}
+            />
+          ))}
+        </MapView>
+      )}
 
       {selected ? (
         <View style={styles.sheet}>
@@ -79,6 +94,34 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1
+  },
+  webList: {
+    padding: 14,
+    gap: 10
+  },
+  webTitle: {
+    color: palette.textSecondary,
+    marginBottom: 6
+  },
+  webItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: palette.cardElevated,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    borderRadius: 12,
+    padding: 12
+  },
+  webItemName: {
+    color: palette.textPrimary,
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  webItemMeta: {
+    color: palette.textSecondary,
+    marginTop: 3,
+    fontSize: 12
   },
   sheet: {
     position: 'absolute',

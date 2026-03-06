@@ -61,6 +61,24 @@ npm run start
 
 Then open in Expo Go (iOS/Android emulator or physical device).
 
+## Run Web Beta
+
+```bash
+EXPO_PUBLIC_USE_BACKEND=true EXPO_PUBLIC_API_BASE_URL=https://api.yourdomain.com npm run web
+```
+
+Notes:
+- Map screens use a simplified fallback on web beta.
+- Use your deployed backend URL, not localhost, for team testing.
+
+Build static web output:
+
+```bash
+npx expo export --platform web
+```
+
+The output folder is `dist/` and can be deployed to Cloudflare Pages.
+
 ## Backend (Fastify)
 
 A backend MVP is included in `backend/` with:

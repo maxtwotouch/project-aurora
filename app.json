@@ -4,7 +4,7 @@
     "slug": "tromso-northern-lights",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"

@@ -28,7 +28,12 @@ const extras: Record<string, SpotExtra> = {
 };
 
 export function getSpotParking(spot: Spot): string {
-  return extras[spot.id]?.parking ?? 'Parking details not yet available for this spot.';
+  const details = extras[spot.id]?.parking;
+  if (!details) {
+    return 'Parking information is not verified yet for this spot. Please check local signs and restrictions on arrival.';
+  }
+
+  return `Beta note: parking details are not yet verified. ${details}`;
 }
 
 export function getSpotImageUrls(spot: Spot): string[] {
@@ -36,12 +41,6 @@ export function getSpotImageUrls(spot: Spot): string[] {
   if (custom && custom.length > 0) {
     return custom;
   }
-
-  const lat = spot.lat.toFixed(4);
-  const lon = spot.lon.toFixed(4);
-
-  return [
-    `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}&zoom=11&size=800x420&markers=${lat},${lon},lightblue1`,
-    `https://picsum.photos/seed/${spot.id}-aurora/1200/700`
-  ];
+  void spot;
+  return [];
 }
