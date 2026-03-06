@@ -1,9 +1,7 @@
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useMemo, useState } from 'react';
-import MapView, { Marker } from 'react-native-maps';
 
 import { ScoreBadge } from '../components/ScoreBadge';
-import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { Spot, SpotScoreResult } from '../types';
 
@@ -11,13 +9,6 @@ type Props = {
   spots: Spot[];
   rankedSpots: SpotScoreResult[];
   onOpenSpot: (spotId: string) => void;
-};
-
-const TROMSO_CENTER = {
-  latitude: 69.6492,
-  longitude: 18.9553,
-  latitudeDelta: 0.45,
-  longitudeDelta: 0.45
 };
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
@@ -35,32 +26,18 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
 
   return (
     <View style={styles.container}>
-      {Platform.OS === 'web' ? (
-        <ScrollView contentContainerStyle={styles.webList}>
-          <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
-          {spots.map((spot) => (
-            <Pressable key={spot.id} style={styles.webItem} onPress={() => setSelected(spot)}>
-              <View>
-                <Text style={styles.webItemName}>{spot.name}</Text>
-                <Text style={styles.webItemMeta}>{spot.distanceKm} km from city center</Text>
-              </View>
-              <ScoreBadge score={scoreBySpot[spot.id] ?? 0} />
-            </Pressable>
-          ))}
-        </ScrollView>
-      ) : (
-        <MapView style={styles.map} initialRegion={TROMSO_CENTER} customMapStyle={mapDarkStyle}>
-          {spots.map((spot) => (
-            <Marker
-              key={spot.id}
-              coordinate={{ latitude: spot.lat, longitude: spot.lon }}
-              title={spot.name}
-              description={`Score ${scoreBySpot[spot.id] ?? 0}`}
-              onPress={() => setSelected(spot)}
-            />
-          ))}
-        </MapView>
-      )}
+      <ScrollView contentContainerStyle={styles.webList}>
+        <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
+        {spots.map((spot) => (
+          <Pressable key={spot.id} style={styles.webItem} onPress={() => setSelected(spot)}>
+            <View>
+              <Text style={styles.webItemName}>{spot.name}</Text>
+              <Text style={styles.webItemMeta}>{spot.distanceKm} km from city center</Text>
+            </View>
+            <ScoreBadge score={scoreBySpot[spot.id] ?? 0} />
+          </Pressable>
+        ))}
+      </ScrollView>
 
       {selected ? (
         <View style={styles.sheet}>
@@ -91,9 +68,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.night
-  },
-  map: {
-    flex: 1
   },
   webList: {
     padding: 14,

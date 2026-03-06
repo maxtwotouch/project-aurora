@@ -1,9 +1,7 @@
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
-import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
 
@@ -97,28 +95,12 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
       </View>
 
       <View style={styles.mapWrap}>
-        {Platform.OS === 'web' ? (
-          <View style={styles.webMapFallback}>
-            <Text style={styles.description}>Map preview is simplified on web beta.</Text>
-            <Pressable style={styles.webMapBtn} onPress={navigateToSpot}>
-              <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <MapView
-            pointerEvents="none"
-            style={styles.map}
-            customMapStyle={mapDarkStyle}
-            initialRegion={{
-              latitude: spot.lat,
-              longitude: spot.lon,
-              latitudeDelta: 0.08,
-              longitudeDelta: 0.08
-            }}
-          >
-            <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
-          </MapView>
-        )}
+        <View style={styles.webMapFallback}>
+          <Text style={styles.description}>Map preview is simplified on web beta.</Text>
+          <Pressable style={styles.webMapBtn} onPress={navigateToSpot}>
+            <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.sectionCard}>
@@ -258,9 +240,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: palette.cardBorder
-  },
-  map: {
-    flex: 1
   },
   webMapFallback: {
     flex: 1,
