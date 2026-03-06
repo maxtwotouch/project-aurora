@@ -54,6 +54,11 @@ function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later') {
   return { bg: '#3a1a24', border: '#fb7185', text: '#ffc1ce' };
 }
 
+function isLikelyDaytime(now: Date): boolean {
+  const hour = now.getHours();
+  return hour >= 8 && hour < 17;
+}
+
 const formatUpdatedAt = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
     hour: '2-digit',
@@ -78,6 +83,9 @@ export function TonightScreen({
   const decision = decisionLabel(auroraTonightScore, bestSpot?.cloudCoverAtBestHour);
   const decisionColors = decisionStyle(decision);
   const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
+  const daytimeHint = bestSpot && isLikelyDaytime(new Date())
+    ? `It is daytime now. Aurora is more likely visible from around ${formatLocalTime(bestSpot.bestWindowStart)}.`
+    : null;
 
   const navigateToBestSpot = () => {
     if (!bestSpotData) return;
@@ -113,6 +121,7 @@ export function TonightScreen({
         <Text style={styles.helper}>
           Data updated: {lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '-'}
         </Text>
+        {daytimeHint ? <Text style={styles.daytimeHint}>{daytimeHint}</Text> : null}
 
         {bestSpot ? (
           <View style={styles.bestSpotBox}>
@@ -241,6 +250,12 @@ const styles = StyleSheet.create({
   helper: {
     color: palette.textSecondary,
     fontSize: 14
+  },
+  daytimeHint: {
+    color: '#cde2ff',
+    fontSize: 13,
+    marginTop: 6,
+    marginBottom: 2
   },
   bestSpotBox: {
     marginTop: 12,
