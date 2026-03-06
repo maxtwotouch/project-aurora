@@ -1,4 +1,5 @@
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { SpotCard } from '../components/SpotCard';
 import { palette } from '../theme/palette';
@@ -121,7 +122,12 @@ export function TonightScreen({
         <Text style={styles.helper}>
           Data updated: {lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '-'}
         </Text>
-        {daytimeHint ? <Text style={styles.daytimeHint}>{daytimeHint}</Text> : null}
+        {daytimeHint ? (
+          <View style={styles.daytimeCard}>
+            <Ionicons name="sunny" size={18} color="#ffe28a" />
+            <Text style={styles.daytimeHint}>{daytimeHint}</Text>
+          </View>
+        ) : null}
 
         {bestSpot ? (
           <View style={styles.bestSpotBox}>
@@ -251,11 +257,24 @@ const styles = StyleSheet.create({
     color: palette.textSecondary,
     fontSize: 14
   },
+  daytimeCard: {
+    marginTop: 8,
+    marginBottom: 2,
+    backgroundColor: '#2f250f',
+    borderWidth: 1,
+    borderColor: '#8f6b1a',
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
   daytimeHint: {
-    color: '#cde2ff',
+    color: '#ffe8b0',
     fontSize: 13,
-    marginTop: 6,
-    marginBottom: 2
+    fontWeight: '700',
+    flex: 1
   },
   bestSpotBox: {
     marginTop: 12,
