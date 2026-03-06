@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { liveCameras } from '../data/liveCameras';
 import { palette } from '../theme/palette';
 
 export function LiveCamerasScreen() {
   const [refreshToken, setRefreshToken] = useState<number>(Date.now());
+  const [fullscreen, setFullscreen] = useState<{ uri: string; name: string } | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -25,7 +27,9 @@ export function LiveCamerasScreen() {
       {visibleCameras.map((camera) => (
         <View key={camera.id} style={styles.card}>
           {camera.imageUrl ? (
-            <Image source={{ uri: `${camera.imageUrl}?t=${refreshToken}` }} style={styles.image} resizeMode="cover" />
+            <Pressable onPress={() => setFullscreen({ uri: `${camera.imageUrl}?t=${refreshToken}`, name: camera.name })}>
+              <Image source={{ uri: `${camera.imageUrl}?t=${refreshToken}` }} style={styles.image} resizeMode="cover" />
+            </Pressable>
           ) : null}
 
           <Text style={styles.name}>{camera.name}</Text>
@@ -34,6 +38,19 @@ export function LiveCamerasScreen() {
           {camera.note ? <Text style={styles.note}>{camera.note}</Text> : null}
         </View>
       ))}
+
+      <Modal visible={Boolean(fullscreen)} transparent animationType="fade" onRequestClose={() => setFullscreen(null)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setFullscreen(null)} />
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{fullscreen?.name ?? 'Live Feed'}</Text>
+            <Pressable onPress={() => setFullscreen(null)} style={styles.closeBtn}>
+              <Ionicons name="close" size={22} color={palette.textPrimary} />
+            </Pressable>
+          </View>
+          {fullscreen ? <Image source={{ uri: fullscreen.uri }} style={styles.fullscreenImage} resizeMode="contain" /> : null}
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -82,5 +99,37 @@ const styles = StyleSheet.create({
   note: {
     color: palette.textMuted,
     marginTop: 6
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: '#030712f0',
+    justifyContent: 'center'
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingBottom: 8
+  },
+  modalTitle: {
+    color: palette.textPrimary,
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0f172acc'
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '86%'
   }
 });
