@@ -1,7 +1,12 @@
 import spots from '../../src/data/spots.json' with { type: 'json' };
 
 import { computeScore, rankSpots } from './scoring.js';
-import { fetchKpTrendWithQuality, fetchPointForecastWithQuality, fetchSpotForecastWithQuality } from './sources.js';
+import {
+  fetchKpTrendWithQuality,
+  fetchPointForecastWithQuality,
+  fetchSightingPossibleFromWithQuality,
+  fetchSpotForecastWithQuality
+} from './sources.js';
 import type { GeneralForecastScore, HourlyForecast, KpTrend, Spot, TonightSnapshot } from './types.js';
 
 const typedSpots = spots as Spot[];
@@ -45,6 +50,7 @@ function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralFor
 export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
   const kpResponse = await fetchKpTrendWithQuality();
   const tromsoForecast = await fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
+  const daylightHint = await fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon);
 
   const forecastsBySpotId: Record<string, HourlyForecast[]> = {};
   const fallbackWeatherSpotIds: string[] = [];
@@ -67,6 +73,7 @@ export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
     updatedAt: new Date().toISOString(),
     kp: kpResponse.kp,
     tomorrowScore: buildTomorrowScore(tromsoForecast.hourly, kpResponse.kp),
+    sightingPossibleFrom: daylightHint.sightingPossibleFrom,
     topSpots,
     rankings,
     forecastsBySpotId,

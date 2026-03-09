@@ -8,7 +8,7 @@ export function computeScore(cloudCover: number, kp: number, distanceKm: number,
   const estimatedDriveMinutes = distanceKm * 1.15;
   // No distance penalty unless drive time is longer than 2 hours.
   const distancePenalty = estimatedDriveMinutes > 120 ? (estimatedDriveMinutes - 120) * 0.35 : 0;
-  const lightPenalty = lightPollution * 8;
+  const lightPenalty = lightPollution * 5;
 
   return clamp(0.7 * cloudFactor + 0.3 * kpFactor - distancePenalty - lightPenalty, 0, 100);
 }

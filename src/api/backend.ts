@@ -4,6 +4,7 @@ type BackendTonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
   tomorrowScore: GeneralForecastScore | null;
+  sightingPossibleFrom: string | null;
   topSpots: SpotScoreResult[];
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;

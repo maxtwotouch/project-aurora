@@ -85,7 +85,7 @@
     "lat": 69.6311,
     "lon": 18.9317,
     "distanceKm": 3,
-    "lightPollution": 3,
+    "lightPollution": 2,
     "horizon": "north",
     "description": "Popular aurora viewing spot close to Tromsø city center."
   },
@@ -95,7 +95,7 @@
     "lat": 69.6533,
     "lon": 18.9339,
     "distanceKm": 2,
-    "lightPollution": 3,
+    "lightPollution": 2,
     "horizon": "north",
     "description": "Lake in Tromsø with darker skies than downtown."
   },
@@ -105,7 +105,7 @@
     "lat": 69.6408,
     "lon": 18.9873,
     "distanceKm": 2,
-    "lightPollution": 3,
+    "lightPollution": 2,
     "horizon": "north",
     "description": "Cable car viewpoint overlooking Tromsø with panoramic sky."
   },
@@ -125,7 +125,7 @@
     "lat": 69.665,
     "lon": 18.935,
     "distanceKm": 4,
-    "lightPollution": 3,
+    "lightPollution": 2,
     "horizon": "north",
     "description": "Hilltop viewpoint with wide night sky visibility."
   },

@@ -42,6 +42,7 @@ export type SpotScoreResult = {
 export type KpTrend = {
   current: number;
   peakNext12h: number;
+  tonightPeak: number;
   hourly: number[];
   dailyOutlook?: {
     label: string;
@@ -66,6 +67,7 @@ export type TonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
   tomorrowScore: GeneralForecastScore | null;
+  sightingPossibleFrom: string | null;
   topSpots: SpotScoreResult[];
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;

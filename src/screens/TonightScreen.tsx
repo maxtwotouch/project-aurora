@@ -12,9 +12,11 @@ type Props = {
   lastUpdatedAt: string | null;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
+  closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   auroraTonightScore: number;
   tomorrowScore: GeneralForecastScore | null;
+  sightingPossibleFrom: string | null;
   recommendation: string;
   refresh: () => Promise<void>;
 };
@@ -76,9 +78,11 @@ export function TonightScreen({
   lastUpdatedAt,
   kp,
   topSpots,
+  closeSpots,
   spotsById,
   auroraTonightScore,
   tomorrowScore,
+  sightingPossibleFrom,
   recommendation,
   refresh
 }: Props) {
@@ -86,8 +90,8 @@ export function TonightScreen({
   const decision = decisionLabel(auroraTonightScore, bestSpot?.cloudCoverAtBestHour);
   const decisionColors = decisionStyle(decision);
   const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
-  const daytimeHint = bestSpot && isLikelyDaytime(new Date())
-    ? `It is daytime now. Aurora is more likely visible from around ${formatLocalTime(bestSpot.bestWindowStart)}.`
+  const daytimeHint = isLikelyDaytime(new Date()) && sightingPossibleFrom
+    ? `It is daytime now. Sighting possible from around ${sightingPossibleFrom}.`
     : null;
 
   const navigateToBestSpot = () => {
@@ -157,8 +161,8 @@ export function TonightScreen({
               <Text style={styles.metricValue}>{kp.current.toFixed(1)}</Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>KP Peak</Text>
-              <Text style={styles.metricValue}>{kp.peakNext12h.toFixed(1)}</Text>
+              <Text style={styles.metricLabel}>KP Tonight</Text>
+              <Text style={styles.metricValue}>{kp.tonightPeak.toFixed(1)}</Text>
             </View>
           </View>
         </View>
@@ -200,6 +204,19 @@ export function TonightScreen({
 
         return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
       })}
+
+      {closeSpots.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>Close to Tromso</Text>
+          <Text style={styles.sectionSubtitle}>Good nearby options if you do not want a longer drive.</Text>
+          {closeSpots.map((result) => {
+            const spot = spotsById[result.spotId];
+            if (!spot) return null;
+
+            return <SpotCard key={`close-${spot.id}`} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
+          })}
+        </>
+      ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </ScrollView>
@@ -379,6 +396,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.textPrimary,
     marginBottom: 12
+  },
+  sectionSubtitle: {
+    color: palette.textMuted,
+    marginTop: -6,
+    marginBottom: 10
   },
   outlookCard: {
     backgroundColor: palette.cardElevated,

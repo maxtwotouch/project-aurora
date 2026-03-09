@@ -49,6 +49,7 @@ export type AuroraLevel = 'great' | 'possible' | 'low';
 export type KpTrend = {
   current: number;
   peakNext12h: number;
+  tonightPeak: number;
   hourly: number[];
   dailyOutlook?: {
     label: string;
@@ -68,4 +69,8 @@ export type GeneralForecastScore = {
   chance: 'High' | 'Medium' | 'Low';
   cloudCover: number;
   peakKp: number;
+};
+
+export type DaylightHint = {
+  sightingPossibleFrom: string | null;
 };

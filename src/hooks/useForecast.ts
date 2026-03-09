@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { fetchTonightSnapshotFromBackend, shouldUseBackend } from '../api/backend';
 import { fetchKpTrend } from '../api/kp';
-import { fetchPointForecast, fetchSpotForecast } from '../api/yr';
+import { fetchPointForecast, fetchSightingPossibleFrom, fetchSpotForecast } from '../api/yr';
 import spots from '../data/spots.json';
 import { computeScore } from '../scoring/score';
 import { rankSpots } from '../scoring/score';
@@ -19,10 +19,12 @@ type UseForecastResult = {
   kp: KpTrend;
   rankedSpots: SpotScoreResult[];
   topSpots: SpotScoreResult[];
+  closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   forecastsBySpotId: Record<string, HourlyForecast[]>;
   auroraTonightScore: number;
   tomorrowScore: GeneralForecastScore | null;
+  sightingPossibleFrom: string | null;
   recommendation: string;
   level: AuroraLevel;
   refresh: () => Promise<void>;
@@ -30,6 +32,7 @@ type UseForecastResult = {
 
 const typedSpots = spots as Spot[];
 const TROMSO_CENTER = { lat: 69.6492, lon: 18.9553 };
+const OSLO_TIME_ZONE = 'Europe/Oslo';
 
 function levelFromScore(score: number): AuroraLevel {
   if (score >= 70) return 'great';
@@ -49,15 +52,59 @@ function chanceFromScore(score: number): GeneralForecastScore['chance'] {
   return 'Low';
 }
 
+function getOsloParts(input: Date | string): { dayKey: string; hour: number } | null {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: OSLO_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23'
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value);
+
+  if (!year || !month || !day || !Number.isFinite(hour)) {
+    return null;
+  }
+
+  return {
+    dayKey: `${year}-${month}-${day}`,
+    hour
+  };
+}
+
+function addDaysToDayKey(dayKey: string, days: number): string {
+  const date = new Date(`${dayKey}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralForecastScore | null {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowKey = tomorrow.toISOString().slice(0, 10);
+  const todayParts = getOsloParts(new Date());
+  if (!todayParts) {
+    return null;
+  }
+
+  const tomorrowKey = addDaysToDayKey(todayParts.dayKey, 1);
 
   const eveningHours = forecast.filter((hour) => {
-    const date = new Date(hour.time);
-    const sameDay = hour.time.slice(0, 10) === tomorrowKey;
-    const isEvening = date.getHours() >= 18 && date.getHours() <= 23;
+    const parts = getOsloParts(hour.time);
+    if (!parts) {
+      return false;
+    }
+
+    const sameDay = parts.dayKey === tomorrowKey;
+    const isEvening = parts.hour >= 18 && parts.hour <= 23;
     return sameDay && isEvening;
   });
 
@@ -89,11 +136,13 @@ export function useForecast(): UseForecastResult {
   const [kp, setKp] = useState<KpTrend>({
     current: 2,
     peakNext12h: 5,
+    tonightPeak: 5,
     hourly: Array.from({ length: 12 }, (_, i) => Number((2 + (3 * i) / 11).toFixed(1)))
   });
   const [forecastsBySpotId, setForecastsBySpotId] = useState<Record<string, HourlyForecast[]>>({});
   const [rankedSpots, setRankedSpots] = useState<SpotScoreResult[]>([]);
   const [tomorrowScore, setTomorrowScore] = useState<GeneralForecastScore | null>(null);
+  const [sightingPossibleFrom, setSightingPossibleFrom] = useState<string | null>(null);
 
   const spotsById = useMemo(
     () => typedSpots.reduce<Record<string, Spot>>((acc, spot) => ({ ...acc, [spot.id]: spot }), {}),
@@ -114,6 +163,7 @@ export function useForecast(): UseForecastResult {
           setLastUpdatedAt(snapshot.updatedAt);
           setDataQuality(snapshot.dataQuality);
           setTomorrowScore(snapshot.tomorrowScore);
+          setSightingPossibleFrom(snapshot.sightingPossibleFrom);
           return;
         } catch {
           // Graceful fallback for beta reliability if backend is temporarily unavailable.
@@ -124,6 +174,7 @@ export function useForecast(): UseForecastResult {
       setKp(kpTrend);
       const tromsoForecast = await fetchPointForecast(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
       setTomorrowScore(buildTomorrowScore(tromsoForecast, kpTrend));
+      setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
 
       const forecastPairs = await Promise.allSettled(
         typedSpots.map(async (spot) => ({
@@ -163,6 +214,7 @@ export function useForecast(): UseForecastResult {
   }, [refresh]);
 
   const topSpots = rankedSpots.slice(0, 5);
+  const closeSpots = rankedSpots.filter((item) => (spotsById[item.spotId]?.distanceKm ?? 999) <= 10).slice(0, 3);
   const auroraTonightScore =
     topSpots.length > 0 ? Math.round(topSpots.reduce((sum, item) => sum + item.score, 0) / topSpots.length) : 0;
   const level = levelFromScore(auroraTonightScore);
@@ -176,10 +228,12 @@ export function useForecast(): UseForecastResult {
     kp,
     rankedSpots,
     topSpots,
+    closeSpots,
     spotsById,
     forecastsBySpotId,
     auroraTonightScore,
     tomorrowScore,
+    sightingPossibleFrom,
     recommendation,
     level,
     refresh

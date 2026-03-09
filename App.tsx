@@ -54,9 +54,11 @@ type TabsRootProps = {
   lastUpdatedAt: string | null;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
+  closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   auroraTonightScore: number;
   tomorrowScore: GeneralForecastScore | null;
+  sightingPossibleFrom: string | null;
   recommendation: string;
   refresh: () => Promise<void>;
 };
@@ -69,9 +71,11 @@ function TabsRoot({
   lastUpdatedAt,
   kp,
   topSpots,
+  closeSpots,
   spotsById,
   auroraTonightScore,
   tomorrowScore,
+  sightingPossibleFrom,
   recommendation,
   refresh
 }: TabsRootProps) {
@@ -131,9 +135,11 @@ function TabsRoot({
             lastUpdatedAt={lastUpdatedAt}
             kp={kp}
             topSpots={topSpots}
+            closeSpots={closeSpots}
             spotsById={spotsById}
             auroraTonightScore={auroraTonightScore}
             tomorrowScore={tomorrowScore}
+            sightingPossibleFrom={sightingPossibleFrom}
             recommendation={recommendation}
             refresh={refresh}
           />
@@ -193,9 +199,11 @@ export default function App() {
               lastUpdatedAt={forecast.lastUpdatedAt}
               kp={forecast.kp}
               topSpots={forecast.topSpots}
+              closeSpots={forecast.closeSpots}
               spotsById={forecast.spotsById}
               auroraTonightScore={forecast.auroraTonightScore}
               tomorrowScore={forecast.tomorrowScore}
+              sightingPossibleFrom={forecast.sightingPossibleFrom}
               recommendation={forecast.recommendation}
               refresh={forecast.refresh}
             />
