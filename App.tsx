@@ -15,7 +15,7 @@ import { MapScreen } from './src/screens/MapScreen.native';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -56,6 +56,7 @@ type TabsRootProps = {
   topSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   auroraTonightScore: number;
+  tomorrowScore: GeneralForecastScore | null;
   recommendation: string;
   refresh: () => Promise<void>;
 };
@@ -70,6 +71,7 @@ function TabsRoot({
   topSpots,
   spotsById,
   auroraTonightScore,
+  tomorrowScore,
   recommendation,
   refresh
 }: TabsRootProps) {
@@ -131,6 +133,7 @@ function TabsRoot({
             topSpots={topSpots}
             spotsById={spotsById}
             auroraTonightScore={auroraTonightScore}
+            tomorrowScore={tomorrowScore}
             recommendation={recommendation}
             refresh={refresh}
           />
@@ -192,6 +195,7 @@ export default function App() {
               topSpots={forecast.topSpots}
               spotsById={forecast.spotsById}
               auroraTonightScore={forecast.auroraTonightScore}
+              tomorrowScore={forecast.tomorrowScore}
               recommendation={forecast.recommendation}
               refresh={forecast.refresh}
             />

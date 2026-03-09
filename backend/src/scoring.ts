@@ -2,7 +2,7 @@ import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from './t
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
-function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
+export function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
   const cloudFactor = 100 - cloudCover;
   const kpFactor = kp * 15;
   const estimatedDriveMinutes = distanceKm * 1.15;

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SpotCard } from '../components/SpotCard';
 import { palette } from '../theme/palette';
-import type { KpTrend, Spot, SpotScoreResult } from '../types';
+import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
@@ -14,6 +14,7 @@ type Props = {
   topSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   auroraTonightScore: number;
+  tomorrowScore: GeneralForecastScore | null;
   recommendation: string;
   refresh: () => Promise<void>;
 };
@@ -77,6 +78,7 @@ export function TonightScreen({
   topSpots,
   spotsById,
   auroraTonightScore,
+  tomorrowScore,
   recommendation,
   refresh
 }: Props) {
@@ -161,6 +163,35 @@ export function TonightScreen({
           </View>
         </View>
       </View>
+
+      {tomorrowScore ? (
+        <View style={styles.outlookCard}>
+          <View style={styles.outlookHeader}>
+            <Text style={styles.outlookTitle}>Tomorrow in Tromso</Text>
+            <Text style={styles.outlookChance}>{tomorrowScore.chance}</Text>
+          </View>
+          <Text style={styles.outlookScore}>{tomorrowScore.score} / 100</Text>
+          <Text style={styles.helper}>General forecast based on evening cloud cover and expected geomagnetic activity.</Text>
+          <View style={styles.outlookMetrics}>
+            <Text style={styles.outlookMetric}>Cloud: {tomorrowScore.cloudCover}%</Text>
+            <Text style={styles.outlookMetric}>Peak KP: {tomorrowScore.peakKp.toFixed(1)}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      {kp.dailyOutlook && kp.dailyOutlook.length > 1 ? (
+        <View style={styles.outlookCard}>
+          <Text style={styles.outlookTitle}>3-Day KP Forecast</Text>
+          <View style={styles.kpRow}>
+            {kp.dailyOutlook.slice(1, 4).map((item) => (
+              <View key={item.label} style={styles.kpTile}>
+                <Text style={styles.kpLabel}>{item.label}</Text>
+                <Text style={styles.kpValue}>{item.peak.toFixed(1)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <Text style={styles.sectionTitle}>Top 5 Aurora Spots Right Now</Text>
       {topSpots.map((result) => {
@@ -348,6 +379,70 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.textPrimary,
     marginBottom: 12
+  },
+  outlookCard: {
+    backgroundColor: palette.cardElevated,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 14
+  },
+  outlookTitle: {
+    color: palette.textPrimary,
+    fontSize: 18,
+    fontWeight: '700'
+  },
+  outlookHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4
+  },
+  outlookChance: {
+    color: palette.auroraMint,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  outlookScore: {
+    color: palette.textPrimary,
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 4
+  },
+  outlookMetrics: {
+    flexDirection: 'row',
+    gap: 14,
+    marginTop: 8
+  },
+  outlookMetric: {
+    color: palette.textSecondary,
+    fontWeight: '600'
+  },
+  kpRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10
+  },
+  kpTile: {
+    flex: 1,
+    backgroundColor: '#0d1a30',
+    borderWidth: 1,
+    borderColor: '#2d466b',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center'
+  },
+  kpLabel: {
+    color: palette.textMuted,
+    fontSize: 11,
+    marginBottom: 4
+  },
+  kpValue: {
+    color: palette.textPrimary,
+    fontSize: 19,
+    fontWeight: '800'
   },
   error: {
     color: palette.danger,

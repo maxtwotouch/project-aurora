@@ -82,6 +82,47 @@ function parseForecastPeak(payload: unknown, current: number): number {
   return clampKp(Math.max(current, ...values));
 }
 
+function parseDailyOutlook(payload: unknown): KpTrend['dailyOutlook'] {
+  if (!Array.isArray(payload) || payload.length < 2) {
+    return [
+      { label: 'Today', peak: FALLBACK_PEAK_KP },
+      { label: 'Tomorrow', peak: FALLBACK_PEAK_KP },
+      { label: 'Day 3', peak: FALLBACK_PEAK_KP }
+    ];
+  }
+
+  const rows = payload.slice(1).filter((row): row is unknown[] => Array.isArray(row));
+  const dayMap = new Map<string, number[]>();
+
+  for (const row of rows) {
+    const rawTime = String(row[0] ?? '');
+    const rawValue = Number(row[1]);
+    if (!rawTime || !Number.isFinite(rawValue)) continue;
+
+    const date = new Date(rawTime);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const key = date.toISOString().slice(0, 10);
+    const values = dayMap.get(key) ?? [];
+    values.push(clampKp(rawValue));
+    dayMap.set(key, values);
+  }
+
+  const entries = Array.from(dayMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(0, 3)
+    .map(([day, values], index) => ({
+      label: index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : 'Day 3',
+      peak: Math.max(...values)
+    }));
+
+  return entries.length > 0 ? entries : [
+    { label: 'Today', peak: FALLBACK_PEAK_KP },
+    { label: 'Tomorrow', peak: FALLBACK_PEAK_KP },
+    { label: 'Day 3', peak: FALLBACK_PEAK_KP }
+  ];
+}
+
 function selectCurrentKp(nowPayload: unknown[]): number {
   const latest = findLatestValidKp(nowPayload);
   if (latest === null) {
@@ -125,12 +166,32 @@ export async function fetchKpTrend(): Promise<KpTrend> {
     if (forecastResponse.status === 'fulfilled' && forecastResponse.value.ok) {
       const forecastPayload = await forecastResponse.value.json();
       peak = parseForecastPeak(forecastPayload, current);
+      const dailyOutlook = parseDailyOutlook(forecastPayload);
+
+      const value: KpTrend = {
+        current,
+        peakNext12h: peak,
+        hourly: buildHourlyKpTrend(current, peak, 12),
+        dailyOutlook
+      };
+
+      kpCache = {
+        timestamp: Date.now(),
+        value
+      };
+
+      return value;
     }
 
     const value: KpTrend = {
       current,
       peakNext12h: peak,
-      hourly: buildHourlyKpTrend(current, peak, 12)
+      hourly: buildHourlyKpTrend(current, peak, 12),
+      dailyOutlook: [
+        { label: 'Today', peak },
+        { label: 'Tomorrow', peak },
+        { label: 'Day 3', peak }
+      ]
     };
 
     kpCache = {
@@ -143,7 +204,12 @@ export async function fetchKpTrend(): Promise<KpTrend> {
     const value: KpTrend = {
       current: FALLBACK_CURRENT_KP,
       peakNext12h: FALLBACK_PEAK_KP,
-      hourly: buildHourlyKpTrend(FALLBACK_CURRENT_KP, FALLBACK_PEAK_KP, 12)
+      hourly: buildHourlyKpTrend(FALLBACK_CURRENT_KP, FALLBACK_PEAK_KP, 12),
+      dailyOutlook: [
+        { label: 'Today', peak: FALLBACK_PEAK_KP },
+        { label: 'Tomorrow', peak: FALLBACK_PEAK_KP },
+        { label: 'Day 3', peak: FALLBACK_PEAK_KP }
+      ]
     };
 
     kpCache = {

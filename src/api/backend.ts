@@ -1,8 +1,9 @@
-import type { HourlyForecast, KpTrend, SpotScoreResult } from '../types';
+import type { GeneralForecastScore, HourlyForecast, KpTrend, SpotScoreResult } from '../types';
 
 type BackendTonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
+  tomorrowScore: GeneralForecastScore | null;
   topSpots: SpotScoreResult[];
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;

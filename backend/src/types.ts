@@ -43,6 +43,18 @@ export type KpTrend = {
   current: number;
   peakNext12h: number;
   hourly: number[];
+  dailyOutlook?: {
+    label: string;
+    peak: number;
+  }[];
+};
+
+export type GeneralForecastScore = {
+  label?: string;
+  score: number;
+  chance: 'High' | 'Medium' | 'Low';
+  cloudCover: number;
+  peakKp: number;
 };
 
 export type DataQuality = {
@@ -53,6 +65,7 @@ export type DataQuality = {
 export type TonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
+  tomorrowScore: GeneralForecastScore | null;
   topSpots: SpotScoreResult[];
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;

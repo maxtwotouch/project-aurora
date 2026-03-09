@@ -12,6 +12,7 @@ type CacheEntry = {
 const forecastCache = new Map<string, CacheEntry>();
 
 const getSpotKey = (spot: Spot) => `${spot.lat.toFixed(4)},${spot.lon.toFixed(4)}`;
+const getPointKey = (lat: number, lon: number, hours: number) => `${lat.toFixed(4)},${lon.toFixed(4)},${hours}`;
 
 function buildFallbackForecast(): HourlyForecast[] {
   const start = new Date();
@@ -59,6 +60,58 @@ export async function fetchSpotForecast(spot: Spot): Promise<HourlyForecast[]> {
     }
 
     const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => ({
+      time: entry.time,
+      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
+      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
+      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
+    }));
+
+    forecastCache.set(key, {
+      timestamp: Date.now(),
+      data: hourly
+    });
+
+    return hourly;
+  } catch {
+    const fallback = buildFallbackForecast();
+    forecastCache.set(key, {
+      timestamp: Date.now(),
+      data: fallback
+    });
+
+    return fallback;
+  }
+}
+
+export async function fetchPointForecast(lat: number, lon: number, hours = 48): Promise<HourlyForecast[]> {
+  const key = getPointKey(lat, lon, hours);
+  const cached = forecastCache.get(key);
+
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  const url = `${MET_BASE_URL}?lat=${lat}&lon=${lon}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'tromso-northern-lights-mvp/1.0'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`MET forecast failed for point (${response.status})`);
+    }
+
+    const payload = await response.json();
+    const timeseries = payload?.properties?.timeseries;
+
+    if (!Array.isArray(timeseries)) {
+      throw new Error('Unexpected MET response format.');
+    }
+
+    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => ({
       time: entry.time,
       cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
       temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),

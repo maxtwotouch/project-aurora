@@ -75,6 +75,43 @@ function parseForecastPeak(payload: unknown, current: number): number {
   return clampKp(Math.max(current, ...values));
 }
 
+function parseDailyOutlook(payload: unknown): KpTrend['dailyOutlook'] {
+  if (!Array.isArray(payload) || payload.length < 2) {
+    return [
+      { label: 'Today', peak: FALLBACK_PEAK_KP },
+      { label: 'Tomorrow', peak: FALLBACK_PEAK_KP },
+      { label: 'Day 3', peak: FALLBACK_PEAK_KP },
+      { label: 'Day 4', peak: FALLBACK_PEAK_KP }
+    ];
+  }
+
+  const rows = payload.slice(1).filter((row): row is unknown[] => Array.isArray(row));
+  const dayMap = new Map<string, number[]>();
+
+  for (const row of rows) {
+    const rawTime = String(row[0] ?? '');
+    const rawValue = Number(row[1]);
+    if (!rawTime || !Number.isFinite(rawValue)) continue;
+
+    const date = new Date(rawTime);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const key = date.toISOString().slice(0, 10);
+    const values = dayMap.get(key) ?? [];
+    values.push(clampKp(rawValue));
+    dayMap.set(key, values);
+  }
+
+  const labels = ['Today', 'Tomorrow', 'Day 3', 'Day 4'];
+  return Array.from(dayMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(0, 4)
+    .map(([_, values], index) => ({
+      label: labels[index] ?? `Day ${index + 1}`,
+      peak: Math.max(...values)
+    }));
+}
+
 export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFallback: boolean }> {
   try {
     const [nowResponse, forecastResponse] = await Promise.allSettled([fetch(KP_NOW_URL), fetch(KP_FORECAST_URL)]);
@@ -95,13 +132,28 @@ export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFal
     if (forecastResponse.status === 'fulfilled' && forecastResponse.value.ok) {
       const forecastPayload = await forecastResponse.value.json();
       peak = parseForecastPeak(forecastPayload, current);
+      return {
+        kp: {
+          current,
+          peakNext12h: peak,
+          hourly: buildHourlyKpTrend(current, peak, 12),
+          dailyOutlook: parseDailyOutlook(forecastPayload)
+        },
+        usingFallback: false
+      };
     }
 
     return {
       kp: {
         current,
         peakNext12h: peak,
-        hourly: buildHourlyKpTrend(current, peak, 12)
+        hourly: buildHourlyKpTrend(current, peak, 12),
+        dailyOutlook: [
+          { label: 'Today', peak },
+          { label: 'Tomorrow', peak },
+          { label: 'Day 3', peak },
+          { label: 'Day 4', peak }
+        ]
       },
       usingFallback: false
     };
@@ -110,7 +162,13 @@ export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFal
       kp: {
         current: FALLBACK_CURRENT_KP,
         peakNext12h: FALLBACK_PEAK_KP,
-        hourly: buildHourlyKpTrend(FALLBACK_CURRENT_KP, FALLBACK_PEAK_KP, 12)
+        hourly: buildHourlyKpTrend(FALLBACK_CURRENT_KP, FALLBACK_PEAK_KP, 12),
+        dailyOutlook: [
+          { label: 'Today', peak: FALLBACK_PEAK_KP },
+          { label: 'Tomorrow', peak: FALLBACK_PEAK_KP },
+          { label: 'Day 3', peak: FALLBACK_PEAK_KP },
+          { label: 'Day 4', peak: FALLBACK_PEAK_KP }
+        ]
       },
       usingFallback: true
     };
@@ -136,6 +194,41 @@ export async function fetchSpotForecastWithQuality(spot: Spot): Promise<{ hourly
     }
 
     const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => ({
+      time: entry.time,
+      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
+      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
+      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
+    }));
+
+    return { hourly, usingFallback: false };
+  } catch {
+    return { hourly: buildFallbackForecast(), usingFallback: true };
+  }
+}
+
+export async function fetchPointForecastWithQuality(
+  lat: number,
+  lon: number,
+  hours = 48
+): Promise<{ hourly: HourlyForecast[]; usingFallback: boolean }> {
+  try {
+    const response = await fetch(`${MET_BASE_URL}?lat=${lat}&lon=${lon}`, {
+      headers: {
+        'User-Agent': 'aurora-backend/1.0'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`MET forecast failed for point (${response.status})`);
+    }
+
+    const payload = await response.json();
+    const timeseries = payload?.properties?.timeseries;
+    if (!Array.isArray(timeseries)) {
+      throw new Error('Unexpected MET response format.');
+    }
+
+    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => ({
       time: entry.time,
       cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
       temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),

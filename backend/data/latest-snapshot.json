@@ -1,3808 +1,3833 @@
 {
-  "updatedAt": "2026-03-06T12:28:02.211Z",
+  "updatedAt": "2026-03-09T15:28:37.819Z",
   "kp": {
     "current": 0,
-    "peakNext12h": 3.33,
+    "peakNext12h": 5,
     "hourly": [
       0,
-      0.3,
-      0.6,
+      0.5,
       0.9,
-      1.2,
-      1.5,
+      1.4,
       1.8,
-      2.1,
-      2.4,
+      2.3,
       2.7,
-      3,
-      3.3
+      3.2,
+      3.6,
+      4.1,
+      4.5,
+      5
+    ],
+    "dailyOutlook": [
+      {
+        "label": "Today",
+        "peak": 1.67
+      },
+      {
+        "label": "Tomorrow",
+        "peak": 1.67
+      },
+      {
+        "label": "Day 3",
+        "peak": 5
+      },
+      {
+        "label": "Day 4",
+        "peak": 3
+      }
     ]
+  },
+  "tomorrowScore": {
+    "label": "Tomorrow",
+    "score": 34,
+    "chance": "Low",
+    "cloudCover": 40,
+    "peakKp": 1.7
   },
   "topSpots": [
     {
       "spotId": "tromvik",
       "spotName": "Tromvik",
-      "score": 40,
+      "score": 37,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96.2,
-          "temperature": 4.4,
-          "windSpeed": 17.3,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 5.1,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 96.7,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.8,
+          "windSpeed": 7.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": 3.3,
-          "windSpeed": 14.9,
+          "windSpeed": 10.9,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 84.9,
-          "temperature": 5,
-          "windSpeed": 16.2,
-          "score": 5.269999999999994
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 98.9,
-          "temperature": 4.7,
-          "windSpeed": 16.4,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.1,
+          "windSpeed": 12.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82.6,
-          "temperature": 4.7,
-          "windSpeed": 15.9,
-          "score": 9.580000000000002
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 95.6,
-          "temperature": 3.4,
-          "windSpeed": 18.1,
-          "score": 1.8300000000000036
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 87.6,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 8.780000000000001
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 60.3,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 29.239999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 47,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 39.89999999999999
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 94.4,
-          "temperature": 4.6,
-          "windSpeed": 14.7,
-          "score": 8.069999999999997
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99,
-          "temperature": 4.7,
-          "windSpeed": 14.9,
-          "score": 6.199999999999999
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.5,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
           "temperature": 4.9,
-          "windSpeed": 14.6,
-          "score": 7.199999999999999
+          "windSpeed": 14.5,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.7,
+          "temperature": 5.1,
+          "windSpeed": 14.4,
+          "score": 2.559999999999997
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 90.7,
+          "temperature": 5,
+          "windSpeed": 13,
+          "score": 10.659999999999997
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 91.7,
+          "temperature": 4.8,
+          "windSpeed": 13.7,
+          "score": 12.209999999999997
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 99.2,
+          "temperature": 4.7,
+          "windSpeed": 13.9,
+          "score": 8.759999999999998
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.1,
+          "temperature": 4.6,
+          "windSpeed": 13.8,
+          "score": 13.879999999999999
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 64.3,
+          "temperature": 4.8,
+          "windSpeed": 12.9,
+          "score": 37.24
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 83.6,
+          "temperature": 4.8,
+          "windSpeed": 12,
+          "score": 25.980000000000004
         }
       ],
-      "cloudCoverAtBestHour": 47,
-      "temperatureAtBestHour": 4.5,
-      "windSpeedAtBestHour": 15,
-      "coldScore": 72,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "cloudCoverAtBestHour": 64,
+      "temperatureAtBestHour": 4.8,
+      "windSpeedAtBestHour": 12.9,
+      "coldScore": 57,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "grunnfjord",
       "spotName": "Grunnfjord",
-      "score": 39,
+      "score": 34,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96.9,
-          "temperature": 4.4,
-          "windSpeed": 16.4,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.2,
+          "windSpeed": 4.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.8,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.7,
+          "windSpeed": 7.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": 3.1,
-          "windSpeed": 14.3,
+          "windSpeed": 10.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.8,
-          "temperature": 4.9,
-          "windSpeed": 15.5,
-          "score": 4.640000000000001
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 99.1,
-          "temperature": 4.7,
-          "windSpeed": 15.6,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4,
+          "windSpeed": 12.1,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
           "temperature": 4.6,
-          "windSpeed": 15,
-          "score": 10
+          "windSpeed": 12.9,
+          "score": 0.09999999999999964
         },
         {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 95.3,
-          "temperature": 3.7,
-          "windSpeed": 16.2,
-          "score": 2.0400000000000027
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.8,
+          "temperature": 5,
+          "windSpeed": 13.6,
+          "score": 2.490000000000002
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 88.2,
-          "temperature": 4.4,
-          "windSpeed": 14.3,
-          "score": 8.36
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 60.3,
-          "temperature": 4.5,
-          "windSpeed": 14.1,
-          "score": 29.239999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 47.7,
-          "temperature": 4.4,
-          "windSpeed": 14.2,
-          "score": 39.40999999999999
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 94.9,
-          "temperature": 4.5,
-          "windSpeed": 13.9,
-          "score": 7.719999999999995
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.3,
-          "temperature": 4.6,
-          "windSpeed": 14.1,
-          "score": 5.990000000000002
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 93.4,
           "temperature": 4.8,
-          "windSpeed": 13.8,
-          "score": 7.059999999999997
+          "windSpeed": 12.5,
+          "score": 8.769999999999996
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92.2,
+          "temperature": 4.5,
+          "windSpeed": 12.7,
+          "score": 11.859999999999996
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98.4,
+          "temperature": 4.5,
+          "windSpeed": 13.4,
+          "score": 9.319999999999997
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.3,
+          "temperature": 4.4,
+          "windSpeed": 12.9,
+          "score": 14.439999999999998
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 69.5,
+          "temperature": 4.6,
+          "windSpeed": 12.1,
+          "score": 33.599999999999994
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 84.5,
+          "temperature": 4.6,
+          "windSpeed": 11.2,
+          "score": 25.35
         }
       ],
-      "cloudCoverAtBestHour": 48,
-      "temperatureAtBestHour": 4.4,
-      "windSpeedAtBestHour": 14.2,
-      "coldScore": 67,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "cloudCoverAtBestHour": 70,
+      "temperatureAtBestHour": 4.6,
+      "windSpeedAtBestHour": 12.1,
+      "coldScore": 54,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "grotfjord",
       "spotName": "Grotfjord",
-      "score": 37,
+      "score": 32,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 0.2,
-          "windSpeed": 16.8,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1.3,
+          "windSpeed": 6.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.6,
-          "temperature": -1.1,
-          "windSpeed": 14.5,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1,
+          "windSpeed": 6.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 87.3,
-          "temperature": 0.5,
-          "windSpeed": 16.7,
-          "score": 3.59
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 99,
-          "temperature": 0.3,
-          "windSpeed": 15.1,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82.6,
-          "temperature": 0.1,
-          "windSpeed": 14.8,
-          "score": 9.580000000000002
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.6,
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": -0.5,
-          "windSpeed": 12.5,
-          "score": 1.1300000000000043
+          "windSpeed": 9.2,
+          "score": 0
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 89,
-          "temperature": -0.1,
-          "windSpeed": 13.8,
-          "score": 7.799999999999999
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0,
+          "windSpeed": 12.7,
+          "score": 0
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 61.6,
-          "temperature": -0.1,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.7,
+          "windSpeed": 12.3,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.8,
+          "temperature": 1.1,
           "windSpeed": 13.5,
-          "score": 28.33
+          "score": 2.490000000000002
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 51.5,
-          "temperature": -0.1,
-          "windSpeed": 13.6,
-          "score": 36.74999999999999
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 93.3,
+          "temperature": 0.9,
+          "windSpeed": 11.8,
+          "score": 8.840000000000003
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 95.5,
-          "temperature": -0.1,
-          "windSpeed": 13.8,
-          "score": 7.300000000000001
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92,
+          "temperature": 0.6,
+          "windSpeed": 11.8,
+          "score": 12
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.5,
-          "temperature": 0.1,
-          "windSpeed": 14,
-          "score": 5.85
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98.4,
+          "temperature": 0.5,
+          "windSpeed": 13.3,
+          "score": 9.319999999999997
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 0.4,
-          "windSpeed": 14,
-          "score": 7.059999999999997
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.1,
+          "temperature": 0.3,
+          "windSpeed": 12.5,
+          "score": 14.579999999999998
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 72.2,
+          "temperature": 0.5,
+          "windSpeed": 12.1,
+          "score": 31.709999999999994
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 85.8,
+          "temperature": 0.5,
+          "windSpeed": 11.2,
+          "score": 24.439999999999998
         }
       ],
-      "cloudCoverAtBestHour": 52,
-      "temperatureAtBestHour": -0.1,
-      "windSpeedAtBestHour": 13.6,
-      "coldScore": 93,
+      "cloudCoverAtBestHour": 72,
+      "temperatureAtBestHour": 0.5,
+      "windSpeedAtBestHour": 12.1,
+      "coldScore": 81,
       "dressAdvice": "Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots."
+    },
+    {
+      "spotId": "lyngseidet",
+      "spotName": "Lyngseidet",
+      "score": 29,
+      "trend": "improving",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.9,
+          "windSpeed": 1.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2,
+          "windSpeed": 1.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 1.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.6,
+          "windSpeed": 2.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.1,
+          "windSpeed": 5.3,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.4,
+          "temperature": 4.3,
+          "windSpeed": 7.5,
+          "score": 2.769999999999996
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97.9,
+          "temperature": 4.4,
+          "windSpeed": 8.2,
+          "score": 5.619999999999996
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 90.2,
+          "temperature": 3.7,
+          "windSpeed": 7.3,
+          "score": 13.259999999999998
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 88.5,
+          "temperature": 3.6,
+          "windSpeed": 6.8,
+          "score": 16.25
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 90.7,
+          "temperature": 3.3,
+          "windSpeed": 7,
+          "score": 16.959999999999994
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 87.3,
+          "temperature": 3.2,
+          "windSpeed": 6.9,
+          "score": 21.14
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 78.8,
+          "temperature": 3,
+          "windSpeed": 6.7,
+          "score": 29.340000000000003
+        }
+      ],
+      "cloudCoverAtBestHour": 79,
+      "temperatureAtBestHour": 3,
+      "windSpeedAtBestHour": 6.7,
+      "coldScore": 33,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "skulsfjord",
       "spotName": "Skulsfjord",
-      "score": 34,
+      "score": 28,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 4.5,
-          "windSpeed": 12,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 99.2,
-          "temperature": 3,
-          "windSpeed": 9.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 87.4,
-          "temperature": 4.9,
-          "windSpeed": 11.4,
-          "score": 3.5199999999999942
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 98.6,
-          "temperature": 5,
-          "windSpeed": 10.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 83,
-          "temperature": 4.9,
-          "windSpeed": 10.3,
-          "score": 9.299999999999997
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.4,
-          "temperature": 4.2,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.8,
           "windSpeed": 7.1,
-          "score": 1.269999999999996
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90,
-          "temperature": 4.6,
-          "windSpeed": 9.9,
-          "score": 7.1
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 62.7,
-          "temperature": 4.7,
-          "windSpeed": 9.5,
-          "score": 27.559999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 55.9,
-          "temperature": 4.8,
-          "windSpeed": 9.6,
-          "score": 33.669999999999995
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 96.3,
-          "temperature": 4.7,
-          "windSpeed": 9.5,
-          "score": 6.740000000000002
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 4.9,
-          "windSpeed": 9.6,
-          "score": 5.709999999999997
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.8,
-          "temperature": 5,
-          "windSpeed": 9.4,
-          "score": 6.990000000000002
-        }
-      ],
-      "cloudCoverAtBestHour": 56,
-      "temperatureAtBestHour": 4.8,
-      "windSpeedAtBestHour": 9.6,
-      "coldScore": 38,
-      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
-    },
-    {
-      "spotId": "ersfjordbotn",
-      "spotName": "Ersfjordbotn",
-      "score": 23,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 95.1,
-          "temperature": 2.7,
-          "windSpeed": 11.3,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
+          "time": "2026-03-09T16:00:00Z",
           "cloudCover": 100,
-          "temperature": 2,
-          "windSpeed": 8.7,
+          "temperature": 3.1,
+          "windSpeed": 8.3,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.3,
-          "temperature": 3.1,
-          "windSpeed": 12,
-          "score": 4.99
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 96.3,
-          "temperature": 3.2,
-          "windSpeed": 11.2,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 88,
-          "temperature": 3.1,
-          "windSpeed": 11,
-          "score": 5.799999999999997
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 3,
-          "windSpeed": 11.2,
-          "score": 0.7800000000000047
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90.1,
-          "temperature": 2.9,
-          "windSpeed": 10.6,
-          "score": 7.030000000000003
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71.9,
-          "temperature": 2.9,
-          "windSpeed": 10.2,
-          "score": 21.119999999999994
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 70.7,
-          "temperature": 3,
-          "windSpeed": 10,
-          "score": 23.309999999999995
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 98.3,
-          "temperature": 3.1,
-          "windSpeed": 10.2,
-          "score": 5.340000000000002
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 100,
-          "temperature": 3.2,
-          "windSpeed": 10.3,
-          "score": 5.5
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
+          "time": "2026-03-09T17:00:00Z",
           "cloudCover": 100,
           "temperature": 3.5,
-          "windSpeed": 10.3,
-          "score": 6.85
+          "windSpeed": 9.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.2,
+          "windSpeed": 12.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.8,
+          "windSpeed": 7.5,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 5.1,
+          "windSpeed": 8.8,
+          "score": 2.4199999999999964
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 94.3,
+          "temperature": 5,
+          "windSpeed": 8.9,
+          "score": 8.14
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92,
+          "temperature": 4.3,
+          "windSpeed": 7.5,
+          "score": 12
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98,
+          "temperature": 4.3,
+          "windSpeed": 7,
+          "score": 9.599999999999998
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94,
+          "temperature": 4.5,
+          "windSpeed": 8.6,
+          "score": 14.649999999999995
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 77.5,
+          "temperature": 4.7,
+          "windSpeed": 8.4,
+          "score": 28
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 87.6,
+          "temperature": 4.7,
+          "windSpeed": 7.5,
+          "score": 23.180000000000003
         }
       ],
-      "cloudCoverAtBestHour": 71,
-      "temperatureAtBestHour": 3,
-      "windSpeedAtBestHour": 10,
-      "coldScore": 52,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
+      "cloudCoverAtBestHour": 78,
+      "temperatureAtBestHour": 4.7,
+      "windSpeedAtBestHour": 8.4,
+      "coldScore": 32,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     }
   ],
   "rankings": [
     {
       "spotId": "tromvik",
       "spotName": "Tromvik",
-      "score": 40,
+      "score": 37,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96.2,
-          "temperature": 4.4,
-          "windSpeed": 17.3,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 5.1,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 96.7,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.8,
+          "windSpeed": 7.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": 3.3,
-          "windSpeed": 14.9,
+          "windSpeed": 10.9,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 84.9,
-          "temperature": 5,
-          "windSpeed": 16.2,
-          "score": 5.269999999999994
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 98.9,
-          "temperature": 4.7,
-          "windSpeed": 16.4,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.1,
+          "windSpeed": 12.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82.6,
-          "temperature": 4.7,
-          "windSpeed": 15.9,
-          "score": 9.580000000000002
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 95.6,
-          "temperature": 3.4,
-          "windSpeed": 18.1,
-          "score": 1.8300000000000036
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 87.6,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 8.780000000000001
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 60.3,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 29.239999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 47,
-          "temperature": 4.5,
-          "windSpeed": 15,
-          "score": 39.89999999999999
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 94.4,
-          "temperature": 4.6,
-          "windSpeed": 14.7,
-          "score": 8.069999999999997
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99,
-          "temperature": 4.7,
-          "windSpeed": 14.9,
-          "score": 6.199999999999999
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.5,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
           "temperature": 4.9,
-          "windSpeed": 14.6,
-          "score": 7.199999999999999
+          "windSpeed": 14.5,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.7,
+          "temperature": 5.1,
+          "windSpeed": 14.4,
+          "score": 2.559999999999997
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 90.7,
+          "temperature": 5,
+          "windSpeed": 13,
+          "score": 10.659999999999997
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 91.7,
+          "temperature": 4.8,
+          "windSpeed": 13.7,
+          "score": 12.209999999999997
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 99.2,
+          "temperature": 4.7,
+          "windSpeed": 13.9,
+          "score": 8.759999999999998
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.1,
+          "temperature": 4.6,
+          "windSpeed": 13.8,
+          "score": 13.879999999999999
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 64.3,
+          "temperature": 4.8,
+          "windSpeed": 12.9,
+          "score": 37.24
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 83.6,
+          "temperature": 4.8,
+          "windSpeed": 12,
+          "score": 25.980000000000004
         }
       ],
-      "cloudCoverAtBestHour": 47,
-      "temperatureAtBestHour": 4.5,
-      "windSpeedAtBestHour": 15,
-      "coldScore": 72,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "cloudCoverAtBestHour": 64,
+      "temperatureAtBestHour": 4.8,
+      "windSpeedAtBestHour": 12.9,
+      "coldScore": 57,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "grunnfjord",
       "spotName": "Grunnfjord",
-      "score": 39,
+      "score": 34,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96.9,
-          "temperature": 4.4,
-          "windSpeed": 16.4,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.2,
+          "windSpeed": 4.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.8,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.7,
+          "windSpeed": 7.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": 3.1,
-          "windSpeed": 14.3,
+          "windSpeed": 10.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.8,
-          "temperature": 4.9,
-          "windSpeed": 15.5,
-          "score": 4.640000000000001
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 99.1,
-          "temperature": 4.7,
-          "windSpeed": 15.6,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4,
+          "windSpeed": 12.1,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
           "temperature": 4.6,
-          "windSpeed": 15,
-          "score": 10
+          "windSpeed": 12.9,
+          "score": 0.09999999999999964
         },
         {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 95.3,
-          "temperature": 3.7,
-          "windSpeed": 16.2,
-          "score": 2.0400000000000027
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.8,
+          "temperature": 5,
+          "windSpeed": 13.6,
+          "score": 2.490000000000002
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 88.2,
-          "temperature": 4.4,
-          "windSpeed": 14.3,
-          "score": 8.36
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 60.3,
-          "temperature": 4.5,
-          "windSpeed": 14.1,
-          "score": 29.239999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 47.7,
-          "temperature": 4.4,
-          "windSpeed": 14.2,
-          "score": 39.40999999999999
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 94.9,
-          "temperature": 4.5,
-          "windSpeed": 13.9,
-          "score": 7.719999999999995
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.3,
-          "temperature": 4.6,
-          "windSpeed": 14.1,
-          "score": 5.990000000000002
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 93.4,
           "temperature": 4.8,
-          "windSpeed": 13.8,
-          "score": 7.059999999999997
+          "windSpeed": 12.5,
+          "score": 8.769999999999996
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92.2,
+          "temperature": 4.5,
+          "windSpeed": 12.7,
+          "score": 11.859999999999996
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98.4,
+          "temperature": 4.5,
+          "windSpeed": 13.4,
+          "score": 9.319999999999997
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.3,
+          "temperature": 4.4,
+          "windSpeed": 12.9,
+          "score": 14.439999999999998
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 69.5,
+          "temperature": 4.6,
+          "windSpeed": 12.1,
+          "score": 33.599999999999994
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 84.5,
+          "temperature": 4.6,
+          "windSpeed": 11.2,
+          "score": 25.35
         }
       ],
-      "cloudCoverAtBestHour": 48,
-      "temperatureAtBestHour": 4.4,
-      "windSpeedAtBestHour": 14.2,
-      "coldScore": 67,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "cloudCoverAtBestHour": 70,
+      "temperatureAtBestHour": 4.6,
+      "windSpeedAtBestHour": 12.1,
+      "coldScore": 54,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "grotfjord",
       "spotName": "Grotfjord",
-      "score": 37,
+      "score": 32,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 0.2,
-          "windSpeed": 16.8,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1.3,
+          "windSpeed": 6.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.6,
-          "temperature": -1.1,
-          "windSpeed": 14.5,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1,
+          "windSpeed": 6.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 87.3,
-          "temperature": 0.5,
-          "windSpeed": 16.7,
-          "score": 3.59
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 99,
-          "temperature": 0.3,
-          "windSpeed": 15.1,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 82.6,
-          "temperature": 0.1,
-          "windSpeed": 14.8,
-          "score": 9.580000000000002
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.6,
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": -0.5,
-          "windSpeed": 12.5,
-          "score": 1.1300000000000043
+          "windSpeed": 9.2,
+          "score": 0
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 89,
-          "temperature": -0.1,
-          "windSpeed": 13.8,
-          "score": 7.799999999999999
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0,
+          "windSpeed": 12.7,
+          "score": 0
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 61.6,
-          "temperature": -0.1,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.7,
+          "windSpeed": 12.3,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.8,
+          "temperature": 1.1,
           "windSpeed": 13.5,
-          "score": 28.33
+          "score": 2.490000000000002
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 51.5,
-          "temperature": -0.1,
-          "windSpeed": 13.6,
-          "score": 36.74999999999999
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 93.3,
+          "temperature": 0.9,
+          "windSpeed": 11.8,
+          "score": 8.840000000000003
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 95.5,
-          "temperature": -0.1,
-          "windSpeed": 13.8,
-          "score": 7.300000000000001
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92,
+          "temperature": 0.6,
+          "windSpeed": 11.8,
+          "score": 12
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.5,
-          "temperature": 0.1,
-          "windSpeed": 14,
-          "score": 5.85
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98.4,
+          "temperature": 0.5,
+          "windSpeed": 13.3,
+          "score": 9.319999999999997
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 0.4,
-          "windSpeed": 14,
-          "score": 7.059999999999997
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.1,
+          "temperature": 0.3,
+          "windSpeed": 12.5,
+          "score": 14.579999999999998
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 72.2,
+          "temperature": 0.5,
+          "windSpeed": 12.1,
+          "score": 31.709999999999994
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 85.8,
+          "temperature": 0.5,
+          "windSpeed": 11.2,
+          "score": 24.439999999999998
         }
       ],
-      "cloudCoverAtBestHour": 52,
-      "temperatureAtBestHour": -0.1,
-      "windSpeedAtBestHour": 13.6,
-      "coldScore": 93,
+      "cloudCoverAtBestHour": 72,
+      "temperatureAtBestHour": 0.5,
+      "windSpeedAtBestHour": 12.1,
+      "coldScore": 81,
       "dressAdvice": "Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots."
+    },
+    {
+      "spotId": "lyngseidet",
+      "spotName": "Lyngseidet",
+      "score": 29,
+      "trend": "improving",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.9,
+          "windSpeed": 1.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2,
+          "windSpeed": 1.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 1.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.6,
+          "windSpeed": 2.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.1,
+          "windSpeed": 5.3,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.4,
+          "temperature": 4.3,
+          "windSpeed": 7.5,
+          "score": 2.769999999999996
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97.9,
+          "temperature": 4.4,
+          "windSpeed": 8.2,
+          "score": 5.619999999999996
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 90.2,
+          "temperature": 3.7,
+          "windSpeed": 7.3,
+          "score": 13.259999999999998
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 88.5,
+          "temperature": 3.6,
+          "windSpeed": 6.8,
+          "score": 16.25
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 90.7,
+          "temperature": 3.3,
+          "windSpeed": 7,
+          "score": 16.959999999999994
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 87.3,
+          "temperature": 3.2,
+          "windSpeed": 6.9,
+          "score": 21.14
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 78.8,
+          "temperature": 3,
+          "windSpeed": 6.7,
+          "score": 29.340000000000003
+        }
+      ],
+      "cloudCoverAtBestHour": 79,
+      "temperatureAtBestHour": 3,
+      "windSpeedAtBestHour": 6.7,
+      "coldScore": 33,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "skulsfjord",
       "spotName": "Skulsfjord",
-      "score": 34,
+      "score": 28,
       "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 4.5,
-          "windSpeed": 12,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 99.2,
-          "temperature": 3,
-          "windSpeed": 9.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 87.4,
-          "temperature": 4.9,
-          "windSpeed": 11.4,
-          "score": 3.5199999999999942
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 98.6,
-          "temperature": 5,
-          "windSpeed": 10.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 83,
-          "temperature": 4.9,
-          "windSpeed": 10.3,
-          "score": 9.299999999999997
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.4,
-          "temperature": 4.2,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.8,
           "windSpeed": 7.1,
-          "score": 1.269999999999996
+          "score": 0
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90,
-          "temperature": 4.6,
-          "windSpeed": 9.9,
-          "score": 7.1
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.1,
+          "windSpeed": 8.3,
+          "score": 0
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 62.7,
-          "temperature": 4.7,
-          "windSpeed": 9.5,
-          "score": 27.559999999999995
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.5,
+          "windSpeed": 9.6,
+          "score": 0
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 55.9,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.2,
+          "windSpeed": 12.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
           "temperature": 4.8,
-          "windSpeed": 9.6,
-          "score": 33.669999999999995
+          "windSpeed": 7.5,
+          "score": 0.09999999999999964
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 96.3,
-          "temperature": 4.7,
-          "windSpeed": 9.5,
-          "score": 6.740000000000002
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 5.1,
+          "windSpeed": 8.8,
+          "score": 2.4199999999999964
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 4.9,
-          "windSpeed": 9.6,
-          "score": 5.709999999999997
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.8,
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 94.3,
           "temperature": 5,
-          "windSpeed": 9.4,
-          "score": 6.990000000000002
+          "windSpeed": 8.9,
+          "score": 8.14
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 92,
+          "temperature": 4.3,
+          "windSpeed": 7.5,
+          "score": 12
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98,
+          "temperature": 4.3,
+          "windSpeed": 7,
+          "score": 9.599999999999998
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94,
+          "temperature": 4.5,
+          "windSpeed": 8.6,
+          "score": 14.649999999999995
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 77.5,
+          "temperature": 4.7,
+          "windSpeed": 8.4,
+          "score": 28
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 87.6,
+          "temperature": 4.7,
+          "windSpeed": 7.5,
+          "score": 23.180000000000003
         }
       ],
-      "cloudCoverAtBestHour": 56,
-      "temperatureAtBestHour": 4.8,
-      "windSpeedAtBestHour": 9.6,
-      "coldScore": 38,
+      "cloudCoverAtBestHour": 78,
+      "temperatureAtBestHour": 4.7,
+      "windSpeedAtBestHour": 8.4,
+      "coldScore": 32,
       "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
+    },
+    {
+      "spotId": "sandvika_beach",
+      "spotName": "Sandvika Beach",
+      "score": 26,
+      "trend": "improving",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.8,
+          "windSpeed": 8.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
+          "windSpeed": 9.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.3,
+          "windSpeed": 12.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4,
+          "windSpeed": 9.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 5.1,
+          "windSpeed": 10.6,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.7,
+          "temperature": 5.4,
+          "windSpeed": 11.4,
+          "score": 2.559999999999997
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 90.2,
+          "temperature": 5.2,
+          "windSpeed": 10.6,
+          "score": 11.009999999999998
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 85.5,
+          "temperature": 4.1,
+          "windSpeed": 7.8,
+          "score": 16.549999999999997
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 99.1,
+          "temperature": 4.1,
+          "windSpeed": 8.4,
+          "score": 8.830000000000002
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95,
+          "temperature": 4.6,
+          "windSpeed": 11.9,
+          "score": 13.949999999999996
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 80.1,
+          "temperature": 4.7,
+          "windSpeed": 11.1,
+          "score": 26.180000000000007
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 91.8,
+          "temperature": 4.6,
+          "windSpeed": 10.3,
+          "score": 20.240000000000002
+        }
+      ],
+      "cloudCoverAtBestHour": 80,
+      "temperatureAtBestHour": 4.7,
+      "windSpeedAtBestHour": 11.1,
+      "coldScore": 47,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "ersfjordbotn",
       "spotName": "Ersfjordbotn",
-      "score": 23,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "score": 20,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 95.1,
-          "temperature": 2.7,
-          "windSpeed": 11.3,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.5,
+          "windSpeed": 4.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.8,
+          "windSpeed": 6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
           "cloudCover": 100,
           "temperature": 2,
-          "windSpeed": 8.7,
+          "windSpeed": 7.4,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.3,
-          "temperature": 3.1,
-          "windSpeed": 12,
-          "score": 4.99
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 96.3,
-          "temperature": 3.2,
-          "windSpeed": 11.2,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.3,
+          "windSpeed": 8,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 88,
-          "temperature": 3.1,
-          "windSpeed": 11,
-          "score": 5.799999999999997
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
+          "windSpeed": 6.3,
+          "score": 0.09999999999999964
         },
         {
-          "time": "2026-03-06T17:00:00Z",
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 3.6,
+          "windSpeed": 8.1,
+          "score": 2.4199999999999964
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97.2,
+          "temperature": 3.1,
+          "windSpeed": 6.4,
+          "score": 6.109999999999998
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 90.5,
+          "temperature": 2.6,
+          "windSpeed": 5.6,
+          "score": 13.049999999999997
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
           "cloudCover": 97.1,
-          "temperature": 3,
-          "windSpeed": 11.2,
-          "score": 0.7800000000000047
+          "temperature": 2.6,
+          "windSpeed": 7.3,
+          "score": 10.230000000000004
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90.1,
-          "temperature": 2.9,
-          "windSpeed": 10.6,
-          "score": 7.030000000000003
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.5,
+          "temperature": 2.5,
+          "windSpeed": 7.4,
+          "score": 13.599999999999994
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71.9,
-          "temperature": 2.9,
-          "windSpeed": 10.2,
-          "score": 21.119999999999994
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 70.7,
-          "temperature": 3,
-          "windSpeed": 10,
-          "score": 23.309999999999995
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 98.3,
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 88.8,
           "temperature": 3.1,
-          "windSpeed": 10.2,
-          "score": 5.340000000000002
+          "windSpeed": 8.4,
+          "score": 20.090000000000003
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 100,
-          "temperature": 3.2,
-          "windSpeed": 10.3,
-          "score": 5.5
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 100,
-          "temperature": 3.5,
-          "windSpeed": 10.3,
-          "score": 6.85
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 92.9,
+          "temperature": 3.1,
+          "windSpeed": 8.1,
+          "score": 19.469999999999995
         }
       ],
-      "cloudCoverAtBestHour": 71,
-      "temperatureAtBestHour": 3,
-      "windSpeedAtBestHour": 10,
-      "coldScore": 52,
+      "cloudCoverAtBestHour": 89,
+      "temperatureAtBestHour": 3.1,
+      "windSpeedAtBestHour": 8.4,
+      "coldScore": 42,
       "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "kattfjordvatnet",
       "spotName": "Kattfjordvatnet",
-      "score": 23,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "score": 20,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 97.8,
-          "temperature": 4.1,
-          "windSpeed": 12,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.3,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
           "temperature": 2.7,
+          "windSpeed": 7.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.9,
+          "windSpeed": 8.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
+          "windSpeed": 10.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.5,
+          "windSpeed": 9.3,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.5,
+          "windSpeed": 8.1,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 4.8,
+          "windSpeed": 8.3,
+          "score": 2.4199999999999964
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 95.2,
+          "temperature": 4.7,
+          "windSpeed": 7.7,
+          "score": 7.509999999999998
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 88.7,
+          "temperature": 3.7,
+          "windSpeed": 6.5,
+          "score": 14.309999999999995
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 98.3,
+          "temperature": 3.7,
+          "windSpeed": 7.2,
+          "score": 9.39
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.7,
+          "temperature": 4,
           "windSpeed": 8.2,
-          "score": 0
+          "score": 13.459999999999994
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 86.8,
-          "temperature": 4.7,
-          "windSpeed": 12.8,
-          "score": 3.9400000000000013
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 97.7,
-          "temperature": 4.8,
-          "windSpeed": 12,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 86.9,
-          "temperature": 4.6,
-          "windSpeed": 11.6,
-          "score": 6.569999999999993
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 98.6,
-          "temperature": 4.5,
-          "windSpeed": 12.1,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90,
-          "temperature": 4.3,
-          "windSpeed": 11,
-          "score": 7.1
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 73.3,
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 84.4,
           "temperature": 4.4,
-          "windSpeed": 10.6,
-          "score": 20.14
+          "windSpeed": 8.8,
+          "score": 23.169999999999995
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 70.8,
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 92.2,
           "temperature": 4.4,
-          "windSpeed": 10.6,
-          "score": 23.240000000000002
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 98.1,
-          "temperature": 4.4,
-          "windSpeed": 10.6,
-          "score": 5.480000000000004
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 4.6,
-          "windSpeed": 10.7,
-          "score": 5.569999999999997
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 4.7,
-          "windSpeed": 10.7,
-          "score": 6.919999999999996
+          "windSpeed": 8.1,
+          "score": 19.959999999999997
         }
       ],
-      "cloudCoverAtBestHour": 71,
+      "cloudCoverAtBestHour": 84,
       "temperatureAtBestHour": 4.4,
-      "windSpeedAtBestHour": 10.6,
-      "coldScore": 46,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
-    },
-    {
-      "spotId": "sandvika_beach",
-      "spotName": "Sandvika Beach",
-      "score": 23,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96.8,
-          "temperature": 4.2,
-          "windSpeed": 13.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 94.8,
-          "temperature": 3.1,
-          "windSpeed": 10.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85,
-          "temperature": 4.9,
-          "windSpeed": 14.9,
-          "score": 5.199999999999999
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 4.9,
-          "windSpeed": 14.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 87.3,
-          "temperature": 4.9,
-          "windSpeed": 14.1,
-          "score": 6.289999999999999
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.9,
-          "temperature": 4.7,
-          "windSpeed": 14.1,
-          "score": 0.2199999999999953
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 87.7,
-          "temperature": 4.6,
-          "windSpeed": 13.5,
-          "score": 8.709999999999997
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 70.5,
-          "temperature": 4.6,
-          "windSpeed": 13.2,
-          "score": 22.099999999999998
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 71.8,
-          "temperature": 4.5,
-          "windSpeed": 13,
-          "score": 22.54
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 98.2,
-          "temperature": 4.6,
-          "windSpeed": 13,
-          "score": 5.409999999999998
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.8,
-          "temperature": 4.7,
-          "windSpeed": 13.1,
-          "score": 5.640000000000002
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.8,
-          "temperature": 4.8,
-          "windSpeed": 13,
-          "score": 6.990000000000002
-        }
-      ],
-      "cloudCoverAtBestHour": 72,
-      "temperatureAtBestHour": 4.5,
-      "windSpeedAtBestHour": 13,
-      "coldScore": 60,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "windSpeedAtBestHour": 8.8,
+      "coldScore": 36,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "sommaroy",
       "spotName": "Sommarøy",
-      "score": 22,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "score": 20,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 96,
-          "temperature": 4.3,
-          "windSpeed": 13.6,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.7,
+          "windSpeed": 8.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 95.8,
-          "temperature": 3.4,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
+          "windSpeed": 10.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.2,
+          "windSpeed": 12.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4,
+          "windSpeed": 9.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 5.1,
           "windSpeed": 10.5,
-          "score": 0
+          "score": 0.09999999999999964
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.1,
-          "temperature": 4.9,
-          "windSpeed": 14.6,
-          "score": 5.130000000000003
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.7,
+          "temperature": 5.4,
+          "windSpeed": 11.2,
+          "score": 2.559999999999997
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 95.8,
-          "temperature": 5,
-          "windSpeed": 14.8,
-          "score": 0
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 90.9,
+          "temperature": 5.2,
+          "windSpeed": 10.5,
+          "score": 10.519999999999996
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 87.8,
-          "temperature": 4.9,
-          "windSpeed": 14.4,
-          "score": 5.940000000000001
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 84.5,
+          "temperature": 4.2,
+          "windSpeed": 7.6,
+          "score": 17.25
         },
         {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.6,
-          "temperature": 4.8,
-          "windSpeed": 14.5,
-          "score": 0.43000000000000327
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 99,
+          "temperature": 4.2,
+          "windSpeed": 8.6,
+          "score": 8.899999999999999
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 85,
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.4,
           "temperature": 4.6,
-          "windSpeed": 13.7,
-          "score": 10.600000000000001
+          "windSpeed": 11.7,
+          "score": 13.669999999999991
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71,
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 82.1,
           "temperature": 4.6,
-          "windSpeed": 13.4,
-          "score": 21.749999999999996
+          "windSpeed": 11,
+          "score": 24.78
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 74.5,
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 93,
           "temperature": 4.6,
-          "windSpeed": 13.3,
-          "score": 20.65
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 98.7,
-          "temperature": 4.7,
-          "windSpeed": 13.3,
-          "score": 5.059999999999999
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.8,
-          "temperature": 4.8,
-          "windSpeed": 13.3,
-          "score": 5.640000000000002
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 4.8,
-          "windSpeed": 13.1,
-          "score": 6.919999999999996
+          "windSpeed": 10.3,
+          "score": 19.4
         }
       ],
-      "cloudCoverAtBestHour": 71,
+      "cloudCoverAtBestHour": 82,
       "temperatureAtBestHour": 4.6,
-      "windSpeedAtBestHour": 13.4,
-      "coldScore": 61,
-      "dressAdvice": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots."
+      "windSpeedAtBestHour": 11,
+      "coldScore": 47,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
-      "spotId": "lyngseidet",
-      "spotName": "Lyngseidet",
+      "spotId": "breivikeidet_valley",
+      "spotName": "Breivikeidet Valley",
       "score": 20,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T19:00:00Z",
-      "bestWindowEnd": "2026-03-06T21:00:00Z",
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 92.1,
-          "temperature": 3.4,
-          "windSpeed": 6.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 80.2,
-          "temperature": 3.6,
-          "windSpeed": 8.9,
-          "score": 7.209999999999997
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
+          "time": "2026-03-09T15:00:00Z",
           "cloudCover": 100,
-          "temperature": 2.9,
-          "windSpeed": 7.9,
+          "temperature": 2,
+          "windSpeed": 1.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 69.3,
-          "temperature": 2.9,
-          "windSpeed": 10.1,
-          "score": 17.540000000000003
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.4,
+          "windSpeed": 2,
+          "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 78.9,
-          "temperature": 3.1,
-          "windSpeed": 9.4,
-          "score": 12.169999999999995
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 86.8,
-          "temperature": 3,
-          "windSpeed": 8.1,
-          "score": 7.990000000000002
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 99.8,
-          "temperature": 2.6,
-          "windSpeed": 7.9,
-          "score": 0.240000000000002
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 77.5,
-          "temperature": 2.6,
-          "windSpeed": 7.1,
-          "score": 17.199999999999996
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 76.9,
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
           "temperature": 2.8,
-          "windSpeed": 7.2,
-          "score": 18.96999999999999
+          "windSpeed": 2.4,
+          "score": 0
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 77.2,
-          "temperature": 3.1,
-          "windSpeed": 7.5,
-          "score": 20.11
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 86.8,
-          "temperature": 3.2,
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.7,
           "windSpeed": 6.8,
-          "score": 14.740000000000002
+          "score": 0
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 97.5,
-          "temperature": 3.6,
-          "windSpeed": 7.5,
-          "score": 8.600000000000001
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.4,
+          "windSpeed": 6.1,
+          "score": 0.09999999999999964
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.8,
+          "temperature": 3.3,
+          "windSpeed": 6.8,
+          "score": 2.490000000000002
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97,
+          "temperature": 2.8,
+          "windSpeed": 8.3,
+          "score": 6.25
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 97.3,
+          "temperature": 2.6,
+          "windSpeed": 6.3,
+          "score": 8.29
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 85.5,
+          "temperature": 2.1,
+          "windSpeed": 8,
+          "score": 18.349999999999998
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 96.2,
+          "temperature": 2,
+          "windSpeed": 6.3,
+          "score": 13.109999999999992
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 93.7,
+          "temperature": 1.7,
+          "windSpeed": 6.5,
+          "score": 16.659999999999997
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 90.4,
+          "temperature": 1.9,
+          "windSpeed": 6.1,
+          "score": 21.219999999999995
         }
       ],
-      "cloudCoverAtBestHour": 77,
-      "temperatureAtBestHour": 3.1,
-      "windSpeedAtBestHour": 7.5,
-      "coldScore": 37,
+      "cloudCoverAtBestHour": 90,
+      "temperatureAtBestHour": 1.9,
+      "windSpeedAtBestHour": 6.1,
+      "coldScore": 36,
       "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "skibotn",
       "spotName": "Skibotn",
-      "score": 16,
+      "score": 20,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T20:00:00Z",
-      "bestWindowEnd": "2026-03-06T22:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 80.5,
-          "temperature": 3.7,
-          "windSpeed": 7,
-          "score": 5.649999999999999
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 75.8,
-          "temperature": 3.6,
-          "windSpeed": 5,
-          "score": 10.290000000000003
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
+          "time": "2026-03-09T15:00:00Z",
           "cloudCover": 100,
-          "temperature": 2.7,
-          "windSpeed": 5.2,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 78.6,
-          "temperature": 2.7,
-          "windSpeed": 9.8,
-          "score": 11.030000000000001
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 84.2,
-          "temperature": 2.5,
-          "windSpeed": 4.1,
-          "score": 8.459999999999997
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 86.8,
-          "temperature": 2.5,
-          "windSpeed": 6,
-          "score": 7.990000000000002
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 93,
-          "temperature": 2.2,
-          "windSpeed": 5.8,
-          "score": 5
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 90,
-          "temperature": 2.7,
-          "windSpeed": 6.9,
-          "score": 8.45
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 81.9,
-          "temperature": 2.4,
-          "windSpeed": 4.8,
-          "score": 15.469999999999992
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 83.1,
-          "temperature": 2.4,
-          "windSpeed": 4.7,
-          "score": 15.980000000000004
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 94,
-          "temperature": 1.9,
-          "windSpeed": 2,
-          "score": 9.7
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 2.1,
-          "windSpeed": 2.9,
-          "score": 7.059999999999997
-        }
-      ],
-      "cloudCoverAtBestHour": 83,
-      "temperatureAtBestHour": 2.4,
-      "windSpeedAtBestHour": 4.7,
-      "coldScore": 25,
-      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
-    },
-    {
-      "spotId": "breivikeidet_valley",
-      "spotName": "Breivikeidet Valley",
-      "score": 14,
-      "trend": "worse",
-      "bestWindowStart": "2026-03-06T19:00:00Z",
-      "bestWindowEnd": "2026-03-06T21:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 80.2,
-          "temperature": 2.1,
-          "windSpeed": 10.3,
-          "score": 5.859999999999998
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 100,
-          "temperature": 2.1,
-          "windSpeed": 8.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 98.7,
-          "temperature": 1.3,
-          "windSpeed": 8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 91.3,
-          "temperature": 1.9,
-          "windSpeed": 9.5,
-          "score": 2.1400000000000006
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 84.1,
-          "temperature": 2.3,
-          "windSpeed": 8.3,
-          "score": 8.530000000000001
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.3,
-          "temperature": 2.2,
-          "windSpeed": 8.3,
-          "score": 0.6400000000000023
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 93.1,
-          "temperature": 1.1,
-          "windSpeed": 7.9,
-          "score": 4.930000000000003
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 81.9,
-          "temperature": 1.9,
-          "windSpeed": 7.7,
-          "score": 14.119999999999994
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 87.8,
-          "temperature": 1.8,
-          "windSpeed": 7.3,
-          "score": 11.34
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 89.3,
-          "temperature": 1.9,
-          "windSpeed": 7.2,
-          "score": 11.64
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 95.9,
-          "temperature": 2.3,
-          "windSpeed": 7.4,
-          "score": 8.369999999999997
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 100,
-          "temperature": 2.6,
-          "windSpeed": 7.8,
-          "score": 6.85
-        }
-      ],
-      "cloudCoverAtBestHour": 82,
-      "temperatureAtBestHour": 1.9,
-      "windSpeedAtBestHour": 7.7,
-      "coldScore": 46,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
-    },
-    {
-      "spotId": "oldervik",
-      "spotName": "Oldervik",
-      "score": 14,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T19:00:00Z",
-      "bestWindowEnd": "2026-03-06T21:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 81.2,
           "temperature": 1.7,
-          "windSpeed": 9.2,
+          "windSpeed": 6.6,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 98.8,
-          "temperature": 1.6,
-          "windSpeed": 7.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 94.2,
-          "temperature": 1.3,
-          "windSpeed": 9.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 90.7,
-          "temperature": 1.9,
-          "windSpeed": 10,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 71.8,
-          "temperature": 2.1,
-          "windSpeed": 9.1,
-          "score": 9.14
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.5,
-          "temperature": 1.9,
-          "windSpeed": 8.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 90,
-          "temperature": 1.1,
-          "windSpeed": 7.4,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 72.8,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
           "temperature": 1.8,
-          "windSpeed": 8,
-          "score": 12.489999999999998
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 76.9,
-          "temperature": 1.6,
-          "windSpeed": 7.4,
-          "score": 10.969999999999992
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 75.1,
-          "temperature": 1.8,
-          "windSpeed": 7.3,
-          "score": 13.580000000000005
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 94.6,
-          "temperature": 2.1,
-          "windSpeed": 7.8,
-          "score": 1.2800000000000047
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 98.4,
-          "temperature": 2.4,
-          "windSpeed": 7.9,
+          "windSpeed": 5,
           "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.9,
+          "windSpeed": 5.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2,
+          "windSpeed": 3.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 2.6,
+          "windSpeed": 3.9,
+          "score": 0.16999999999999638
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 98.5,
+          "temperature": 3.2,
+          "windSpeed": 3.5,
+          "score": 3.3999999999999986
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 96.7,
+          "temperature": 2.9,
+          "windSpeed": 4.3,
+          "score": 6.459999999999997
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 85.1,
+          "temperature": 2.7,
+          "windSpeed": 4.6,
+          "score": 16.830000000000002
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 83.8,
+          "temperature": 2,
+          "windSpeed": 3.7,
+          "score": 19.54
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 89.2,
+          "temperature": 1.9,
+          "windSpeed": 3.3,
+          "score": 18.009999999999994
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 88.9,
+          "temperature": 1.9,
+          "windSpeed": 3.6,
+          "score": 20.019999999999996
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 84.9,
+          "temperature": 2.1,
+          "windSpeed": 3.8,
+          "score": 25.069999999999993
         }
       ],
-      "cloudCoverAtBestHour": 75,
-      "temperatureAtBestHour": 1.8,
-      "windSpeedAtBestHour": 7.3,
-      "coldScore": 44,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
+      "cloudCoverAtBestHour": 85,
+      "temperatureAtBestHour": 2.1,
+      "windSpeedAtBestHour": 3.8,
+      "coldScore": 22,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "signaldalen",
       "spotName": "Signaldalen",
-      "score": 14,
+      "score": 19,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T20:00:00Z",
-      "bestWindowEnd": "2026-03-06T22:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 79.8,
-          "temperature": 4.6,
-          "windSpeed": 6.4,
-          "score": 6.140000000000001
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 84.5,
-          "temperature": 4.5,
-          "windSpeed": 5.8,
-          "score": 4.199999999999999
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
+          "time": "2026-03-09T15:00:00Z",
           "cloudCover": 100,
-          "temperature": 4.2,
-          "windSpeed": 4.7,
+          "temperature": 2.9,
+          "windSpeed": 5.8,
           "score": 0
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 88.4,
-          "temperature": 3.8,
-          "windSpeed": 10.6,
-          "score": 4.169999999999995
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
+          "windSpeed": 5.3,
+          "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 87.8,
-          "temperature": 3.7,
-          "windSpeed": 6.9,
-          "score": 5.940000000000001
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.1,
+          "windSpeed": 5.1,
+          "score": 0
         },
         {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 79.9,
-          "temperature": 3.6,
-          "windSpeed": 6.8,
-          "score": 12.819999999999993
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.4,
+          "windSpeed": 3.5,
+          "score": 0
         },
         {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 77.6,
-          "temperature": 3.5,
-          "windSpeed": 9,
-          "score": 15.780000000000001
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 99.9,
+          "temperature": 4,
+          "windSpeed": 3.7,
+          "score": 0.16999999999999638
         },
         {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 93.5,
-          "temperature": 3.5,
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 98.6,
+          "temperature": 4.9,
+          "windSpeed": 5.9,
+          "score": 3.3300000000000036
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97,
+          "temperature": 4.9,
+          "windSpeed": 6.4,
+          "score": 6.25
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 88.1,
+          "temperature": 4.5,
           "windSpeed": 6.6,
-          "score": 6
+          "score": 14.730000000000004
         },
         {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 85.2,
-          "temperature": 3.7,
-          "windSpeed": 7.1,
-          "score": 13.159999999999997
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 86.5,
+          "temperature": 4.3,
+          "windSpeed": 6,
+          "score": 17.65
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 85.3,
-          "temperature": 3.7,
-          "windSpeed": 7,
-          "score": 14.440000000000001
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 91.4,
+          "temperature": 4.2,
+          "windSpeed": 5.4,
+          "score": 16.46999999999999
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 95.8,
-          "temperature": 4.1,
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 92.5,
+          "temperature": 4.2,
           "windSpeed": 6.1,
-          "score": 8.440000000000001
+          "score": 17.5
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 99.7,
-          "temperature": 4.4,
-          "windSpeed": 7.1,
-          "score": 7.059999999999997
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 94,
+          "temperature": 4.2,
+          "windSpeed": 5.6,
+          "score": 18.7
         }
       ],
-      "cloudCoverAtBestHour": 85,
-      "temperatureAtBestHour": 3.7,
-      "windSpeedAtBestHour": 7,
-      "coldScore": 30,
+      "cloudCoverAtBestHour": 94,
+      "temperatureAtBestHour": 4.2,
+      "windSpeedAtBestHour": 5.6,
+      "coldScore": 18,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
+    },
+    {
+      "spotId": "oldervik",
+      "spotName": "Oldervik",
+      "score": 16,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 3.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.3,
+          "windSpeed": 3.3,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.7,
+          "windSpeed": 3.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.3,
+          "windSpeed": 9.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.2,
+          "windSpeed": 8.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.3,
+          "windSpeed": 9.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 96.4,
+          "temperature": 2.9,
+          "windSpeed": 8.3,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 98.8,
+          "temperature": 2.6,
+          "windSpeed": 6.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 84.3,
+          "temperature": 2.2,
+          "windSpeed": 6.1,
+          "score": 11.190000000000001
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 97.1,
+          "temperature": 2,
+          "windSpeed": 6.8,
+          "score": 4.48
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 94.3,
+          "temperature": 2.1,
+          "windSpeed": 7.1,
+          "score": 8.240000000000002
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 86.6,
+          "temperature": 2.3,
+          "windSpeed": 5.3,
+          "score": 15.880000000000003
+        }
+      ],
+      "cloudCoverAtBestHour": 87,
+      "temperatureAtBestHour": 2.3,
+      "windSpeedAtBestHour": 5.3,
+      "coldScore": 29,
       "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "floya",
       "spotName": "Fløya",
-      "score": 13,
-      "trend": "improving",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 88.3,
-          "temperature": 1.6,
-          "windSpeed": 9.6,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 100,
-          "temperature": 1.3,
-          "windSpeed": 9.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 84,
-          "temperature": 1.2,
-          "windSpeed": 9.9,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 89.6,
-          "temperature": 2.3,
-          "windSpeed": 11.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 85.5,
-          "temperature": 2.4,
-          "windSpeed": 11.3,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 2.3,
-          "windSpeed": 11.2,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 86.8,
-          "temperature": 1.4,
-          "windSpeed": 8,
-          "score": 1.3400000000000034
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71.9,
-          "temperature": 2.1,
-          "windSpeed": 9.3,
-          "score": 13.119999999999994
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 73.8,
-          "temperature": 2,
-          "windSpeed": 9.4,
-          "score": 13.14
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 96.9,
-          "temperature": 2.2,
-          "windSpeed": 9,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 2.5,
-          "windSpeed": 9.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 100,
-          "temperature": 2.7,
-          "windSpeed": 9.6,
-          "score": 0
-        }
-      ],
-      "cloudCoverAtBestHour": 74,
-      "temperatureAtBestHour": 2,
-      "windSpeedAtBestHour": 9.4,
-      "coldScore": 55,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
-    },
-    {
-      "spotId": "vardentoppen",
-      "spotName": "Vardentoppen",
-      "score": 7,
+      "score": 12,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 89.5,
-          "temperature": 2.4,
-          "windSpeed": 9.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
+          "time": "2026-03-09T15:00:00Z",
           "cloudCover": 100,
           "temperature": 2,
-          "windSpeed": 8.6,
+          "windSpeed": 3.6,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 83.2,
-          "temperature": 1.6,
-          "windSpeed": 7,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 5.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 89.9,
-          "temperature": 2.8,
-          "windSpeed": 11.9,
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.9,
+          "windSpeed": 9.1,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 84.2,
-          "temperature": 2.8,
-          "windSpeed": 10.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 96.6,
-          "temperature": 2.8,
-          "windSpeed": 11.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 89.1,
-          "temperature": 1.8,
-          "windSpeed": 7.6,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 69.2,
-          "temperature": 2.6,
-          "windSpeed": 9.8,
-          "score": 7.0099999999999945
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 72.7,
-          "temperature": 2.5,
-          "windSpeed": 9.8,
-          "score": 5.909999999999997
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 2.6,
-          "windSpeed": 9.4,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 2.8,
-          "windSpeed": 9.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
+          "time": "2026-03-09T18:00:00Z",
           "cloudCover": 100,
           "temperature": 3,
-          "windSpeed": 9.5,
+          "windSpeed": 8.5,
           "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.5,
+          "windSpeed": 8.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.3,
+          "windSpeed": 7.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 96.5,
+          "temperature": 3.2,
+          "windSpeed": 8.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 96.8,
+          "temperature": 2.7,
+          "windSpeed": 7.9,
+          "score": 0.6400000000000006
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 88.6,
+          "temperature": 2.4,
+          "windSpeed": 8.8,
+          "score": 8.180000000000003
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.5,
+          "temperature": 2.4,
+          "windSpeed": 8.8,
+          "score": 5.599999999999994
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 94.6,
+          "temperature": 2.2,
+          "windSpeed": 8.3,
+          "score": 8.030000000000005
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 91.6,
+          "temperature": 2.5,
+          "windSpeed": 7.4,
+          "score": 12.380000000000003
         }
       ],
-      "cloudCoverAtBestHour": 69,
-      "temperatureAtBestHour": 2.6,
-      "windSpeedAtBestHour": 9.8,
-      "coldScore": 53,
+      "cloudCoverAtBestHour": 92,
+      "temperatureAtBestHour": 2.5,
+      "windSpeedAtBestHour": 7.4,
+      "coldScore": 40,
       "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "prestvannet",
       "spotName": "Prestvannet",
-      "score": 6,
+      "score": 4,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 89.1,
-          "temperature": 2.5,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.3,
+          "windSpeed": 1.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.5,
+          "windSpeed": 1.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.4,
+          "windSpeed": 7.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
           "windSpeed": 9.8,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
+          "time": "2026-03-09T19:00:00Z",
           "cloudCover": 100,
-          "temperature": 2.1,
-          "windSpeed": 8.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 83.5,
-          "temperature": 2,
-          "windSpeed": 8.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 89.6,
-          "temperature": 2.9,
-          "windSpeed": 12,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 85.5,
-          "temperature": 3,
-          "windSpeed": 10.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 2.9,
-          "windSpeed": 11,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 88,
-          "temperature": 1.9,
-          "windSpeed": 7.8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71,
-          "temperature": 2.7,
-          "windSpeed": 9.3,
-          "score": 5.7499999999999964
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 73.2,
-          "temperature": 2.5,
-          "windSpeed": 9.4,
-          "score": 5.559999999999995
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 97.2,
-          "temperature": 2.7,
-          "windSpeed": 8.9,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 2.9,
-          "windSpeed": 9.4,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 100,
-          "temperature": 3.1,
-          "windSpeed": 9.3,
-          "score": 0
-        }
-      ],
-      "cloudCoverAtBestHour": 71,
-      "temperatureAtBestHour": 2.7,
-      "windSpeedAtBestHour": 9.3,
-      "coldScore": 50,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
-    },
-    {
-      "spotId": "telegrafbukta",
-      "spotName": "Telegrafbukta",
-      "score": 5,
-      "trend": "worse",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
-      "hourlyScores": [
-        {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 88.7,
-          "temperature": 3,
-          "windSpeed": 9.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 100,
-          "temperature": 2.6,
-          "windSpeed": 9.2,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 85.2,
-          "temperature": 2.5,
-          "windSpeed": 9.1,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 89.2,
-          "temperature": 3.6,
-          "windSpeed": 11.4,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 88,
-          "temperature": 3.7,
-          "windSpeed": 10.6,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.5,
-          "temperature": 3.6,
-          "windSpeed": 10.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 87.5,
-          "temperature": 2.8,
-          "windSpeed": 7.3,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 73,
-          "temperature": 3.4,
-          "windSpeed": 8.3,
-          "score": 4.349999999999998
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 73.9,
           "temperature": 3.3,
-          "windSpeed": 8.3,
-          "score": 5.069999999999993
+          "windSpeed": 8.8,
+          "score": 0
         },
         {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 97.3,
-          "temperature": 3.5,
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.2,
+          "windSpeed": 7.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97,
+          "temperature": 3.1,
           "windSpeed": 7.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 3.7,
-          "windSpeed": 8.4,
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 95.7,
+          "temperature": 2.5,
+          "windSpeed": 7.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 100,
-          "temperature": 3.9,
-          "windSpeed": 8.2,
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 90.5,
+          "temperature": 2.3,
+          "windSpeed": 8.6,
           "score": 0
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.7,
+          "temperature": 2.3,
+          "windSpeed": 8.7,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 94.6,
+          "temperature": 2.2,
+          "windSpeed": 8.3,
+          "score": 0.03000000000000469
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 91.9,
+          "temperature": 2.4,
+          "windSpeed": 7.2,
+          "score": 4.169999999999995
         }
       ],
-      "cloudCoverAtBestHour": 74,
-      "temperatureAtBestHour": 3.3,
-      "windSpeedAtBestHour": 8.3,
+      "cloudCoverAtBestHour": 92,
+      "temperatureAtBestHour": 2.4,
+      "windSpeedAtBestHour": 7.2,
       "coldScore": 40,
       "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     },
     {
       "spotId": "fjellheisen_storsteinen",
       "spotName": "Fjellheisen / Storsteinen",
-      "score": 5,
+      "score": 4,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T18:00:00Z",
-      "bestWindowEnd": "2026-03-06T20:00:00Z",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 88.8,
-          "temperature": 1.8,
-          "windSpeed": 9.6,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T13:00:00Z",
+          "time": "2026-03-09T15:00:00Z",
           "cloudCover": 100,
-          "temperature": 1.5,
-          "windSpeed": 9.5,
+          "temperature": 2.2,
+          "windSpeed": 3.6,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 83.8,
-          "temperature": 1.4,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.3,
+          "windSpeed": 5.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.1,
+          "windSpeed": 9.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.2,
+          "windSpeed": 8.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.7,
+          "windSpeed": 8.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.5,
+          "windSpeed": 7.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 96.7,
+          "temperature": 3.4,
+          "windSpeed": 8.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 96.3,
+          "temperature": 2.9,
+          "windSpeed": 7.9,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 89.6,
+          "temperature": 2.6,
+          "windSpeed": 8.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.1,
+          "temperature": 2.6,
+          "windSpeed": 8.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 94.6,
+          "temperature": 2.4,
+          "windSpeed": 8.3,
+          "score": 0.03000000000000469
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 91.8,
+          "temperature": 2.7,
+          "windSpeed": 7.4,
+          "score": 4.240000000000002
+        }
+      ],
+      "cloudCoverAtBestHour": 92,
+      "temperatureAtBestHour": 2.7,
+      "windSpeedAtBestHour": 7.4,
+      "coldScore": 39,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
+    },
+    {
+      "spotId": "vardentoppen",
+      "spotName": "Vardentoppen",
+      "score": 4,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.3,
+          "windSpeed": 2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.4,
+          "windSpeed": 2.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 1.6,
+          "windSpeed": 4.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3,
           "windSpeed": 9.9,
           "score": 0
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 89.6,
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.1,
+          "windSpeed": 8.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.2,
+          "windSpeed": 7.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 96.8,
+          "temperature": 3,
+          "windSpeed": 7.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 96,
           "temperature": 2.5,
-          "windSpeed": 11.5,
+          "windSpeed": 7.4,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 85.6,
-          "temperature": 2.6,
-          "windSpeed": 11.3,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 2.5,
-          "windSpeed": 11.2,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 87.5,
-          "temperature": 1.6,
-          "windSpeed": 8,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 71.4,
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 90.4,
           "temperature": 2.3,
-          "windSpeed": 9.3,
-          "score": 5.469999999999995
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 73.6,
-          "temperature": 2.2,
-          "windSpeed": 9.4,
-          "score": 5.280000000000001
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 97.1,
-          "temperature": 2.4,
-          "windSpeed": 9,
+          "windSpeed": 8.4,
           "score": 0
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 99.9,
-          "temperature": 2.7,
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 94.4,
+          "temperature": 2.2,
+          "windSpeed": 8.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 94.5,
+          "temperature": 2.2,
+          "windSpeed": 8,
+          "score": 0.10000000000000142
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 91.5,
+          "temperature": 2.4,
+          "windSpeed": 6.9,
+          "score": 4.449999999999999
+        }
+      ],
+      "cloudCoverAtBestHour": 92,
+      "temperatureAtBestHour": 2.4,
+      "windSpeedAtBestHour": 6.9,
+      "coldScore": 38,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
+    },
+    {
+      "spotId": "telegrafbukta",
+      "spotName": "Telegrafbukta",
+      "score": 3,
+      "trend": "worse",
+      "bestWindowStart": "2026-03-10T00:00:00Z",
+      "bestWindowEnd": "2026-03-10T02:00:00Z",
+      "hourlyScores": [
+        {
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": 2.1,
+          "windSpeed": 1.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": 3.5,
+          "windSpeed": 6.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4,
+          "windSpeed": 10,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.3,
           "windSpeed": 9.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T23:00:00Z",
+          "time": "2026-03-09T19:00:00Z",
           "cloudCover": 100,
-          "temperature": 2.9,
-          "windSpeed": 9.6,
+          "temperature": 4.6,
+          "windSpeed": 9.2,
           "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 100,
+          "temperature": 4.5,
+          "windSpeed": 7.1,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 97.1,
+          "temperature": 4.4,
+          "windSpeed": 7.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 95.3,
+          "temperature": 3.8,
+          "windSpeed": 6.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 91.2,
+          "temperature": 3.4,
+          "windSpeed": 8.2,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 95.3,
+          "temperature": 3.5,
+          "windSpeed": 8.4,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 95.4,
+          "temperature": 3.3,
+          "windSpeed": 7,
+          "score": 0
+        },
+        {
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 93.9,
+          "temperature": 3.6,
+          "windSpeed": 6.3,
+          "score": 2.769999999999996
         }
       ],
-      "cloudCoverAtBestHour": 71,
-      "temperatureAtBestHour": 2.3,
-      "windSpeedAtBestHour": 9.3,
-      "coldScore": 52,
-      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
+      "cloudCoverAtBestHour": 94,
+      "temperatureAtBestHour": 3.6,
+      "windSpeedAtBestHour": 6.3,
+      "coldScore": 26,
+      "dressAdvice": "Cool: light layers plus a wind-resistant outer jacket."
     },
     {
       "spotId": "kilpisjarvi",
       "spotName": "Kilpisjärvi",
-      "score": 4,
+      "score": 0,
       "trend": "worse",
-      "bestWindowStart": "2026-03-06T16:00:00Z",
-      "bestWindowEnd": "2026-03-06T18:00:00Z",
+      "bestWindowStart": "2026-03-09T15:00:00Z",
+      "bestWindowEnd": "2026-03-09T17:00:00Z",
       "hourlyScores": [
         {
-          "time": "2026-03-06T12:00:00Z",
-          "cloudCover": 68.5,
-          "temperature": 1.1,
-          "windSpeed": 11.4,
+          "time": "2026-03-09T15:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1.6,
+          "windSpeed": 4.7,
           "score": 0
         },
         {
-          "time": "2026-03-06T13:00:00Z",
-          "cloudCover": 85,
-          "temperature": 0.6,
-          "windSpeed": 12.3,
+          "time": "2026-03-09T16:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1.5,
+          "windSpeed": 5.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T14:00:00Z",
-          "cloudCover": 71.6,
+          "time": "2026-03-09T17:00:00Z",
+          "cloudCover": 100,
+          "temperature": -1.3,
+          "windSpeed": 4.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T18:00:00Z",
+          "cloudCover": 100,
+          "temperature": -0.9,
+          "windSpeed": 4.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T19:00:00Z",
+          "cloudCover": 100,
+          "temperature": 0.2,
+          "windSpeed": 2.8,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T20:00:00Z",
+          "cloudCover": 99.5,
+          "temperature": 0.3,
+          "windSpeed": 1.5,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T21:00:00Z",
+          "cloudCover": 98.8,
           "temperature": 0.4,
-          "windSpeed": 10.6,
+          "windSpeed": 6.5,
           "score": 0
         },
         {
-          "time": "2026-03-06T15:00:00Z",
-          "cloudCover": 69.3,
+          "time": "2026-03-09T22:00:00Z",
+          "cloudCover": 86.4,
+          "temperature": 0.3,
+          "windSpeed": 5.6,
+          "score": 0
+        },
+        {
+          "time": "2026-03-09T23:00:00Z",
+          "cloudCover": 83.9,
           "temperature": -0.2,
-          "windSpeed": 11.2,
+          "windSpeed": 4.8,
           "score": 0
         },
         {
-          "time": "2026-03-06T16:00:00Z",
-          "cloudCover": 77.9,
-          "temperature": -0.5,
-          "windSpeed": 10.5,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T17:00:00Z",
-          "cloudCover": 62.5,
-          "temperature": -0.7,
-          "windSpeed": 10.2,
-          "score": 2.6000000000000014
-        },
-        {
-          "time": "2026-03-06T18:00:00Z",
-          "cloudCover": 62.5,
-          "temperature": -0.7,
-          "windSpeed": 11.6,
-          "score": 3.950000000000003
-        },
-        {
-          "time": "2026-03-06T19:00:00Z",
-          "cloudCover": 74.4,
-          "temperature": -0.7,
-          "windSpeed": 12.6,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T20:00:00Z",
-          "cloudCover": 73.3,
-          "temperature": -0.4,
-          "windSpeed": 12.7,
-          "score": 0
-        },
-        {
-          "time": "2026-03-06T21:00:00Z",
-          "cloudCover": 75,
+          "time": "2026-03-10T00:00:00Z",
+          "cloudCover": 98.2,
           "temperature": -0.6,
-          "windSpeed": 11.8,
+          "windSpeed": 3.2,
           "score": 0
         },
         {
-          "time": "2026-03-06T22:00:00Z",
-          "cloudCover": 81.6,
-          "temperature": -0.4,
-          "windSpeed": 8.9,
+          "time": "2026-03-10T01:00:00Z",
+          "cloudCover": 97.7,
+          "temperature": -0.9,
+          "windSpeed": 3.8,
           "score": 0
         },
         {
-          "time": "2026-03-06T23:00:00Z",
-          "cloudCover": 95.9,
-          "temperature": -0.1,
-          "windSpeed": 7.7,
+          "time": "2026-03-10T02:00:00Z",
+          "cloudCover": 98.3,
+          "temperature": -0.9,
+          "windSpeed": 5,
           "score": 0
         }
       ],
-      "cloudCoverAtBestHour": 63,
-      "temperatureAtBestHour": -0.7,
-      "windSpeedAtBestHour": 11.6,
-      "coldScore": 85,
-      "dressAdvice": "Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots."
+      "cloudCoverAtBestHour": 100,
+      "temperatureAtBestHour": -1.6,
+      "windSpeedAtBestHour": 4.7,
+      "coldScore": 51,
+      "dressAdvice": "Cold: layered top, insulated jacket, gloves, and warm footwear."
     }
   ],
   "forecastsBySpotId": {
-    "kattfjordvatnet": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 97.8,
-        "temperature": 4.1,
-        "windSpeed": 12
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 98.3,
-        "temperature": 2.7,
-        "windSpeed": 8.2
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 86.8,
-        "temperature": 4.7,
-        "windSpeed": 12.8
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 97.7,
-        "temperature": 4.8,
-        "windSpeed": 12
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 86.9,
-        "temperature": 4.6,
-        "windSpeed": 11.6
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 98.6,
-        "temperature": 4.5,
-        "windSpeed": 12.1
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 90,
-        "temperature": 4.3,
-        "windSpeed": 11
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 73.3,
-        "temperature": 4.4,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 70.8,
-        "temperature": 4.4,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 98.1,
-        "temperature": 4.4,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 4.6,
-        "windSpeed": 10.7
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 4.7,
-        "windSpeed": 10.7
-      }
-    ],
     "ersfjordbotn": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 95.1,
-        "temperature": 2.7,
-        "windSpeed": 11.3
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.5,
+        "windSpeed": 4.7
       },
       {
-        "time": "2026-03-06T13:00:00Z",
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.8,
+        "windSpeed": 6
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
         "cloudCover": 100,
         "temperature": 2,
-        "windSpeed": 8.7
+        "windSpeed": 7.4
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 85.3,
-        "temperature": 3.1,
-        "windSpeed": 12
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 96.3,
-        "temperature": 3.2,
-        "windSpeed": 11.2
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 88,
-        "temperature": 3.1,
-        "windSpeed": 11
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 3,
-        "windSpeed": 11.2
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 90.1,
-        "temperature": 2.9,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 71.9,
-        "temperature": 2.9,
-        "windSpeed": 10.2
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 70.7,
-        "temperature": 3,
-        "windSpeed": 10
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 98.3,
-        "temperature": 3.1,
-        "windSpeed": 10.2
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
+        "time": "2026-03-09T18:00:00Z",
         "cloudCover": 100,
-        "temperature": 3.2,
-        "windSpeed": 10.3
+        "temperature": 2.3,
+        "windSpeed": 8
       },
       {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T19:00:00Z",
         "cloudCover": 100,
-        "temperature": 3.5,
-        "windSpeed": 10.3
-      }
-    ],
-    "sommaroy": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 96,
-        "temperature": 4.3,
-        "windSpeed": 13.6
+        "temperature": 3,
+        "windSpeed": 6.3
       },
       {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 95.8,
-        "temperature": 3.4,
-        "windSpeed": 10.5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 85.1,
-        "temperature": 4.9,
-        "windSpeed": 14.6
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 95.8,
-        "temperature": 5,
-        "windSpeed": 14.8
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 87.8,
-        "temperature": 4.9,
-        "windSpeed": 14.4
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.6,
-        "temperature": 4.8,
-        "windSpeed": 14.5
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 85,
-        "temperature": 4.6,
-        "windSpeed": 13.7
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 71,
-        "temperature": 4.6,
-        "windSpeed": 13.4
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 74.5,
-        "temperature": 4.6,
-        "windSpeed": 13.3
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 98.7,
-        "temperature": 4.7,
-        "windSpeed": 13.3
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.8,
-        "temperature": 4.8,
-        "windSpeed": 13.3
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T20:00:00Z",
         "cloudCover": 99.9,
-        "temperature": 4.8,
-        "windSpeed": 13.1
-      }
-    ],
-    "grotfjord": [
+        "temperature": 3.6,
+        "windSpeed": 8.1
+      },
       {
-        "time": "2026-03-06T12:00:00Z",
+        "time": "2026-03-09T21:00:00Z",
         "cloudCover": 97.2,
-        "temperature": 0.2,
-        "windSpeed": 16.8
+        "temperature": 3.1,
+        "windSpeed": 6.4
       },
       {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 98.6,
-        "temperature": -1.1,
-        "windSpeed": 14.5
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 90.5,
+        "temperature": 2.6,
+        "windSpeed": 5.6
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 87.3,
-        "temperature": 0.5,
-        "windSpeed": 16.7
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 97.1,
+        "temperature": 2.6,
+        "windSpeed": 7.3
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 99,
-        "temperature": 0.3,
-        "windSpeed": 15.1
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 82.6,
-        "temperature": 0.1,
-        "windSpeed": 14.8
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 96.6,
-        "temperature": -0.5,
-        "windSpeed": 12.5
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 89,
-        "temperature": -0.1,
-        "windSpeed": 13.8
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 61.6,
-        "temperature": -0.1,
-        "windSpeed": 13.5
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 51.5,
-        "temperature": -0.1,
-        "windSpeed": 13.6
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
+        "time": "2026-03-10T00:00:00Z",
         "cloudCover": 95.5,
-        "temperature": -0.1,
-        "windSpeed": 13.8
+        "temperature": 2.5,
+        "windSpeed": 7.4
       },
       {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.5,
-        "temperature": 0.1,
-        "windSpeed": 14
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 88.8,
+        "temperature": 3.1,
+        "windSpeed": 8.4
       },
       {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.7,
-        "temperature": 0.4,
-        "windSpeed": 14
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 92.9,
+        "temperature": 3.1,
+        "windSpeed": 8.1
       }
     ],
     "skulsfjord": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 97.2,
-        "temperature": 4.5,
-        "windSpeed": 12
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 99.2,
-        "temperature": 3,
-        "windSpeed": 9.5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 87.4,
-        "temperature": 4.9,
-        "windSpeed": 11.4
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 98.6,
-        "temperature": 5,
-        "windSpeed": 10.7
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 83,
-        "temperature": 4.9,
-        "windSpeed": 10.3
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 96.4,
-        "temperature": 4.2,
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.8,
         "windSpeed": 7.1
       },
       {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 90,
-        "temperature": 4.6,
-        "windSpeed": 9.9
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 62.7,
-        "temperature": 4.7,
-        "windSpeed": 9.5
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 55.9,
-        "temperature": 4.8,
-        "windSpeed": 9.6
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 96.3,
-        "temperature": 4.7,
-        "windSpeed": 9.5
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.7,
-        "temperature": 4.9,
-        "windSpeed": 9.6
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.8,
-        "temperature": 5,
-        "windSpeed": 9.4
-      }
-    ],
-    "grunnfjord": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 96.9,
-        "temperature": 4.4,
-        "windSpeed": 16.4
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 98.8,
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
         "temperature": 3.1,
-        "windSpeed": 14.3
+        "windSpeed": 8.3
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 85.8,
-        "temperature": 4.9,
-        "windSpeed": 15.5
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.5,
+        "windSpeed": 9.6
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 99.1,
-        "temperature": 4.7,
-        "windSpeed": 15.6
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.2,
+        "windSpeed": 12.1
       },
       {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 82,
-        "temperature": 4.6,
-        "windSpeed": 15
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 95.3,
-        "temperature": 3.7,
-        "windSpeed": 16.2
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 88.2,
-        "temperature": 4.4,
-        "windSpeed": 14.3
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 60.3,
-        "temperature": 4.5,
-        "windSpeed": 14.1
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 47.7,
-        "temperature": 4.4,
-        "windSpeed": 14.2
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 94.9,
-        "temperature": 4.5,
-        "windSpeed": 13.9
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.3,
-        "temperature": 4.6,
-        "windSpeed": 14.1
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.7,
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
         "temperature": 4.8,
-        "windSpeed": 13.8
-      }
-    ],
-    "tromvik": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 96.2,
-        "temperature": 4.4,
-        "windSpeed": 17.3
+        "windSpeed": 7.5
       },
       {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 96.7,
-        "temperature": 3.3,
-        "windSpeed": 14.9
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.9,
+        "temperature": 5.1,
+        "windSpeed": 8.8
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 84.9,
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 94.3,
         "temperature": 5,
-        "windSpeed": 16.2
+        "windSpeed": 8.9
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 98.9,
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 92,
+        "temperature": 4.3,
+        "windSpeed": 7.5
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 98,
+        "temperature": 4.3,
+        "windSpeed": 7
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 94,
+        "temperature": 4.5,
+        "windSpeed": 8.6
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 77.5,
         "temperature": 4.7,
-        "windSpeed": 16.4
+        "windSpeed": 8.4
       },
       {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 82.6,
-        "temperature": 4.7,
-        "windSpeed": 15.9
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 95.6,
-        "temperature": 3.4,
-        "windSpeed": 18.1
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
+        "time": "2026-03-10T02:00:00Z",
         "cloudCover": 87.6,
-        "temperature": 4.5,
-        "windSpeed": 15
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 60.3,
-        "temperature": 4.5,
-        "windSpeed": 15
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 47,
-        "temperature": 4.5,
-        "windSpeed": 15
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 94.4,
-        "temperature": 4.6,
-        "windSpeed": 14.7
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99,
         "temperature": 4.7,
-        "windSpeed": 14.9
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.5,
-        "temperature": 4.9,
-        "windSpeed": 14.6
+        "windSpeed": 7.5
       }
     ],
     "sandvika_beach": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 96.8,
-        "temperature": 4.2,
-        "windSpeed": 13.5
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 94.8,
-        "temperature": 3.1,
-        "windSpeed": 10.5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 85,
-        "temperature": 4.9,
-        "windSpeed": 14.9
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 97.2,
-        "temperature": 4.9,
-        "windSpeed": 14.5
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 87.3,
-        "temperature": 4.9,
-        "windSpeed": 14.1
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.9,
-        "temperature": 4.7,
-        "windSpeed": 14.1
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 87.7,
-        "temperature": 4.6,
-        "windSpeed": 13.5
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 70.5,
-        "temperature": 4.6,
-        "windSpeed": 13.2
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 71.8,
-        "temperature": 4.5,
-        "windSpeed": 13
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 98.2,
-        "temperature": 4.6,
-        "windSpeed": 13
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.8,
-        "temperature": 4.7,
-        "windSpeed": 13.1
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.8,
-        "temperature": 4.8,
-        "windSpeed": 13
-      }
-    ],
-    "fjellheisen_storsteinen": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 88.8,
-        "temperature": 1.8,
-        "windSpeed": 9.6
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
+        "time": "2026-03-09T15:00:00Z",
         "cloudCover": 100,
-        "temperature": 1.5,
-        "windSpeed": 9.5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 83.8,
-        "temperature": 1.4,
-        "windSpeed": 9.9
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 89.6,
-        "temperature": 2.5,
-        "windSpeed": 11.5
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 85.6,
-        "temperature": 2.6,
-        "windSpeed": 11.3
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 2.5,
-        "windSpeed": 11.2
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 87.5,
-        "temperature": 1.6,
-        "windSpeed": 8
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 71.4,
-        "temperature": 2.3,
-        "windSpeed": 9.3
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 73.6,
-        "temperature": 2.2,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 2.4,
-        "windSpeed": 9
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 2.7,
-        "windSpeed": 9.7
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 100,
-        "temperature": 2.9,
-        "windSpeed": 9.6
-      }
-    ],
-    "telegrafbukta": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 88.7,
-        "temperature": 3,
-        "windSpeed": 9.7
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 100,
-        "temperature": 2.6,
-        "windSpeed": 9.2
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 85.2,
-        "temperature": 2.5,
-        "windSpeed": 9.1
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 89.2,
-        "temperature": 3.6,
-        "windSpeed": 11.4
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 88,
-        "temperature": 3.7,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.5,
-        "temperature": 3.6,
-        "windSpeed": 10.5
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 87.5,
         "temperature": 2.8,
-        "windSpeed": 7.3
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 73,
-        "temperature": 3.4,
-        "windSpeed": 8.3
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 73.9,
-        "temperature": 3.3,
-        "windSpeed": 8.3
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 97.3,
-        "temperature": 3.5,
-        "windSpeed": 7.7
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 3.7,
-        "windSpeed": 8.4
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 100,
-        "temperature": 3.9,
         "windSpeed": 8.2
-      }
-    ],
-    "floya": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 88.3,
-        "temperature": 1.6,
-        "windSpeed": 9.6
       },
       {
-        "time": "2026-03-06T13:00:00Z",
+        "time": "2026-03-09T16:00:00Z",
         "cloudCover": 100,
-        "temperature": 1.3,
-        "windSpeed": 9.5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 84,
-        "temperature": 1.2,
-        "windSpeed": 9.9
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 89.6,
-        "temperature": 2.3,
-        "windSpeed": 11.5
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 85.5,
-        "temperature": 2.4,
-        "windSpeed": 11.3
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 2.3,
-        "windSpeed": 11.2
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 86.8,
-        "temperature": 1.4,
-        "windSpeed": 8
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 71.9,
-        "temperature": 2.1,
-        "windSpeed": 9.3
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 73.8,
-        "temperature": 2,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 96.9,
-        "temperature": 2.2,
-        "windSpeed": 9
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 2.5,
-        "windSpeed": 9.7
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 100,
-        "temperature": 2.7,
-        "windSpeed": 9.6
-      }
-    ],
-    "oldervik": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 81.2,
-        "temperature": 1.7,
-        "windSpeed": 9.2
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 98.8,
-        "temperature": 1.6,
-        "windSpeed": 7.7
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 94.2,
-        "temperature": 1.3,
+        "temperature": 3,
         "windSpeed": 9.8
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 90.7,
-        "temperature": 1.9,
-        "windSpeed": 10
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
+        "windSpeed": 12.9
       },
       {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 71.8,
-        "temperature": 2.1,
-        "windSpeed": 9.1
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4,
+        "windSpeed": 9.9
       },
       {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 96.5,
-        "temperature": 1.9,
-        "windSpeed": 8.8
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 5.1,
+        "windSpeed": 10.6
       },
       {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 90,
-        "temperature": 1.1,
-        "windSpeed": 7.4
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.7,
+        "temperature": 5.4,
+        "windSpeed": 11.4
       },
       {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 72.8,
-        "temperature": 1.8,
-        "windSpeed": 8
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 90.2,
+        "temperature": 5.2,
+        "windSpeed": 10.6
       },
       {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 76.9,
-        "temperature": 1.6,
-        "windSpeed": 7.4
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 75.1,
-        "temperature": 1.8,
-        "windSpeed": 7.3
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 94.6,
-        "temperature": 2.1,
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 85.5,
+        "temperature": 4.1,
         "windSpeed": 7.8
       },
       {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 99.1,
+        "temperature": 4.1,
+        "windSpeed": 8.4
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95,
+        "temperature": 4.6,
+        "windSpeed": 11.9
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 80.1,
+        "temperature": 4.7,
+        "windSpeed": 11.1
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 91.8,
+        "temperature": 4.6,
+        "windSpeed": 10.3
+      }
+    ],
+    "grotfjord": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": -1.3,
+        "windSpeed": 6.5
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": -1,
+        "windSpeed": 6.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": -0.5,
+        "windSpeed": 9.2
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 0,
+        "windSpeed": 12.7
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 0.7,
+        "windSpeed": 12.3
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.8,
+        "temperature": 1.1,
+        "windSpeed": 13.5
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 93.3,
+        "temperature": 0.9,
+        "windSpeed": 11.8
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 92,
+        "temperature": 0.6,
+        "windSpeed": 11.8
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
         "cloudCover": 98.4,
-        "temperature": 2.4,
-        "windSpeed": 7.9
+        "temperature": 0.5,
+        "windSpeed": 13.3
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 94.1,
+        "temperature": 0.3,
+        "windSpeed": 12.5
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 72.2,
+        "temperature": 0.5,
+        "windSpeed": 12.1
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 85.8,
+        "temperature": 0.5,
+        "windSpeed": 11.2
+      }
+    ],
+    "kattfjordvatnet": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.7,
+        "windSpeed": 7.4
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.9,
+        "windSpeed": 8.6
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3,
+        "windSpeed": 10.6
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.5,
+        "windSpeed": 9.3
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.5,
+        "windSpeed": 8.1
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.9,
+        "temperature": 4.8,
+        "windSpeed": 8.3
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 95.2,
+        "temperature": 4.7,
+        "windSpeed": 7.7
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 88.7,
+        "temperature": 3.7,
+        "windSpeed": 6.5
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 98.3,
+        "temperature": 3.7,
+        "windSpeed": 7.2
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.7,
+        "temperature": 4,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 84.4,
+        "temperature": 4.4,
+        "windSpeed": 8.8
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 92.2,
+        "temperature": 4.4,
+        "windSpeed": 8.1
       }
     ],
     "prestvannet": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 89.1,
-        "temperature": 2.5,
-        "windSpeed": 9.8
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
+        "time": "2026-03-09T15:00:00Z",
         "cloudCover": 100,
-        "temperature": 2.1,
-        "windSpeed": 8.7
+        "temperature": 0.3,
+        "windSpeed": 1.9
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 83.5,
-        "temperature": 2,
-        "windSpeed": 8.7
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 89.6,
-        "temperature": 2.9,
-        "windSpeed": 12
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 85.5,
-        "temperature": 3,
-        "windSpeed": 10.8
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 2.9,
-        "windSpeed": 11
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 88,
-        "temperature": 1.9,
-        "windSpeed": 7.8
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 71,
-        "temperature": 2.7,
-        "windSpeed": 9.3
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 73.2,
-        "temperature": 2.5,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 97.2,
-        "temperature": 2.7,
-        "windSpeed": 8.9
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 2.9,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T16:00:00Z",
         "cloudCover": 100,
-        "temperature": 3.1,
-        "windSpeed": 9.3
-      }
-    ],
-    "lyngseidet": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 92.1,
-        "temperature": 3.4,
-        "windSpeed": 6.8
+        "temperature": 0.5,
+        "windSpeed": 1.9
       },
       {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 80.2,
-        "temperature": 3.6,
-        "windSpeed": 8.9
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
+        "time": "2026-03-09T17:00:00Z",
         "cloudCover": 100,
-        "temperature": 2.9,
-        "windSpeed": 7.9
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 69.3,
-        "temperature": 2.9,
-        "windSpeed": 10.1
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 78.9,
-        "temperature": 3.1,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 86.8,
-        "temperature": 3,
-        "windSpeed": 8.1
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 99.8,
-        "temperature": 2.6,
-        "windSpeed": 7.9
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 77.5,
-        "temperature": 2.6,
-        "windSpeed": 7.1
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 76.9,
-        "temperature": 2.8,
-        "windSpeed": 7.2
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 77.2,
-        "temperature": 3.1,
-        "windSpeed": 7.5
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 86.8,
-        "temperature": 3.2,
-        "windSpeed": 6.8
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 97.5,
-        "temperature": 3.6,
-        "windSpeed": 7.5
-      }
-    ],
-    "vardentoppen": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 89.5,
         "temperature": 2.4,
-        "windSpeed": 9.7
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 100,
-        "temperature": 2,
-        "windSpeed": 8.6
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 83.2,
-        "temperature": 1.6,
-        "windSpeed": 7
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 89.9,
-        "temperature": 2.8,
-        "windSpeed": 11.9
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 84.2,
-        "temperature": 2.8,
-        "windSpeed": 10.8
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 96.6,
-        "temperature": 2.8,
-        "windSpeed": 11.5
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 89.1,
-        "temperature": 1.8,
         "windSpeed": 7.6
       },
       {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 69.2,
-        "temperature": 2.6,
-        "windSpeed": 9.8
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 72.7,
-        "temperature": 2.5,
-        "windSpeed": 9.8
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 97.1,
-        "temperature": 2.6,
-        "windSpeed": 9.4
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 99.9,
-        "temperature": 2.8,
-        "windSpeed": 9.7
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T18:00:00Z",
         "cloudCover": 100,
         "temperature": 3,
-        "windSpeed": 9.5
-      }
-    ],
-    "kilpisjarvi": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 68.5,
-        "temperature": 1.1,
-        "windSpeed": 11.4
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 85,
-        "temperature": 0.6,
-        "windSpeed": 12.3
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 71.6,
-        "temperature": 0.4,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 69.3,
-        "temperature": -0.2,
-        "windSpeed": 11.2
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 77.9,
-        "temperature": -0.5,
-        "windSpeed": 10.5
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 62.5,
-        "temperature": -0.7,
-        "windSpeed": 10.2
-      },
-      {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 62.5,
-        "temperature": -0.7,
-        "windSpeed": 11.6
-      },
-      {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 74.4,
-        "temperature": -0.7,
-        "windSpeed": 12.6
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 73.3,
-        "temperature": -0.4,
-        "windSpeed": 12.7
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 75,
-        "temperature": -0.6,
-        "windSpeed": 11.8
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 81.6,
-        "temperature": -0.4,
-        "windSpeed": 8.9
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 95.9,
-        "temperature": -0.1,
-        "windSpeed": 7.7
-      }
-    ],
-    "skibotn": [
-      {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 80.5,
-        "temperature": 3.7,
-        "windSpeed": 7
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 75.8,
-        "temperature": 3.6,
-        "windSpeed": 5
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 100,
-        "temperature": 2.7,
-        "windSpeed": 5.2
-      },
-      {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 78.6,
-        "temperature": 2.7,
         "windSpeed": 9.8
       },
       {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 84.2,
-        "temperature": 2.5,
-        "windSpeed": 4.1
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
+        "windSpeed": 8.8
       },
       {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 86.8,
-        "temperature": 2.5,
-        "windSpeed": 6
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.2,
+        "windSpeed": 7.4
       },
       {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 93,
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 97,
+        "temperature": 3.1,
+        "windSpeed": 7.7
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 95.7,
+        "temperature": 2.5,
+        "windSpeed": 7.5
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 90.5,
+        "temperature": 2.3,
+        "windSpeed": 8.6
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 94.7,
+        "temperature": 2.3,
+        "windSpeed": 8.7
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 94.6,
         "temperature": 2.2,
-        "windSpeed": 5.8
+        "windSpeed": 8.3
       },
       {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 90,
-        "temperature": 2.7,
-        "windSpeed": 6.9
-      },
-      {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 81.9,
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 91.9,
         "temperature": 2.4,
-        "windSpeed": 4.8
-      },
-      {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 83.1,
-        "temperature": 2.4,
-        "windSpeed": 4.7
-      },
-      {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 94,
-        "temperature": 1.9,
-        "windSpeed": 2
-      },
-      {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.7,
-        "temperature": 2.1,
-        "windSpeed": 2.9
+        "windSpeed": 7.2
       }
     ],
-    "signaldalen": [
+    "telegrafbukta": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 79.8,
-        "temperature": 4.6,
-        "windSpeed": 6.4
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
-        "cloudCover": 84.5,
-        "temperature": 4.5,
-        "windSpeed": 5.8
-      },
-      {
-        "time": "2026-03-06T14:00:00Z",
+        "time": "2026-03-09T15:00:00Z",
         "cloudCover": 100,
-        "temperature": 4.2,
-        "windSpeed": 4.7
+        "temperature": 2.1,
+        "windSpeed": 1.8
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 88.4,
-        "temperature": 3.8,
-        "windSpeed": 10.6
-      },
-      {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 87.8,
-        "temperature": 3.7,
-        "windSpeed": 6.9
-      },
-      {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 79.9,
-        "temperature": 3.6,
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.5,
         "windSpeed": 6.8
       },
       {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 77.6,
-        "temperature": 3.5,
-        "windSpeed": 9
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4,
+        "windSpeed": 10
       },
       {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 93.5,
-        "temperature": 3.5,
-        "windSpeed": 6.6
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.3,
+        "windSpeed": 9.7
       },
       {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 85.2,
-        "temperature": 3.7,
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.6,
+        "windSpeed": 9.2
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.5,
         "windSpeed": 7.1
       },
       {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 85.3,
-        "temperature": 3.7,
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 97.1,
+        "temperature": 4.4,
+        "windSpeed": 7.2
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 95.3,
+        "temperature": 3.8,
+        "windSpeed": 6.8
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 91.2,
+        "temperature": 3.4,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.3,
+        "temperature": 3.5,
+        "windSpeed": 8.4
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 95.4,
+        "temperature": 3.3,
         "windSpeed": 7
       },
       {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 95.8,
-        "temperature": 4.1,
-        "windSpeed": 6.1
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 93.9,
+        "temperature": 3.6,
+        "windSpeed": 6.3
+      }
+    ],
+    "fjellheisen_storsteinen": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.2,
+        "windSpeed": 3.6
       },
       {
-        "time": "2026-03-06T23:00:00Z",
-        "cloudCover": 99.7,
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.3,
+        "windSpeed": 5.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.1,
+        "windSpeed": 9.1
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.2,
+        "windSpeed": 8.5
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.7,
+        "windSpeed": 8.5
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.5,
+        "windSpeed": 7.9
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 96.7,
+        "temperature": 3.4,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 96.3,
+        "temperature": 2.9,
+        "windSpeed": 7.9
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 89.6,
+        "temperature": 2.6,
+        "windSpeed": 8.8
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.1,
+        "temperature": 2.6,
+        "windSpeed": 8.8
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 94.6,
+        "temperature": 2.4,
+        "windSpeed": 8.3
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 91.8,
+        "temperature": 2.7,
+        "windSpeed": 7.4
+      }
+    ],
+    "grunnfjord": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.2,
+        "windSpeed": 4.7
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.7,
+        "windSpeed": 7.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.1,
+        "windSpeed": 10.2
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4,
+        "windSpeed": 12.1
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.6,
+        "windSpeed": 12.9
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.8,
+        "temperature": 5,
+        "windSpeed": 13.6
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 93.4,
+        "temperature": 4.8,
+        "windSpeed": 12.5
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 92.2,
+        "temperature": 4.5,
+        "windSpeed": 12.7
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 98.4,
+        "temperature": 4.5,
+        "windSpeed": 13.4
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 94.3,
         "temperature": 4.4,
-        "windSpeed": 7.1
+        "windSpeed": 12.9
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 69.5,
+        "temperature": 4.6,
+        "windSpeed": 12.1
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 84.5,
+        "temperature": 4.6,
+        "windSpeed": 11.2
+      }
+    ],
+    "sommaroy": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.7,
+        "windSpeed": 8.7
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3,
+        "windSpeed": 10.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.2,
+        "windSpeed": 12.5
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4,
+        "windSpeed": 9.4
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 5.1,
+        "windSpeed": 10.5
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.7,
+        "temperature": 5.4,
+        "windSpeed": 11.2
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 90.9,
+        "temperature": 5.2,
+        "windSpeed": 10.5
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 84.5,
+        "temperature": 4.2,
+        "windSpeed": 7.6
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 99,
+        "temperature": 4.2,
+        "windSpeed": 8.6
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.4,
+        "temperature": 4.6,
+        "windSpeed": 11.7
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 82.1,
+        "temperature": 4.6,
+        "windSpeed": 11
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 93,
+        "temperature": 4.6,
+        "windSpeed": 10.3
+      }
+    ],
+    "floya": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2,
+        "windSpeed": 3.6
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.1,
+        "windSpeed": 5.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.9,
+        "windSpeed": 9.1
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3,
+        "windSpeed": 8.5
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.5,
+        "windSpeed": 8.5
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
+        "windSpeed": 7.9
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 96.5,
+        "temperature": 3.2,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 96.8,
+        "temperature": 2.7,
+        "windSpeed": 7.9
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 88.6,
+        "temperature": 2.4,
+        "windSpeed": 8.8
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.5,
+        "temperature": 2.4,
+        "windSpeed": 8.8
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 94.6,
+        "temperature": 2.2,
+        "windSpeed": 8.3
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 91.6,
+        "temperature": 2.5,
+        "windSpeed": 7.4
+      }
+    ],
+    "tromvik": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.1,
+        "windSpeed": 5.1
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.8,
+        "windSpeed": 7.5
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
+        "windSpeed": 10.9
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.1,
+        "windSpeed": 12.5
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.9,
+        "windSpeed": 14.5
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.7,
+        "temperature": 5.1,
+        "windSpeed": 14.4
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 90.7,
+        "temperature": 5,
+        "windSpeed": 13
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 91.7,
+        "temperature": 4.8,
+        "windSpeed": 13.7
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 99.2,
+        "temperature": 4.7,
+        "windSpeed": 13.9
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 95.1,
+        "temperature": 4.6,
+        "windSpeed": 13.8
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 64.3,
+        "temperature": 4.8,
+        "windSpeed": 12.9
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 83.6,
+        "temperature": 4.8,
+        "windSpeed": 12
       }
     ],
     "breivikeidet_valley": [
       {
-        "time": "2026-03-06T12:00:00Z",
-        "cloudCover": 80.2,
-        "temperature": 2.1,
-        "windSpeed": 10.3
-      },
-      {
-        "time": "2026-03-06T13:00:00Z",
+        "time": "2026-03-09T15:00:00Z",
         "cloudCover": 100,
-        "temperature": 2.1,
-        "windSpeed": 8.5
+        "temperature": 2,
+        "windSpeed": 1.7
       },
       {
-        "time": "2026-03-06T14:00:00Z",
-        "cloudCover": 98.7,
-        "temperature": 1.3,
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.4,
+        "windSpeed": 2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.8,
+        "windSpeed": 2.4
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.7,
+        "windSpeed": 6.8
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.4,
+        "windSpeed": 6.1
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.8,
+        "temperature": 3.3,
+        "windSpeed": 6.8
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 97,
+        "temperature": 2.8,
+        "windSpeed": 8.3
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 97.3,
+        "temperature": 2.6,
+        "windSpeed": 6.3
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 85.5,
+        "temperature": 2.1,
         "windSpeed": 8
       },
       {
-        "time": "2026-03-06T15:00:00Z",
-        "cloudCover": 91.3,
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 96.2,
+        "temperature": 2,
+        "windSpeed": 6.3
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 93.7,
+        "temperature": 1.7,
+        "windSpeed": 6.5
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 90.4,
         "temperature": 1.9,
+        "windSpeed": 6.1
+      }
+    ],
+    "oldervik": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.1,
+        "windSpeed": 3.5
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.3,
+        "windSpeed": 3.3
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.7,
+        "windSpeed": 3.8
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
         "windSpeed": 9.5
       },
       {
-        "time": "2026-03-06T16:00:00Z",
-        "cloudCover": 84.1,
-        "temperature": 2.3,
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.2,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.3,
+        "windSpeed": 9.2
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 96.4,
+        "temperature": 2.9,
         "windSpeed": 8.3
       },
       {
-        "time": "2026-03-06T17:00:00Z",
-        "cloudCover": 97.3,
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 98.8,
+        "temperature": 2.6,
+        "windSpeed": 6.1
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 84.3,
         "temperature": 2.2,
-        "windSpeed": 8.3
+        "windSpeed": 6.1
       },
       {
-        "time": "2026-03-06T18:00:00Z",
-        "cloudCover": 93.1,
-        "temperature": 1.1,
-        "windSpeed": 7.9
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 97.1,
+        "temperature": 2,
+        "windSpeed": 6.8
       },
       {
-        "time": "2026-03-06T19:00:00Z",
-        "cloudCover": 81.9,
-        "temperature": 1.9,
-        "windSpeed": 7.7
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 94.3,
+        "temperature": 2.1,
+        "windSpeed": 7.1
       },
       {
-        "time": "2026-03-06T20:00:00Z",
-        "cloudCover": 87.8,
-        "temperature": 1.8,
-        "windSpeed": 7.3
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 86.6,
+        "temperature": 2.3,
+        "windSpeed": 5.3
+      }
+    ],
+    "vardentoppen": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 0.3,
+        "windSpeed": 2
       },
       {
-        "time": "2026-03-06T21:00:00Z",
-        "cloudCover": 89.3,
-        "temperature": 1.9,
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 0.4,
+        "windSpeed": 2.8
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.6,
+        "windSpeed": 4.5
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3,
+        "windSpeed": 9.9
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.1,
+        "windSpeed": 8.6
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.2,
         "windSpeed": 7.2
       },
       {
-        "time": "2026-03-06T22:00:00Z",
-        "cloudCover": 95.9,
-        "temperature": 2.3,
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 96.8,
+        "temperature": 3,
+        "windSpeed": 7.5
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 96,
+        "temperature": 2.5,
         "windSpeed": 7.4
       },
       {
-        "time": "2026-03-06T23:00:00Z",
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 90.4,
+        "temperature": 2.3,
+        "windSpeed": 8.4
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 94.4,
+        "temperature": 2.2,
+        "windSpeed": 8.5
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 94.5,
+        "temperature": 2.2,
+        "windSpeed": 8
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 91.5,
+        "temperature": 2.4,
+        "windSpeed": 6.9
+      }
+    ],
+    "lyngseidet": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.9,
+        "windSpeed": 1.4
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2,
+        "windSpeed": 1.6
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.1,
+        "windSpeed": 1.9
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
         "cloudCover": 100,
         "temperature": 2.6,
-        "windSpeed": 7.8
+        "windSpeed": 2.1
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 4.1,
+        "windSpeed": 5.3
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.4,
+        "temperature": 4.3,
+        "windSpeed": 7.5
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 97.9,
+        "temperature": 4.4,
+        "windSpeed": 8.2
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 90.2,
+        "temperature": 3.7,
+        "windSpeed": 7.3
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 88.5,
+        "temperature": 3.6,
+        "windSpeed": 6.8
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 90.7,
+        "temperature": 3.3,
+        "windSpeed": 7
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 87.3,
+        "temperature": 3.2,
+        "windSpeed": 6.9
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 78.8,
+        "temperature": 3,
+        "windSpeed": 6.7
+      }
+    ],
+    "kilpisjarvi": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": -1.6,
+        "windSpeed": 4.7
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": -1.5,
+        "windSpeed": 5.2
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": -1.3,
+        "windSpeed": 4.6
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": -0.9,
+        "windSpeed": 4.8
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 100,
+        "temperature": 0.2,
+        "windSpeed": 2.8
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 99.5,
+        "temperature": 0.3,
+        "windSpeed": 1.5
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 98.8,
+        "temperature": 0.4,
+        "windSpeed": 6.5
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 86.4,
+        "temperature": 0.3,
+        "windSpeed": 5.6
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 83.9,
+        "temperature": -0.2,
+        "windSpeed": 4.8
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 98.2,
+        "temperature": -0.6,
+        "windSpeed": 3.2
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 97.7,
+        "temperature": -0.9,
+        "windSpeed": 3.8
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 98.3,
+        "temperature": -0.9,
+        "windSpeed": 5
+      }
+    ],
+    "signaldalen": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2.9,
+        "windSpeed": 5.8
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3,
+        "windSpeed": 5.3
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.1,
+        "windSpeed": 5.1
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 3.4,
+        "windSpeed": 3.5
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 99.9,
+        "temperature": 4,
+        "windSpeed": 3.7
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 98.6,
+        "temperature": 4.9,
+        "windSpeed": 5.9
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 97,
+        "temperature": 4.9,
+        "windSpeed": 6.4
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 88.1,
+        "temperature": 4.5,
+        "windSpeed": 6.6
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 86.5,
+        "temperature": 4.3,
+        "windSpeed": 6
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 91.4,
+        "temperature": 4.2,
+        "windSpeed": 5.4
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 92.5,
+        "temperature": 4.2,
+        "windSpeed": 6.1
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 94,
+        "temperature": 4.2,
+        "windSpeed": 5.6
+      }
+    ],
+    "skibotn": [
+      {
+        "time": "2026-03-09T15:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.7,
+        "windSpeed": 6.6
+      },
+      {
+        "time": "2026-03-09T16:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.8,
+        "windSpeed": 5
+      },
+      {
+        "time": "2026-03-09T17:00:00Z",
+        "cloudCover": 100,
+        "temperature": 1.9,
+        "windSpeed": 5.1
+      },
+      {
+        "time": "2026-03-09T18:00:00Z",
+        "cloudCover": 100,
+        "temperature": 2,
+        "windSpeed": 3.5
+      },
+      {
+        "time": "2026-03-09T19:00:00Z",
+        "cloudCover": 99.9,
+        "temperature": 2.6,
+        "windSpeed": 3.9
+      },
+      {
+        "time": "2026-03-09T20:00:00Z",
+        "cloudCover": 98.5,
+        "temperature": 3.2,
+        "windSpeed": 3.5
+      },
+      {
+        "time": "2026-03-09T21:00:00Z",
+        "cloudCover": 96.7,
+        "temperature": 2.9,
+        "windSpeed": 4.3
+      },
+      {
+        "time": "2026-03-09T22:00:00Z",
+        "cloudCover": 85.1,
+        "temperature": 2.7,
+        "windSpeed": 4.6
+      },
+      {
+        "time": "2026-03-09T23:00:00Z",
+        "cloudCover": 83.8,
+        "temperature": 2,
+        "windSpeed": 3.7
+      },
+      {
+        "time": "2026-03-10T00:00:00Z",
+        "cloudCover": 89.2,
+        "temperature": 1.9,
+        "windSpeed": 3.3
+      },
+      {
+        "time": "2026-03-10T01:00:00Z",
+        "cloudCover": 88.9,
+        "temperature": 1.9,
+        "windSpeed": 3.6
+      },
+      {
+        "time": "2026-03-10T02:00:00Z",
+        "cloudCover": 84.9,
+        "temperature": 2.1,
+        "windSpeed": 3.8
       }
     ]
   },
