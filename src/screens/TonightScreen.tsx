@@ -173,7 +173,7 @@ export function TonightScreen({
           </View>
           {tonightScore?.bestWindowStart && tonightScore?.bestWindowEnd ? (
             <Text style={styles.helper}>
-              Best time in Tromso: {formatLocalTime(tonightScore.bestWindowStart)}-{formatLocalTime(tonightScore.bestWindowEnd)}
+              Best time at top spot: {formatLocalTime(tonightScore.bestWindowStart)}-{formatLocalTime(tonightScore.bestWindowEnd)}
             </Text>
           ) : null}
         </View>
