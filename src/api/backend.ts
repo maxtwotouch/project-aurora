@@ -3,6 +3,7 @@ import type { GeneralForecastScore, HourlyForecast, KpTrend, SpotScoreResult } f
 type BackendTonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
+  tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
   topSpots: SpotScoreResult[];

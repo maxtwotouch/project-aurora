@@ -22,7 +22,7 @@ type UseForecastResult = {
   closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
   forecastsBySpotId: Record<string, HourlyForecast[]>;
-  auroraTonightScore: number;
+  tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
   recommendation: string;
@@ -115,13 +115,66 @@ function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralFor
   const avgCloud = eveningHours.reduce((sum, hour) => sum + hour.cloudCover, 0) / eveningHours.length;
   const tomorrowPeak = kp.dailyOutlook?.find((item) => item.label === 'Tomorrow')?.peak ?? kp.peakNext12h;
   const score = Math.round(computeScore(avgCloud, tomorrowPeak, 0, 2));
+  const bestWindowStart = eveningHours[0]?.time;
+  const bestWindowEnd = eveningHours[Math.min(2, eveningHours.length - 1)]?.time;
 
   return {
     label: 'Tomorrow',
     score,
     chance: chanceFromScore(score),
     cloudCover: Math.round(avgCloud),
-    peakKp: Number(tomorrowPeak.toFixed(1))
+    peakKp: Number(tomorrowPeak.toFixed(1)),
+    bestWindowStart,
+    bestWindowEnd
+  };
+}
+
+function isInTonightWindow(parts: { dayKey: string; hour: number }, tonightStartDay: string, tonightEndDay: string) {
+  return (parts.dayKey === tonightStartDay && parts.hour >= 18) || (parts.dayKey === tonightEndDay && parts.hour <= 6);
+}
+
+function buildTonightScore(forecast: HourlyForecast[], kp: KpTrend): GeneralForecastScore | null {
+  const todayParts = getOsloParts(new Date());
+  if (!todayParts) {
+    return null;
+  }
+
+  const tonightStartDay = todayParts.hour < 6 ? addDaysToDayKey(todayParts.dayKey, -1) : todayParts.dayKey;
+  const tonightEndDay = addDaysToDayKey(tonightStartDay, 1);
+  const tonightHours = forecast.filter((hour) => {
+    const parts = getOsloParts(hour.time);
+    return parts ? isInTonightWindow(parts, tonightStartDay, tonightEndDay) : false;
+  });
+
+  if (tonightHours.length === 0) {
+    return null;
+  }
+
+  let bestStart = 0;
+  let bestAvgCloud = 100;
+
+  for (let i = 0; i < tonightHours.length; i += 1) {
+    const window = tonightHours.slice(i, i + 3);
+    const avgCloud = window.reduce((sum, hour) => sum + hour.cloudCover, 0) / window.length;
+
+    if (avgCloud < bestAvgCloud) {
+      bestAvgCloud = avgCloud;
+      bestStart = i;
+    }
+  }
+
+  const chosen = tonightHours.slice(bestStart, bestStart + 3);
+  const avgCloud = chosen.reduce((sum, hour) => sum + hour.cloudCover, 0) / chosen.length;
+  const score = Math.round(computeScore(avgCloud, kp.tonightPeak, 0, 2));
+
+  return {
+    label: 'Tonight',
+    score,
+    chance: chanceFromScore(score),
+    cloudCover: Math.round(avgCloud),
+    peakKp: Number(kp.tonightPeak.toFixed(1)),
+    bestWindowStart: chosen[0]?.time,
+    bestWindowEnd: chosen[chosen.length - 1]?.time
   };
 }
 
@@ -141,6 +194,7 @@ export function useForecast(): UseForecastResult {
   });
   const [forecastsBySpotId, setForecastsBySpotId] = useState<Record<string, HourlyForecast[]>>({});
   const [rankedSpots, setRankedSpots] = useState<SpotScoreResult[]>([]);
+  const [tonightScore, setTonightScore] = useState<GeneralForecastScore | null>(null);
   const [tomorrowScore, setTomorrowScore] = useState<GeneralForecastScore | null>(null);
   const [sightingPossibleFrom, setSightingPossibleFrom] = useState<string | null>(null);
 
@@ -162,6 +216,7 @@ export function useForecast(): UseForecastResult {
           setRankedSpots(snapshot.rankings);
           setLastUpdatedAt(snapshot.updatedAt);
           setDataQuality(snapshot.dataQuality);
+          setTonightScore(snapshot.tonightScore);
           setTomorrowScore(snapshot.tomorrowScore);
           setSightingPossibleFrom(snapshot.sightingPossibleFrom);
           return;
@@ -173,6 +228,7 @@ export function useForecast(): UseForecastResult {
       const kpTrend = await fetchKpTrend();
       setKp(kpTrend);
       const tromsoForecast = await fetchPointForecast(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
+      setTonightScore(buildTonightScore(tromsoForecast, kpTrend));
       setTomorrowScore(buildTomorrowScore(tromsoForecast, kpTrend));
       setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
 
@@ -215,8 +271,7 @@ export function useForecast(): UseForecastResult {
 
   const topSpots = rankedSpots.slice(0, 5);
   const closeSpots = rankedSpots.filter((item) => (spotsById[item.spotId]?.distanceKm ?? 999) <= 10).slice(0, 3);
-  const auroraTonightScore =
-    topSpots.length > 0 ? Math.round(topSpots.reduce((sum, item) => sum + item.score, 0) / topSpots.length) : 0;
+  const auroraTonightScore = tonightScore?.score ?? 0;
   const level = levelFromScore(auroraTonightScore);
   const recommendation = recommendationFromLevel(level);
 
@@ -231,7 +286,7 @@ export function useForecast(): UseForecastResult {
     closeSpots,
     spotsById,
     forecastsBySpotId,
-    auroraTonightScore,
+    tonightScore,
     tomorrowScore,
     sightingPossibleFrom,
     recommendation,

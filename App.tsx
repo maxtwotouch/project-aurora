@@ -56,7 +56,7 @@ type TabsRootProps = {
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
-  auroraTonightScore: number;
+  tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
   recommendation: string;
@@ -73,7 +73,7 @@ function TabsRoot({
   topSpots,
   closeSpots,
   spotsById,
-  auroraTonightScore,
+  tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
   recommendation,
@@ -137,7 +137,7 @@ function TabsRoot({
             topSpots={topSpots}
             closeSpots={closeSpots}
             spotsById={spotsById}
-            auroraTonightScore={auroraTonightScore}
+            tonightScore={tonightScore}
             tomorrowScore={tomorrowScore}
             sightingPossibleFrom={sightingPossibleFrom}
             recommendation={recommendation}
@@ -201,7 +201,7 @@ export default function App() {
               topSpots={forecast.topSpots}
               closeSpots={forecast.closeSpots}
               spotsById={forecast.spotsById}
-              auroraTonightScore={forecast.auroraTonightScore}
+              tonightScore={forecast.tonightScore}
               tomorrowScore={forecast.tomorrowScore}
               sightingPossibleFrom={forecast.sightingPossibleFrom}
               recommendation={forecast.recommendation}

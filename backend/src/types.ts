@@ -56,6 +56,8 @@ export type GeneralForecastScore = {
   chance: 'High' | 'Medium' | 'Low';
   cloudCover: number;
   peakKp: number;
+  bestWindowStart?: string;
+  bestWindowEnd?: string;
 };
 
 export type DataQuality = {
@@ -66,6 +68,7 @@ export type DataQuality = {
 export type TonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
+  tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
   topSpots: SpotScoreResult[];

@@ -69,6 +69,8 @@ export type GeneralForecastScore = {
   chance: 'High' | 'Medium' | 'Low';
   cloudCover: number;
   peakKp: number;
+  bestWindowStart?: string;
+  bestWindowEnd?: string;
 };
 
 export type DaylightHint = {

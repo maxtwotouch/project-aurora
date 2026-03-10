@@ -14,7 +14,7 @@ type Props = {
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
   spotsById: Record<string, Spot>;
-  auroraTonightScore: number;
+  tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
   recommendation: string;
@@ -41,16 +41,20 @@ function chanceLabelFromScore(score: number): string {
   return 'Low';
 }
 
-function decisionLabel(score: number, bestCloudCover?: number): 'Go Now' | 'Wait' | 'Best Later' {
+function decisionLabel(score: number, isDaytimeNow: boolean, bestCloudCover?: number): 'Go Now' | 'Wait' | 'Best Later' | 'Later Tonight' {
+  if (isDaytimeNow) return 'Later Tonight';
   if (typeof bestCloudCover === 'number' && bestCloudCover > 80) return 'Best Later';
   if (score >= 65) return 'Go Now';
   if (score >= 40) return 'Wait';
   return 'Best Later';
 }
 
-function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later') {
+function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later' | 'Later Tonight') {
   if (label === 'Go Now') {
     return { bg: '#123c2f', border: '#2adf92', text: '#9affda' };
+  }
+  if (label === 'Later Tonight') {
+    return { bg: '#14263d', border: '#6cbcff', text: '#cae7ff' };
   }
   if (label === 'Wait') {
     return { bg: '#2b2410', border: '#facc15', text: '#fde68a' };
@@ -80,17 +84,19 @@ export function TonightScreen({
   topSpots,
   closeSpots,
   spotsById,
-  auroraTonightScore,
+  tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
   recommendation,
   refresh
 }: Props) {
   const bestSpot = topSpots[0];
-  const decision = decisionLabel(auroraTonightScore, bestSpot?.cloudCoverAtBestHour);
+  const isDaytimeNow = isLikelyDaytime(new Date());
+  const tonightScoreValue = tonightScore?.score ?? 0;
+  const decision = decisionLabel(tonightScoreValue, isDaytimeNow, bestSpot?.cloudCoverAtBestHour);
   const decisionColors = decisionStyle(decision);
   const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
-  const daytimeHint = isLikelyDaytime(new Date()) && sightingPossibleFrom
+  const daytimeHint = isDaytimeNow && sightingPossibleFrom
     ? `It is daytime now. Sighting possible from around ${sightingPossibleFrom}.`
     : null;
 
@@ -123,8 +129,8 @@ export function TonightScreen({
         <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
           <Text style={[styles.decisionText, { color: decisionColors.text }]}>{decision}</Text>
         </View>
-        <Text style={styles.recommendation}>{chanceLabelFromScore(auroraTonightScore)}</Text>
-        <Text style={styles.score}>{auroraTonightScore} / 100</Text>
+        <Text style={styles.recommendation}>{chanceLabelFromScore(tonightScoreValue)}</Text>
+        <Text style={styles.score}>{tonightScoreValue} / 100</Text>
         <Text style={styles.helper}>
           Data updated: {lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '-'}
         </Text>
@@ -150,11 +156,11 @@ export function TonightScreen({
         ) : null}
 
         <View style={styles.whyBox}>
-          <Text style={styles.whyTitle}>{whyTitleFromScore(auroraTonightScore)}</Text>
+          <Text style={styles.whyTitle}>{whyTitleFromScore(tonightScoreValue)}</Text>
           <View style={styles.metricRow}>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Cloud</Text>
-              <Text style={styles.metricValue}>{bestSpot?.cloudCoverAtBestHour ?? '-'}%</Text>
+              <Text style={styles.metricValue}>{tonightScore?.cloudCover ?? '-'}%</Text>
             </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>KP Now</Text>
@@ -165,6 +171,11 @@ export function TonightScreen({
               <Text style={styles.metricValue}>{kp.tonightPeak.toFixed(1)}</Text>
             </View>
           </View>
+          {tonightScore?.bestWindowStart && tonightScore?.bestWindowEnd ? (
+            <Text style={styles.helper}>
+              Best time in Tromso: {formatLocalTime(tonightScore.bestWindowStart)}-{formatLocalTime(tonightScore.bestWindowEnd)}
+            </Text>
+          ) : null}
         </View>
       </View>
 
