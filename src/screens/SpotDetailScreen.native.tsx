@@ -28,10 +28,15 @@ function trendLabel(trend: SpotScoreResult['trend'] | undefined): string {
 }
 
 function chanceLabel(score: number | undefined): string {
-  if (typeof score !== 'number') return '-';
+  if (typeof score !== 'number') return 'Low';
   if (score >= 70) return 'High';
   if (score >= 45) return 'Medium';
   return 'Low';
+}
+
+function timeSummary(result: SpotScoreResult | undefined) {
+  if (!result) return 'Waiting for the next forecast run';
+  return `${formatLocalTime(result.bestWindowStart)} to ${formatLocalTime(result.bestWindowEnd)}`;
 }
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
@@ -44,21 +49,36 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{spot.name}</Text>
-      <Text style={styles.subtitle}>Detailed viewing conditions</Text>
-
+    <ScrollView
+      contentContainerStyle={styles.container}
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
+    >
+      <View style={styles.atmosphere} />
       <View style={styles.heroCard}>
-        <View style={styles.scoreRow}>
-          <Text style={styles.label}>Spot score tonight</Text>
-          <ScoreBadge score={result?.score ?? 0} size="lg" />
-        </View>
-
-        <Text style={styles.windowText}>
-          Best window: {result ? `${formatLocalTime(result.bestWindowStart)}-${formatLocalTime(result.bestWindowEnd)}` : '-'}
+        <Text style={styles.eyebrow}>Spot</Text>
+        <Text style={styles.title}>{spot.name}</Text>
+        <Text style={styles.subtitle}>
+          {spot.distanceKm} km from Tromso center. Live conditions at a glance.
         </Text>
 
-        <View style={styles.metricsGrid}>
+        <View style={styles.heroTop}>
+          <View style={styles.heroPrimary}>
+            <Text style={styles.kicker}>Best window</Text>
+            <Text style={styles.windowValue}>{timeSummary(result)}</Text>
+            <Text style={styles.helper}>
+              {result
+                ? `${trendLabel(result.trend)} conditions with ${result.cloudCoverAtBestHour}% cloud cover at the best hour.`
+                : 'Forecast metrics are still settling. Pull to refresh from the main screen if needed.'}
+            </Text>
+          </View>
+          <View style={styles.scoreWrap}>
+            <ScoreBadge score={result?.score ?? 0} size="lg" />
+            <Text style={styles.scoreLabel}>{chanceLabel(result?.score)} chance</Text>
+          </View>
+        </View>
+
+        <View style={styles.metricsBand}>
           <View style={styles.metricTile}>
             <Text style={styles.metricLabel}>Cloud</Text>
             <Text style={styles.metricValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
@@ -72,58 +92,79 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
             <Text style={styles.metricValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
           </View>
           <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Cold Score</Text>
+            <Text style={styles.metricLabel}>Cold score</Text>
             <Text style={styles.metricValue}>{result?.coldScore ?? '-'} / 100</Text>
           </View>
         </View>
 
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Trend</Text>
-          <Text style={styles.inlineValue}>{trendLabel(result?.trend)}</Text>
-        </View>
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Chance</Text>
-          <Text style={styles.inlineValue}>{chanceLabel(result?.score)}</Text>
-        </View>
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Distance</Text>
-          <Text style={styles.inlineValue}>{spot.distanceKm} km from city center</Text>
+        <View style={styles.heroActions}>
+          <Pressable style={styles.primaryButton} onPress={navigateToSpot}>
+            <Text style={styles.primaryButtonText}>Open navigation</Text>
+          </Pressable>
         </View>
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Dress Recommendation</Text>
+        <Text style={styles.sectionEyebrow}>Preparation</Text>
+        <Text style={styles.sectionTitle}>Dress for this stop</Text>
         <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
       </View>
 
-      <View style={styles.mapWrap}>
-        <MapView
-          pointerEvents="none"
-          style={styles.map}
-          customMapStyle={mapDarkStyle}
-          initialRegion={{
-            latitude: spot.lat,
-            longitude: spot.lon,
-            latitudeDelta: 0.08,
-            longitudeDelta: 0.08
-          }}
-        >
-          <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
-        </MapView>
+      <View style={styles.mapCard}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionEyebrow}>Position</Text>
+            <Text style={styles.sectionTitle}>Arrive at the viewing area</Text>
+          </View>
+          <Text style={styles.sectionMeta}>{spot.distanceKm} km</Text>
+        </View>
+        <View style={styles.mapWrap}>
+          <MapView
+            pointerEvents="none"
+            style={styles.map}
+            customMapStyle={mapDarkStyle}
+            initialRegion={{
+              latitude: spot.lat,
+              longitude: spot.lon,
+              latitudeDelta: 0.08,
+              longitudeDelta: 0.08
+            }}
+          >
+            <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
+          </MapView>
+        </View>
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.sectionEyebrow}>On site</Text>
+        <Text style={styles.sectionTitle}>What this place is like</Text>
         <Text style={styles.description}>{spot.description}</Text>
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Parking</Text>
+        <Text style={styles.sectionEyebrow}>Arrival</Text>
+        <Text style={styles.sectionTitle}>Parking notes</Text>
         <Text style={styles.description}>{parking}</Text>
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Spot Images</Text>
+        <Text style={styles.sectionEyebrow}>Forecast</Text>
+        <Text style={styles.sectionTitle}>Cloud cover over the next hours</Text>
+        {(forecast ?? []).length > 0 ? (
+          (forecast ?? []).slice(0, 6).map((hour) => (
+            <View key={hour.time} style={styles.hourRow}>
+              <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
+              <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
+        )}
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionEyebrow}>Visual check</Text>
+        <Text style={styles.sectionTitle}>Spot imagery</Text>
         {imageUrls.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
             {imageUrls.map((url) => (
@@ -134,20 +175,6 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
         )}
       </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Cloud Cover Next Hours</Text>
-        {(forecast ?? []).slice(0, 6).map((hour) => (
-          <View key={hour.time} style={styles.hourRow}>
-            <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
-            <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
-          </View>
-        ))}
-      </View>
-
-      <Pressable style={styles.navigateBtn} onPress={navigateToSpot}>
-        <Text style={styles.navigateText}>Navigate</Text>
-      </Pressable>
     </ScrollView>
   );
 }
@@ -158,153 +185,211 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     backgroundColor: palette.night
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: palette.textPrimary,
-    marginBottom: 2
-  },
-  subtitle: {
-    color: palette.textMuted,
-    marginBottom: 16,
-    fontSize: 14
+  atmosphere: {
+    position: 'absolute',
+    top: -28,
+    right: -40,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#7cf2c71a'
   },
   heroCard: {
-    backgroundColor: '#0d1a30',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#2d466b',
-    marginBottom: 14
-  },
-  sectionCard: {
-    backgroundColor: palette.card,
-    borderRadius: 16,
-    padding: 14,
+    backgroundColor: palette.nightPanel,
+    borderRadius: 28,
+    padding: 20,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    marginBottom: 12
+    marginBottom: 14,
+    shadowColor: palette.shadow,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.24,
+    shadowRadius: 22,
+    elevation: 6
   },
-  scoreRow: {
+  eyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+    marginBottom: 6
+  },
+  title: {
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: '800',
+    color: palette.textPrimary,
+    marginBottom: 6
+  },
+  subtitle: {
+    color: palette.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18
+  },
+  heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10
+    alignItems: 'flex-start',
+    gap: 14,
+    marginBottom: 16
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: palette.textSecondary
+  heroPrimary: {
+    flex: 1,
+    minWidth: 0
   },
-  windowText: {
+  kicker: {
+    color: palette.textMuted,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4
+  },
+  windowValue: {
     color: palette.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 10
+    fontSize: 23,
+    lineHeight: 28,
+    fontWeight: '800',
+    marginBottom: 6
   },
-  metricsGrid: {
+  helper: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  scoreWrap: {
+    alignItems: 'center',
+    gap: 8
+  },
+  scoreLabel: {
+    color: palette.auroraMint,
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  metricsBand: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 10
+    gap: 10
   },
   metricTile: {
-    width: '48%',
-    backgroundColor: '#101f38',
+    minWidth: 100,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    backgroundColor: '#152835',
     borderWidth: 1,
-    borderColor: '#2d466b',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 10
+    borderColor: '#284657'
   },
   metricLabel: {
     color: palette.textMuted,
     fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
     marginBottom: 4
   },
   metricValue: {
     color: palette.textPrimary,
-    fontSize: 17,
-    fontWeight: '700'
+    fontSize: 18,
+    fontWeight: '800'
   },
-  inlineRow: {
+  heroActions: {
+    marginTop: 16
+  },
+  primaryButton: {
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: palette.auroraGreen
+  },
+  primaryButtonText: {
+    color: palette.textOnAurora,
+    fontWeight: '800',
+    fontSize: 15
+  },
+  sectionCard: {
+    backgroundColor: palette.card,
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 12
+  },
+  mapCard: {
+    backgroundColor: palette.card,
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 12
+  },
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 12
+  },
+  sectionEyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
     marginBottom: 4
   },
-  inlineLabel: {
+  sectionTitle: {
+    fontSize: 21,
+    lineHeight: 25,
+    fontWeight: '800',
+    color: palette.textPrimary,
+    marginBottom: 6
+  },
+  sectionMeta: {
+    color: palette.textMuted,
+    fontSize: 13,
+    marginTop: 16
+  },
+  description: {
     color: palette.textSecondary,
+    lineHeight: 22,
     fontSize: 14
   },
-  inlineValue: {
-    color: palette.textPrimary,
-    fontSize: 14,
-    fontWeight: '600'
-  },
   mapWrap: {
-    height: 180,
-    borderRadius: 14,
+    height: 220,
+    borderRadius: 18,
     overflow: 'hidden',
-    marginTop: 10,
-    marginBottom: 12,
     borderWidth: 1,
-    borderColor: palette.cardBorder
+    borderColor: '#284657'
   },
   map: {
     flex: 1
   },
-  sectionTitle: {
-    marginTop: 2,
-    marginBottom: 6,
-    fontSize: 16,
-    fontWeight: '700',
-    color: palette.textPrimary
-  },
-  description: {
-    color: palette.textSecondary,
-    lineHeight: 21,
-    fontSize: 14
-  },
   hourRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#1c2d49'
+    borderBottomColor: '#20394a'
   },
   hourTime: {
     color: palette.textPrimary,
-    fontWeight: '600'
+    fontWeight: '700'
   },
   hourCloud: {
     color: palette.textSecondary,
-    fontWeight: '600'
+    fontWeight: '700'
   },
   imagesRow: {
-    marginBottom: 8
+    marginTop: 4
   },
   image: {
-    width: 260,
-    height: 160,
-    borderRadius: 12,
+    width: 280,
+    height: 176,
+    borderRadius: 16,
     marginRight: 10,
     borderWidth: 1,
     borderColor: palette.cardBorder
-  },
-  navigateBtn: {
-    marginTop: 18,
-    backgroundColor: palette.auroraGreen,
-    borderRadius: 14,
-    paddingVertical: 13,
-    alignItems: 'center',
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.24,
-    shadowRadius: 12,
-    elevation: 5
-  },
-  navigateText: {
-    color: palette.night,
-    fontWeight: '800'
   }
 });

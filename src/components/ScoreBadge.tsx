@@ -28,19 +28,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#ffffff55'
+    borderColor: '#f4fff480',
+    shadowColor: palette.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 3
   },
   sm: {
-    width: 38,
-    height: 38
+    width: 42,
+    height: 42
   },
   lg: {
-    width: 58,
-    height: 58
+    width: 64,
+    height: 64
   },
   text: {
-    color: palette.night,
+    color: palette.textOnAurora,
     fontWeight: '800',
-    letterSpacing: 0.2
+    letterSpacing: 0.2,
+    fontSize: 16
   }
 });

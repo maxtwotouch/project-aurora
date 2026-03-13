@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SpotCard } from '../components/SpotCard';
 import { palette } from '../theme/palette';
@@ -16,10 +16,25 @@ export function AllSpotsScreen({ rankedSpots, spotsById, loading, refresh, onOpe
   return (
     <ScrollView
       contentContainerStyle={styles.container}
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} />}
     >
-      <Text style={styles.title}>All Spots Ranked Tonight</Text>
-      <Text style={styles.subtitle}>Sorted by live probability and conditions.</Text>
+      <View style={styles.headerCard}>
+        <Text style={styles.eyebrow}>Tonight</Text>
+        <Text style={styles.title}>All spots</Text>
+        <Text style={styles.subtitle}>
+          Compare range, timing, and conditions before you drive.
+        </Text>
+      </View>
+
+      {!loading && rankedSpots.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>No ranked spots yet</Text>
+          <Text style={styles.emptyText}>Pull to refresh once forecast data is available for tonight.</Text>
+        </View>
+      ) : null}
+
       {rankedSpots.map((result) => {
         const spot = spotsById[result.spotId];
         if (!spot) return null;
@@ -36,14 +51,51 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     backgroundColor: palette.night
   },
+  headerCard: {
+    backgroundColor: palette.nightPanel,
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 14
+  },
+  eyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 6
+  },
   title: {
     color: palette.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 4
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '800',
+    marginBottom: 6
   },
   subtitle: {
-    color: palette.textMuted,
-    marginBottom: 12
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 21
+  },
+  emptyCard: {
+    backgroundColor: palette.card,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 14
+  },
+  emptyTitle: {
+    color: palette.textPrimary,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4
+  },
+  emptyText: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 21
   }
 });

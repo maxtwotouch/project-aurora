@@ -1,5 +1,5 @@
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { ScoreBadge } from '../components/ScoreBadge';
@@ -21,6 +21,8 @@ const TROMSO_CENTER = {
 };
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
+  const topLabelAnim = useRef(new Animated.Value(0)).current;
+  const sheetAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<Spot | null>(null);
 
   const scoreBySpot = useMemo(
@@ -32,6 +34,25 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
+
+  useEffect(() => {
+    Animated.timing(topLabelAnim, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true
+    }).start();
+  }, [topLabelAnim]);
+
+  useEffect(() => {
+    sheetAnim.setValue(0);
+    Animated.timing(sheetAnim, {
+      toValue: 1,
+      duration: 320,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true
+    }).start();
+  }, [selected, sheetAnim]);
 
   return (
     <View style={styles.container}>
@@ -47,27 +68,85 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         ))}
       </MapView>
 
+      <Animated.View
+        style={[
+          styles.topLabel,
+          {
+            opacity: topLabelAnim,
+            transform: [
+              {
+                translateY: topLabelAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-10, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Text style={styles.topLabelEyebrow}>Map mode</Text>
+        <Text style={styles.topLabelTitle}>Scout spots in driving order</Text>
+      </Animated.View>
+
       {selected ? (
-        <View style={styles.sheet}>
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              opacity: sheetAnim,
+              transform: [
+                {
+                  translateY: sheetAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [36, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
           <View style={styles.sheetTop}>
-            <View>
-              <Text style={styles.sheetTitle}>{selected.name}</Text>
-              <Text style={styles.sheetMeta}>Distance: {selected.distanceKm} km</Text>
-              <Text style={styles.sheetMeta}>Score: {scoreBySpot[selected.id] ?? 0}</Text>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.sheetEyebrow}>Selected stop</Text>
+              <Text style={styles.sheetTitle} numberOfLines={2}>
+                {selected.name}
+              </Text>
+              <Text style={styles.sheetMeta}>{selected.distanceKm} km from Tromso center</Text>
+              <Text style={styles.sheetMeta}>Forecast score {scoreBySpot[selected.id] ?? 0}</Text>
             </View>
             <ScoreBadge score={scoreBySpot[selected.id] ?? 0} />
           </View>
 
           <View style={styles.actions}>
-            <Pressable style={styles.btn} onPress={() => onOpenSpot(selected.id)}>
-              <Text style={styles.btnText}>Details</Text>
+            <Pressable style={styles.secondaryButton} onPress={() => onOpenSpot(selected.id)}>
+              <Text style={styles.secondaryButtonText}>Details</Text>
             </Pressable>
-            <Pressable style={[styles.btn, styles.btnPrimary]} onPress={() => navigateToSpot(selected)}>
-              <Text style={[styles.btnText, styles.btnTextPrimary]}>Navigate</Text>
+            <Pressable style={styles.primaryButton} onPress={() => navigateToSpot(selected)}>
+              <Text style={styles.primaryButtonText}>Navigate</Text>
             </Pressable>
           </View>
-        </View>
-      ) : null}
+        </Animated.View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.emptySheet,
+            {
+              opacity: sheetAnim,
+              transform: [
+                {
+                  translateY: sheetAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [24, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <Text style={styles.emptyTitle}>Tap a marker to inspect a viewing stop.</Text>
+          <Text style={styles.emptyText}>The bottom sheet updates with distance, score, and quick actions.</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -80,59 +159,127 @@ const styles = StyleSheet.create({
   map: {
     flex: 1
   },
+  topLabel: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    right: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    backgroundColor: '#10202bdc',
+    borderWidth: 1,
+    borderColor: '#284657'
+  },
+  topLabelEyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 2
+  },
+  topLabelTitle: {
+    color: palette.textPrimary,
+    fontSize: 18,
+    fontWeight: '800'
+  },
   sheet: {
     position: 'absolute',
     left: 14,
     right: 14,
     bottom: 16,
-    backgroundColor: '#101a2fd9',
-    borderRadius: 18,
-    padding: 15,
+    backgroundColor: '#12232fdc',
+    borderRadius: 24,
+    padding: 16,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
-    elevation: 6
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.26,
+    shadowRadius: 18,
+    elevation: 7
+  },
+  emptySheet: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 16,
+    backgroundColor: '#12232fd0',
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: palette.cardBorder
+  },
+  emptyTitle: {
+    color: palette.textPrimary,
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4
+  },
+  emptyText: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 20
   },
   sheetTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'flex-start',
+    gap: 12
+  },
+  sheetCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  sheetEyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 3
   },
   sheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '800',
     color: palette.textPrimary
   },
   sheetMeta: {
-    marginTop: 4,
+    marginTop: 5,
     color: palette.textSecondary,
-    fontSize: 13
+    fontSize: 14
   },
   actions: {
     flexDirection: 'row',
-    marginTop: 12,
+    marginTop: 14,
     gap: 10
   },
-  btn: {
+  secondaryButton: {
     flex: 1,
+    minHeight: 46,
     borderWidth: 1,
-    borderColor: '#3c5275',
-    borderRadius: 12,
-    paddingVertical: 11,
-    alignItems: 'center'
+    borderColor: palette.cardBorderStrong,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#193240'
   },
-  btnPrimary: {
+  primaryButton: {
+    flex: 1,
+    minHeight: 46,
     backgroundColor: palette.auroraGreen,
-    borderColor: palette.auroraGreen
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  btnText: {
+  secondaryButtonText: {
     color: palette.textPrimary,
     fontWeight: '700'
   },
-  btnTextPrimary: {
-    color: palette.night
+  primaryButtonText: {
+    color: palette.textOnAurora,
+    fontWeight: '800'
   }
 });

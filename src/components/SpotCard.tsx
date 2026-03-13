@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ScoreBadge } from './ScoreBadge';
 import { palette } from '../theme/palette';
@@ -32,44 +32,59 @@ function chanceLabel(score: number): string {
 
 function trendStyle(trend: SpotScoreResult['trend']) {
   if (trend === 'good_now') {
-    return { backgroundColor: '#123c2f', borderColor: '#2adf92', color: '#9affda' };
+    return { backgroundColor: palette.successSurface, borderColor: palette.auroraDeep, color: palette.auroraMint };
   }
   if (trend === 'improving') {
-    return { backgroundColor: '#122a3c', borderColor: '#63a8ff', color: '#a8ceff' };
+    return { backgroundColor: palette.infoSurface, borderColor: palette.auroraBlue, color: palette.auroraIce };
   }
-  return { backgroundColor: '#3a1a24', borderColor: '#fb7185', color: '#ffc1ce' };
+  return { backgroundColor: palette.dangerSurface, borderColor: palette.danger, color: '#ffd0d7' };
 }
 
 export function SpotCard({ spot, result, onPress }: Props) {
   const trend = trendStyle(result.trend);
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.row}>
+    <Pressable
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.card,
+        Platform.OS === 'web' ? styles.cardHover : null,
+        pressed ? styles.cardPressed : null
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.topRow}>
         <View style={styles.titleWrap}>
-          <Text style={styles.name}>{spot.name}</Text>
-          <Text style={styles.subtle}>Live recommendation</Text>
+          <Text style={styles.eyebrow}>Field pick</Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {spot.name}
+          </Text>
+          <Text style={styles.subtle}>{spot.distanceKm} km from Tromso center</Text>
         </View>
         <ScoreBadge score={result.score} />
       </View>
-      <View style={styles.metaRow}>
-        <Text style={styles.metaKey}>Best window</Text>
-        <Text style={styles.metaValue}>
-          {formatLocalTime(result.bestWindowStart)}-{formatLocalTime(result.bestWindowEnd)}
+
+      <View style={styles.timingBand}>
+        <Text style={styles.timingLabel}>Best viewing window</Text>
+        <Text style={styles.timingValue}>
+          {formatLocalTime(result.bestWindowStart)} to {formatLocalTime(result.bestWindowEnd)}
         </Text>
       </View>
-      <View style={styles.metaRow}>
-        <Text style={styles.metaKey}>Chance</Text>
-        <Text style={styles.metaValue}>{chanceLabel(result.score)}</Text>
-      </View>
-      <View style={styles.metaRow}>
-        <Text style={styles.metaKey}>Distance</Text>
-        <Text style={styles.metaValue}>{spot.distanceKm} km from city center</Text>
-      </View>
-      <View style={styles.metaRow}>
-        <Text style={styles.metaKey}>Trend</Text>
-        <View style={[styles.trendPill, { backgroundColor: trend.backgroundColor, borderColor: trend.borderColor }]}>
-          <Text style={[styles.trendText, { color: trend.color }]}>{trendLabel(result.trend)}</Text>
+
+      <View style={styles.metaGrid}>
+        <View style={styles.metaCell}>
+          <Text style={styles.metaKey}>Chance</Text>
+          <Text style={styles.metaValue}>{chanceLabel(result.score)}</Text>
+        </View>
+        <View style={styles.metaCell}>
+          <Text style={styles.metaKey}>Cloud</Text>
+          <Text style={styles.metaValue}>{result.cloudCoverAtBestHour}%</Text>
+        </View>
+        <View style={styles.metaCell}>
+          <Text style={styles.metaKey}>Trend</Text>
+          <View style={[styles.trendPill, { backgroundColor: trend.backgroundColor, borderColor: trend.borderColor }]}>
+            <Text style={[styles.trendText, { color: trend.color }]}>{trendLabel(result.trend)}</Text>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -79,50 +94,101 @@ export function SpotCard({ spot, result, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.cardElevated,
-    borderRadius: 16,
-    padding: 15,
+    borderRadius: 22,
+    padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
-    elevation: 4
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 5
   },
-  row: {
+  cardHover: {
+    borderColor: palette.cardBorderStrong,
+    backgroundColor: '#1d3140'
+  },
+  cardPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.988 }]
+  },
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 10
+    gap: 12
   },
   titleWrap: {
     flex: 1,
-    marginRight: 10
+    minWidth: 0
+  },
+  eyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    marginBottom: 4,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8
   },
   name: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '800',
     color: palette.textPrimary
   },
   subtle: {
     color: palette.textMuted,
-    fontSize: 12,
-    marginTop: 2
+    fontSize: 13,
+    marginTop: 5
   },
-  metaRow: {
+  timingBand: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#284657'
+  },
+  timingLabel: {
+    color: palette.textMuted,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4
+  },
+  timingValue: {
+    color: palette.textPrimary,
+    fontSize: 18,
+    fontWeight: '700'
+  },
+  metaGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 14
+  },
+  metaCell: {
+    minWidth: 92,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    backgroundColor: '#162733',
+    borderWidth: 1,
+    borderColor: '#274253'
   },
   metaKey: {
-    color: palette.textMuted
+    color: palette.textMuted,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: 4
   },
   metaValue: {
-    color: palette.textSecondary,
-    fontWeight: '600'
+    color: palette.textPrimary,
+    fontSize: 16,
+    fontWeight: '700'
   },
   trendPill: {
+    alignSelf: 'flex-start',
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 9,
