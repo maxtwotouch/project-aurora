@@ -10,16 +10,18 @@ type Props = {
 
 const AVAILABLE_HOUR_OFFSETS = [0, 1, 4] as const;
 
-function buildFrameUrl(hourOffset: number) {
+function buildFrameUrl(hourOffset: number, refreshBucket: number) {
   const base = 'https://spaceweather2.uit.no/noswe/Aurora';
   const path = hourOffset === 0 ? 'Nowcast' : hourOffset === 1 ? 'Forecast1h' : 'Forecast4h';
-  return `${base}/${path}/tromso.jpg?t=${Math.floor(Date.now() / (10 * 60 * 1000))}`;
+  return `${base}/${path}/tromso.jpg?t=${refreshBucket}`;
 }
 
 export function AuroraMapScreen({ kp }: Props) {
   const [hourOffset, setHourOffset] = useState<number>(0);
   const [timelineWidth, setTimelineWidth] = useState<number>(1);
   const [loadingImage, setLoadingImage] = useState<boolean>(true);
+  const [prefetchedUrls, setPrefetchedUrls] = useState<Record<string, boolean>>({});
+  const [refreshBucket, setRefreshBucket] = useState<number>(Math.floor(Date.now() / (10 * 60 * 1000)));
   const selectedIndex = Math.max(
     0,
     AVAILABLE_HOUR_OFFSETS.indexOf(hourOffset as (typeof AVAILABLE_HOUR_OFFSETS)[number])
@@ -42,7 +44,15 @@ export function AuroraMapScreen({ kp }: Props) {
     return kp.hourly[hourOffset] ?? kp.hourly[kp.hourly.length - 1] ?? kp.current;
   }, [hourOffset, kp.current, kp.hourly]);
 
-  const frameUrl = useMemo(() => buildFrameUrl(hourOffset), [hourOffset]);
+  const frameUrls = useMemo(
+    () =>
+      AVAILABLE_HOUR_OFFSETS.reduce<Record<number, string>>((acc, offset) => {
+        acc[offset] = buildFrameUrl(offset, refreshBucket);
+        return acc;
+      }, {}),
+    [refreshBucket]
+  );
+  const frameUrl = frameUrls[hourOffset];
   const overheadNow = kp.current >= 5 ? 'Likely' : kp.current >= 3.5 ? 'Possible' : 'Low';
   const peakIndex = kp.hourly.reduce((bestIndex, value, index, values) => {
     return value > values[bestIndex] ? index : bestIndex;
@@ -60,14 +70,53 @@ export function AuroraMapScreen({ kp }: Props) {
   }, [peakIndex]);
 
   useEffect(() => {
-    // Prevent permanent spinner if image callbacks fail or hang.
-    setLoadingImage(true);
+    const id = setInterval(() => {
+      const nextBucket = Math.floor(Date.now() / (10 * 60 * 1000));
+      setRefreshBucket((current) => (current === nextBucket ? current : nextBucket));
+    }, 60 * 1000);
+
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all(
+      Object.values(frameUrls).map(async (url) => {
+        try {
+          await Image.prefetch(url);
+          return [url, true] as const;
+        } catch {
+          return [url, false] as const;
+        }
+      })
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+
+      setPrefetchedUrls((current) => {
+        const next = { ...current };
+        for (const [url, ok] of results) {
+          next[url] = ok;
+        }
+        return next;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [frameUrls]);
+
+  useEffect(() => {
+    setLoadingImage(!prefetchedUrls[frameUrl]);
     const timeout = setTimeout(() => {
       setLoadingImage(false);
     }, 12000);
 
     return () => clearTimeout(timeout);
-  }, [frameUrl]);
+  }, [frameUrl, prefetchedUrls]);
 
   return (
     <View style={styles.container}>

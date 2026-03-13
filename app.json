@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Tromso Northern Lights",
+    "name": "Tromsø Northern Lights",
     "slug": "tromso-northern-lights",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,11 +13,20 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.maxtwotouch.tromsonorthernlights",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {},
     "web": {
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c3231a13-9f7e-4c36-878c-d1725e889b81"
+      }
     }
   }
 }
