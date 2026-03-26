@@ -1,20 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { fetchTonightSnapshotFromBackend, shouldUseBackend } from '../api/backend';
-import { fetchKpTrend } from '../api/kp';
-import { fetchPointForecast, fetchSightingPossibleFrom, fetchSpotForecast } from '../api/yr';
+import { fetchKpTrendDetailed } from '../api/kp';
+import { fetchPointForecastDetailed, fetchSightingPossibleFrom, fetchSpotForecastDetailed } from '../api/yr';
 import spots from '../data/spots.json';
 import { rankSpots } from '../scoring/score';
-import type { AuroraLevel, GeneralForecastScore, HourlyForecast, KpTrend, Spot, SpotScoreResult } from '../types';
+import type { AppDataQuality, AuroraLevel, GeneralForecastScore, HourlyForecast, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type UseForecastResult = {
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
-  dataQuality: {
-    usingFallbackKp: boolean;
-    fallbackWeatherSpotIds: string[];
-  };
+  dataQuality: AppDataQuality;
   kp: KpTrend;
   rankedSpots: SpotScoreResult[];
   topSpots: SpotScoreResult[];
@@ -31,7 +28,6 @@ type UseForecastResult = {
 
 const typedSpots = spots as Spot[];
 const TROMSO_CENTER = { lat: 69.6492, lon: 18.9553 };
-const OSLO_TIME_ZONE = 'Europe/Oslo';
 
 function levelFromScore(score: number): AuroraLevel {
   if (score >= 70) return 'great';
@@ -89,6 +85,9 @@ export function useForecast(): UseForecastResult {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [dataQuality, setDataQuality] = useState<UseForecastResult['dataQuality']>({
+    sourceMode: 'direct',
+    backendRequested: false,
+    backendUnavailable: false,
     usingFallbackKp: false,
     fallbackWeatherSpotIds: []
   });
@@ -112,16 +111,23 @@ export function useForecast(): UseForecastResult {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const backendRequested = shouldUseBackend();
 
     try {
-      if (shouldUseBackend()) {
+      if (backendRequested) {
         try {
           const snapshot = await fetchTonightSnapshotFromBackend();
           setKp(snapshot.kp);
           setForecastsBySpotId(snapshot.forecastsBySpotId);
           setRankedSpots(snapshot.rankings);
           setLastUpdatedAt(snapshot.updatedAt);
-          setDataQuality(snapshot.dataQuality);
+          setDataQuality({
+            sourceMode: 'backend',
+            backendRequested: true,
+            backendUnavailable: false,
+            usingFallbackKp: snapshot.dataQuality.usingFallbackKp,
+            fallbackWeatherSpotIds: snapshot.dataQuality.fallbackWeatherSpotIds
+          });
           setTonightScore(snapshot.tonightScore);
           setTomorrowScore(snapshot.tomorrowScore);
           setSightingPossibleFrom(snapshot.sightingPossibleFrom);
@@ -131,22 +137,27 @@ export function useForecast(): UseForecastResult {
         }
       }
 
-      const kpTrend = await fetchKpTrend();
+      const kpResult = await fetchKpTrendDetailed();
+      const kpTrend = kpResult.trend;
       setKp(kpTrend);
-      const tromsoForecast = await fetchPointForecast(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
-      setTomorrowScore(buildTomorrowScore(tromsoForecast, kpTrend));
+      const tromsoForecastResult = await fetchPointForecastDetailed(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
+      setTomorrowScore(buildTomorrowScore(tromsoForecastResult.hourly, kpTrend));
       setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
 
       const forecastPairs = await Promise.allSettled(
         typedSpots.map(async (spot) => ({
           spotId: spot.id,
-          hourly: await fetchSpotForecast(spot)
+          result: await fetchSpotForecastDetailed(spot)
         }))
       );
 
+      const fallbackWeatherSpotIds: string[] = [];
       const forecastMap = forecastPairs.reduce<Record<string, HourlyForecast[]>>((acc, result, index) => {
         if (result.status === 'fulfilled') {
-          acc[result.value.spotId] = result.value.hourly;
+          acc[result.value.spotId] = result.value.result.hourly;
+          if (result.value.result.usedFallback) {
+            fallbackWeatherSpotIds.push(result.value.spotId);
+          }
         } else {
           acc[typedSpots[index].id] = [];
         }
@@ -173,8 +184,11 @@ export function useForecast(): UseForecastResult {
       );
       setLastUpdatedAt(new Date().toISOString());
       setDataQuality({
-        usingFallbackKp: false,
-        fallbackWeatherSpotIds: []
+        sourceMode: 'direct',
+        backendRequested,
+        backendUnavailable: backendRequested,
+        usingFallbackKp: kpResult.usingFallback,
+        fallbackWeatherSpotIds
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load forecast.';

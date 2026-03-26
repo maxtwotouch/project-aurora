@@ -15,7 +15,7 @@ import { MapScreen } from './src/screens/MapScreen.native';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -52,6 +52,7 @@ type TabsRootProps = {
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
+  dataQuality: AppDataQuality;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
@@ -69,6 +70,7 @@ function TabsRoot({
   loading,
   error,
   lastUpdatedAt,
+  dataQuality,
   kp,
   topSpots,
   closeSpots,
@@ -112,14 +114,15 @@ function TabsRoot({
         tabBarStyle: {
           backgroundColor: '#10202be8',
           borderTopColor: '#264455',
-          height: 78,
+          height: 70,
           paddingHorizontal: 10,
-          paddingTop: 10,
-          paddingBottom: 14
+          paddingTop: 6,
+          paddingBottom: 8
         },
         tabBarItemStyle: {
           minWidth: 0,
-          borderRadius: 18
+          borderRadius: 18,
+          paddingTop: 2
         },
         tabBarActiveBackgroundColor: '#16303f',
         tabBarLabelStyle: {
@@ -148,6 +151,7 @@ function TabsRoot({
             loading={loading}
             error={error}
             lastUpdatedAt={lastUpdatedAt}
+            dataQuality={dataQuality}
             kp={kp}
             topSpots={topSpots}
             closeSpots={closeSpots}
@@ -168,6 +172,7 @@ function TabsRoot({
           <AllSpotsScreen
             rankedSpots={rankedSpots}
             spotsById={spotsById}
+            dataQuality={dataQuality}
             loading={loading}
             refresh={refresh}
             onOpenSpot={onOpenSpot}
@@ -219,6 +224,7 @@ export default function App() {
               loading={forecast.loading}
               error={forecast.error}
               lastUpdatedAt={forecast.lastUpdatedAt}
+              dataQuality={forecast.dataQuality}
               kp={forecast.kp}
               topSpots={forecast.topSpots}
               closeSpots={forecast.closeSpots}
@@ -278,6 +284,7 @@ const styles = StyleSheet.create({
   tabIconWrap: {
     minWidth: 34,
     minHeight: 28,
+    marginTop: -2,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999

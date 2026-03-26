@@ -19,3 +19,5 @@ npm run dev
 - `PORT` (default `8080`)
 - `HOST` (default `0.0.0.0`)
 - `REFRESH_MS` (default `300000` = 5 minutes)
+- `ADMIN_TOKEN` for `POST /v1/admin/refresh`
+- `CORS_ORIGINS` comma-separated allowed frontend origins. Default only allows localhost development origins.

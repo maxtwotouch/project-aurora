@@ -1,6 +1,8 @@
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
+import { CollapsibleSection } from '../components/CollapsibleSection';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
@@ -12,6 +14,8 @@ type Props = {
   result: SpotScoreResult | undefined;
   forecast: HourlyForecast[] | undefined;
 };
+
+type SectionKey = 'overview' | 'location' | 'access' | 'forecast' | 'visuals';
 
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
@@ -42,25 +46,42 @@ function timeSummary(result: SpotScoreResult | undefined) {
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
   const parking = getSpotParking(spot);
+  const forecastRows = (forecast ?? []).slice(0, 6);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({
+    overview: 0,
+    location: 0,
+    access: 0,
+    forecast: 0,
+    visuals: 0
+  });
 
   const navigateToSpot = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
 
+  const registerSection = (key: SectionKey) => (event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    setSectionOffsets((current) => ({ ...current, [key]: y }));
+  };
+
+  const jumpTo = (key: SectionKey) => {
+    scrollRef.current?.scrollTo({ y: Math.max(sectionOffsets[key] - 12, 0), animated: true });
+  };
+
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={styles.container}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
     >
       <View style={styles.atmosphere} />
-      <View style={styles.heroCard}>
+      <View style={styles.heroCard} onLayout={registerSection('overview')}>
         <Text style={styles.eyebrow}>Spot</Text>
         <Text style={styles.title}>{spot.name}</Text>
-        <Text style={styles.subtitle}>
-          {spot.distanceKm} km from Tromso center. Live conditions at a glance.
-        </Text>
+        <Text style={styles.subtitle}>{spot.distanceKm} km from Tromso center. The essentials first.</Text>
 
         <View style={styles.heroTop}>
           <View style={styles.heroPrimary}>
@@ -97,6 +118,16 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           </View>
         </View>
 
+        <View style={styles.jumpCard}>
+          <Text style={styles.jumpTitle}>On this page</Text>
+          <View style={styles.jumpRow}>
+            <JumpButton label="Location" onPress={() => jumpTo('location')} />
+            <JumpButton label="Access" onPress={() => jumpTo('access')} />
+            <JumpButton label="Forecast" onPress={() => jumpTo('forecast')} />
+            <JumpButton label="Visuals" onPress={() => jumpTo('visuals')} />
+          </View>
+        </View>
+
         <View style={styles.heroActions}>
           <Pressable style={styles.primaryButton} onPress={navigateToSpot}>
             <Text style={styles.primaryButtonText}>Open navigation</Text>
@@ -104,78 +135,83 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         </View>
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionEyebrow}>Preparation</Text>
-        <Text style={styles.sectionTitle}>Dress for this stop</Text>
-        <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
-      </View>
-
-      <View style={styles.mapCard}>
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionEyebrow}>Position</Text>
-            <Text style={styles.sectionTitle}>Arrive at the viewing area</Text>
+      <View onLayout={registerSection('location')}>
+        <CollapsibleSection eyebrow="Position" title="Arrive at the viewing area" meta={`${spot.distanceKm} km`} defaultOpen>
+          <View style={styles.mapWrap}>
+            <MapView
+              pointerEvents="none"
+              style={styles.map}
+              customMapStyle={mapDarkStyle}
+              initialRegion={{
+                latitude: spot.lat,
+                longitude: spot.lon,
+                latitudeDelta: 0.08,
+                longitudeDelta: 0.08
+              }}
+            >
+              <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
+            </MapView>
           </View>
-          <Text style={styles.sectionMeta}>{spot.distanceKm} km</Text>
-        </View>
-        <View style={styles.mapWrap}>
-          <MapView
-            pointerEvents="none"
-            style={styles.map}
-            customMapStyle={mapDarkStyle}
-            initialRegion={{
-              latitude: spot.lat,
-              longitude: spot.lon,
-              latitudeDelta: 0.08,
-              longitudeDelta: 0.08
-            }}
-          >
-            <Marker coordinate={{ latitude: spot.lat, longitude: spot.lon }} title={spot.name} />
-          </MapView>
-        </View>
+          <Text style={styles.description}>{spot.description}</Text>
+        </CollapsibleSection>
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionEyebrow}>On site</Text>
-        <Text style={styles.sectionTitle}>What this place is like</Text>
-        <Text style={styles.description}>{spot.description}</Text>
+      <View onLayout={registerSection('access')}>
+        <CollapsibleSection eyebrow="Arrival" title="Parking and prep" defaultOpen={false}>
+          <Text style={styles.blockTitle}>Parking</Text>
+          <Text style={styles.description}>{parking}</Text>
+          <Text style={styles.blockTitle}>Dress recommendation</Text>
+          <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
+        </CollapsibleSection>
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionEyebrow}>Arrival</Text>
-        <Text style={styles.sectionTitle}>Parking notes</Text>
-        <Text style={styles.description}>{parking}</Text>
+      <View onLayout={registerSection('forecast')}>
+        <CollapsibleSection
+          eyebrow="Forecast"
+          title="Cloud cover over the next hours"
+          meta={forecastRows.length > 0 ? `${forecastRows.length} hours` : 'No hourly data'}
+          defaultOpen={false}
+        >
+          {forecastRows.length > 0 ? (
+            forecastRows.map((hour) => (
+              <View key={hour.time} style={styles.hourRow}>
+                <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
+                <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
+          )}
+        </CollapsibleSection>
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionEyebrow}>Forecast</Text>
-        <Text style={styles.sectionTitle}>Cloud cover over the next hours</Text>
-        {(forecast ?? []).length > 0 ? (
-          (forecast ?? []).slice(0, 6).map((hour) => (
-            <View key={hour.time} style={styles.hourRow}>
-              <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
-              <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
-        )}
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionEyebrow}>Visual check</Text>
-        <Text style={styles.sectionTitle}>Spot imagery</Text>
-        {imageUrls.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
-            {imageUrls.map((url) => (
-              <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
-            ))}
-          </ScrollView>
-        ) : (
-          <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
-        )}
+      <View onLayout={registerSection('visuals')}>
+        <CollapsibleSection
+          eyebrow="Visual check"
+          title="Spot imagery"
+          meta={imageUrls.length > 0 ? `${imageUrls.length} photo${imageUrls.length === 1 ? '' : 's'}` : 'No photos yet'}
+          defaultOpen={false}
+        >
+          {imageUrls.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
+              {imageUrls.map((url) => (
+                <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
+              ))}
+            </ScrollView>
+          ) : (
+            <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
+          )}
+        </CollapsibleSection>
       </View>
     </ScrollView>
+  );
+}
+
+function JumpButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable style={({ pressed }) => [styles.jumpButton, pressed ? styles.jumpButtonPressed : null]} onPress={onPress}>
+      <Text style={styles.jumpButtonText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -293,6 +329,44 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800'
   },
+  jumpCard: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#12263a',
+    borderWidth: 1,
+    borderColor: '#29475f'
+  },
+  jumpTitle: {
+    color: palette.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 10
+  },
+  jumpRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  jumpButton: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#17303c',
+    borderWidth: 1,
+    borderColor: '#2e5667'
+  },
+  jumpButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }]
+  },
+  jumpButtonText: {
+    color: palette.auroraMint,
+    fontSize: 13,
+    fontWeight: '700'
+  },
   heroActions: {
     marginTop: 16
   },
@@ -308,86 +382,51 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15
   },
-  sectionCard: {
-    backgroundColor: palette.card,
-    borderRadius: 22,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: palette.cardBorder,
-    marginBottom: 12
-  },
-  mapCard: {
-    backgroundColor: palette.card,
-    borderRadius: 22,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: palette.cardBorder,
-    marginBottom: 12
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 12
-  },
-  sectionEyebrow: {
-    color: palette.auroraMint,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 4
-  },
-  sectionTitle: {
-    fontSize: 21,
-    lineHeight: 25,
-    fontWeight: '800',
-    color: palette.textPrimary,
-    marginBottom: 6
-  },
-  sectionMeta: {
-    color: palette.textMuted,
-    fontSize: 13,
-    marginTop: 16
-  },
-  description: {
-    color: palette.textSecondary,
-    lineHeight: 22,
-    fontSize: 14
-  },
   mapWrap: {
     height: 220,
     borderRadius: 18,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#284657'
+    marginBottom: 12
   },
   map: {
     flex: 1
+  },
+  blockTitle: {
+    color: palette.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 6,
+    marginBottom: 6
+  },
+  description: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 21
   },
   hourRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#20394a'
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#284657'
   },
   hourTime: {
     color: palette.textPrimary,
-    fontWeight: '700'
+    fontSize: 14,
+    fontWeight: '600'
   },
   hourCloud: {
-    color: palette.textSecondary,
+    color: palette.auroraMint,
+    fontSize: 14,
     fontWeight: '700'
   },
   imagesRow: {
     marginTop: 4
   },
   image: {
-    width: 280,
-    height: 176,
-    borderRadius: 16,
+    width: 220,
+    height: 150,
+    borderRadius: 14,
     marginRight: 10,
     borderWidth: 1,
     borderColor: palette.cardBorder

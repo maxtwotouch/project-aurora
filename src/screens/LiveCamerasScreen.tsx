@@ -19,6 +19,18 @@ export function LiveCamerasScreen() {
   }, []);
 
   const visibleCameras = useMemo(() => liveCameras.filter((camera) => Boolean(camera.imageUrl)), []);
+  const groupedCameras = useMemo(() => {
+    const groups = new Map<string, LiveCamera[]>();
+
+    visibleCameras.forEach((camera) => {
+      const key = camera.area;
+      const current = groups.get(key) ?? [];
+      current.push(camera);
+      groups.set(key, current);
+    });
+
+    return Array.from(groups.entries()).map(([area, cameras]) => ({ area, cameras }));
+  }, [visibleCameras]);
 
   return (
     <ScrollView
@@ -30,6 +42,23 @@ export function LiveCamerasScreen() {
         <Text style={styles.eyebrow}>Live cameras</Text>
         <Text style={styles.title}>Sky check</Text>
         <Text style={styles.subtitle}>Quick horizon check before you head out. Auto-refreshes every minute.</Text>
+        <Text style={styles.headerMeta}>
+          Grouped by location so multi-camera areas read like one overview instead of a long feed.
+        </Text>
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryTile}>
+            <Text style={styles.summaryLabel}>Layout</Text>
+            <Text style={styles.summaryValue}>2x2 overview</Text>
+          </View>
+          <View style={styles.summaryTile}>
+            <Text style={styles.summaryLabel}>Focus</Text>
+            <Text style={styles.summaryValue}>All directions</Text>
+          </View>
+          <View style={styles.summaryTile}>
+            <Text style={styles.summaryLabel}>Action</Text>
+            <Text style={styles.summaryValue}>Tap to expand</Text>
+          </View>
+        </View>
       </View>
 
       {visibleCameras.length === 0 ? (
@@ -39,34 +68,60 @@ export function LiveCamerasScreen() {
         </View>
       ) : null}
 
-      {visibleCameras.map((camera) => (
-        <View key={camera.id} style={styles.card}>
-          {camera.imageUrl && !failedCameraIds[camera.id] ? (
-            <Pressable onPress={() => setFullscreen({ uri: `${camera.imageUrl}?t=${refreshToken}`, name: camera.name })}>
-              <Image
-                source={{ uri: `${camera.imageUrl}?t=${refreshToken}` }}
-                style={styles.image}
-                resizeMode="cover"
-                onError={() => {
-                  setFailedCameraIds((current) => ({ ...current, [camera.id]: true }));
-                }}
-              />
-            </Pressable>
-          ) : (
-            <CameraUnavailable camera={camera} />
-          )}
-
+      {groupedCameras.map(({ area, cameras }) => (
+        <View key={area} style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardCopy}>
-              <Text style={styles.name}>{camera.name}</Text>
-              <Text style={styles.meta}>{camera.provider}</Text>
+              <Text style={styles.name}>{area}</Text>
+              <Text style={styles.meta}>
+                {cameras.length > 1 ? `${cameras.length} directional feeds` : 'Single live camera'}
+              </Text>
             </View>
             <View style={styles.areaPill}>
-              <Text style={styles.areaPillText}>{camera.area}</Text>
+              <Text style={styles.areaPillText}>{cameras.length} view{cameras.length > 1 ? 's' : ''}</Text>
             </View>
           </View>
 
-          {camera.note ? <Text style={styles.note}>{camera.note}</Text> : null}
+          <View style={styles.cameraGrid}>
+            {cameras.map((camera) => (
+              <View key={camera.id} style={styles.cameraTile}>
+                {camera.imageUrl && !failedCameraIds[camera.id] ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Expand ${camera.name}`}
+                    style={({ pressed }) => [pressed ? styles.mediaPressed : null]}
+                    onPress={() => setFullscreen({ uri: `${camera.imageUrl}?t=${refreshToken}`, name: camera.name })}
+                  >
+                    <Image
+                      source={{ uri: `${camera.imageUrl}?t=${refreshToken}` }}
+                      style={styles.image}
+                      resizeMode="cover"
+                      onError={() => {
+                        setFailedCameraIds((current) => ({ ...current, [camera.id]: true }));
+                      }}
+                    />
+                  </Pressable>
+                ) : (
+                  <CameraUnavailable camera={camera} compact />
+                )}
+
+                <Text style={styles.cameraName} numberOfLines={2}>
+                  {camera.name}
+                </Text>
+                <Text style={styles.cameraMeta} numberOfLines={2}>
+                  {camera.provider}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.sourceButton, pressed ? styles.buttonPressed : null]}
+            onPress={() => void Linking.openURL(cameras[0].sourceUrl)}
+          >
+            <Text style={styles.sourceButtonText}>Open source page</Text>
+          </Pressable>
         </View>
       ))}
 
@@ -86,14 +141,18 @@ export function LiveCamerasScreen() {
   );
 }
 
-function CameraUnavailable({ camera }: { camera: LiveCamera }) {
+function CameraUnavailable({ camera, compact = false }: { camera: LiveCamera; compact?: boolean }) {
   return (
-    <View style={styles.unavailableCard}>
+    <View style={[styles.unavailableCard, compact ? styles.unavailableCardCompact : null]}>
       <Text style={styles.unavailableTitle}>Live image unavailable</Text>
       <Text style={styles.unavailableText}>
         {camera.name} did not return an image. Open the source page to check whether the feed is offline.
       </Text>
-      <Pressable style={styles.unavailableButton} onPress={() => void Linking.openURL(camera.sourceUrl)}>
+      <Pressable
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.unavailableButton, pressed ? styles.buttonPressed : null]}
+        onPress={() => void Linking.openURL(camera.sourceUrl)}
+      >
         <Text style={styles.unavailableButtonText}>Open source</Text>
       </Pressable>
     </View>
@@ -134,6 +193,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21
   },
+  headerMeta: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 16
+  },
+  summaryTile: {
+    flexGrow: 1,
+    minWidth: 96,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#152734',
+    borderWidth: 1,
+    borderColor: '#284657'
+  },
+  summaryLabel: {
+    color: palette.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: 4
+  },
+  summaryValue: {
+    color: palette.textPrimary,
+    fontSize: 14,
+    fontWeight: '700'
+  },
   emptyCard: {
     backgroundColor: palette.card,
     borderRadius: 22,
@@ -161,18 +255,31 @@ const styles = StyleSheet.create({
     borderColor: palette.cardBorder,
     marginBottom: 12
   },
+  cameraGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12
+  },
+  cameraTile: {
+    width: '48%',
+    minWidth: 140
+  },
   image: {
     width: '100%',
-    height: 192,
+    aspectRatio: 1,
     borderRadius: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: palette.cardBorder
+  },
+  mediaPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.988 }]
   },
   unavailableCard: {
     minHeight: 192,
     borderRadius: 16,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: '#132330',
@@ -180,6 +287,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 18,
     gap: 10
+  },
+  unavailableCardCompact: {
+    minHeight: 160,
+    marginBottom: 10
   },
   unavailableTitle: {
     color: palette.textPrimary,
@@ -202,6 +313,10 @@ const styles = StyleSheet.create({
   unavailableButtonText: {
     color: palette.textOnAurora,
     fontWeight: '800'
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }]
   },
   cardHeader: {
     flexDirection: 'row',
@@ -240,6 +355,32 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
     marginTop: 10,
     lineHeight: 20
+  },
+  cameraName: {
+    color: palette.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 19
+  },
+  cameraMeta: {
+    color: palette.textSecondary,
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17
+  },
+  sourceButton: {
+    minHeight: 44,
+    marginTop: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#355468',
+    backgroundColor: '#132836'
+  },
+  sourceButtonText: {
+    color: palette.textPrimary,
+    fontWeight: '700'
   },
   modalOverlay: {
     flex: 1,

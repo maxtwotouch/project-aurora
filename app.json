@@ -3,8 +3,15 @@
     "name": "Tromsø Northern Lights",
     "slug": "tromso-northern-lights",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/c3231a13-9f7e-4c36-878c-d1725e889b81"
+    },
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
@@ -19,7 +26,9 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "android": {},
+    "android": {
+      "package": "com.maxtwotouch.tromsonorthernlights"
+    },
     "web": {
       "bundler": "metro"
     },

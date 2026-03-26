@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Easing, Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { DataQualityBanner } from '../components/DataQualityBanner';
 import { SpotCard } from '../components/SpotCard';
 import { palette } from '../theme/palette';
-import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
+import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
+  dataQuality: AppDataQuality;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
@@ -87,6 +90,7 @@ export function TonightScreen({
   loading,
   error,
   lastUpdatedAt,
+  dataQuality,
   kp,
   topSpots,
   closeSpots,
@@ -97,10 +101,13 @@ export function TonightScreen({
   recommendation,
   refresh
 }: Props) {
+  const navigation = useNavigation<any>();
   const heroAnim = useRef(new Animated.Value(0)).current;
   const secondaryAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
   const bestSpot = topSpots[0];
+  const previewTopSpots = topSpots.slice(0, 2);
+  const previewCloseSpots = closeSpots.slice(0, 2);
   const isDaytimeNow = isLikelyDaytime(new Date());
   const tonightScoreValue = tonightScore?.score ?? 0;
   const decision = decisionLabel(tonightScoreValue, isDaytimeNow, bestSpot?.cloudCoverAtBestHour);
@@ -212,12 +219,32 @@ export function TonightScreen({
           </View>
         </View>
 
+        <DataQualityBanner dataQuality={dataQuality} />
+
         {daytimeHint ? (
           <View style={styles.daylightNotice}>
             <Ionicons name="sunny" size={18} color="#ffe49a" />
             <Text style={styles.daylightNoticeText}>{daytimeHint}</Text>
           </View>
         ) : null}
+
+        <View style={styles.quickNavCard}>
+          <Text style={styles.quickNavTitle}>On this page</Text>
+          <View style={styles.quickNavRow}>
+            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('AllSpots')}>
+              <Text style={styles.quickNavChipText}>Full spots</Text>
+            </Pressable>
+            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('SpotsMap')}>
+              <Text style={styles.quickNavChipText}>Map</Text>
+            </Pressable>
+            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('Live')}>
+              <Text style={styles.quickNavChipText}>Cameras</Text>
+            </Pressable>
+            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('AuroraMap')}>
+              <Text style={styles.quickNavChipText}>Aurora map</Text>
+            </Pressable>
+          </View>
+        </View>
 
         <View style={styles.heroColumns}>
           <View style={styles.heroPrimary}>
@@ -387,15 +414,20 @@ export function TonightScreen({
         ]}
       >
         <Text style={styles.sectionTitle}>Top aurora spots right now</Text>
-        <Text style={styles.sectionSubtitle}>Ranked for immediacy, cloud cover, and practical viewing quality.</Text>
+        <Text style={styles.sectionSubtitle}>Short preview here. Use the Spots tab for sorting and the full ranked list.</Text>
       </Animated.View>
       <Animated.View style={{ opacity: listAnim }}>
-        {topSpots.map((result) => {
+        {previewTopSpots.map((result) => {
         const spot = spotsById[result.spotId];
         if (!spot) return null;
 
         return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
         })}
+        {topSpots.length > previewTopSpots.length ? (
+          <Pressable style={styles.inlineCta} onPress={() => navigation.navigate('AllSpots')}>
+            <Text style={styles.inlineCtaText}>Open all ranked spots</Text>
+          </Pressable>
+        ) : null}
       </Animated.View>
 
       {closeSpots.length > 0 ? (
@@ -417,15 +449,20 @@ export function TonightScreen({
             ]}
           >
             <Text style={styles.sectionTitle}>Closer alternatives</Text>
-            <Text style={styles.sectionSubtitle}>Shorter drives if you want a quicker departure from Tromso.</Text>
+            <Text style={styles.sectionSubtitle}>Nearest options for a faster departure.</Text>
           </Animated.View>
           <Animated.View style={{ opacity: listAnim }}>
-            {closeSpots.map((result) => {
+            {previewCloseSpots.map((result) => {
             const spot = spotsById[result.spotId];
             if (!spot) return null;
 
             return <SpotCard key={`close-${spot.id}`} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
             })}
+            {closeSpots.length > previewCloseSpots.length ? (
+              <Pressable style={styles.inlineCta} onPress={() => navigation.navigate('AllSpots')}>
+                <Text style={styles.inlineCtaText}>Compare nearby spots</Text>
+              </Pressable>
+            ) : null}
           </Animated.View>
         </>
       ) : null}
@@ -594,6 +631,39 @@ const styles = StyleSheet.create({
     color: '#ffe7af',
     fontSize: 14,
     lineHeight: 20
+  },
+  quickNavCard: {
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#274253',
+    backgroundColor: '#0f202a'
+  },
+  quickNavTitle: {
+    color: palette.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10
+  },
+  quickNavRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  quickNavChip: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#17303c',
+    borderWidth: 1,
+    borderColor: '#2e5667'
+  },
+  quickNavChipText: {
+    color: palette.auroraMint,
+    fontSize: 13,
+    fontWeight: '700'
   },
   heroColumns: {
     gap: 16
@@ -847,6 +917,21 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
     fontSize: 14,
     lineHeight: 20
+  },
+  inlineCta: {
+    minHeight: 46,
+    borderRadius: 16,
+    marginTop: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#355468',
+    backgroundColor: '#132836'
+  },
+  inlineCtaText: {
+    color: palette.textPrimary,
+    fontWeight: '700',
+    fontSize: 14
   },
   error: {
     color: '#ffd5db',

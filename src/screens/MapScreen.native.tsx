@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
@@ -29,6 +30,11 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     () => rankedSpots.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.spotId]: s.score }), {}),
     [rankedSpots]
   );
+  const defaultSpot = useMemo(() => {
+    const rankedIds = new Set(rankedSpots.map((item) => item.spotId));
+    const candidates = spots.filter((spot) => rankedIds.has(spot.id));
+    return [...(candidates.length > 0 ? candidates : spots)].sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null;
+  }, [rankedSpots, spots]);
 
   const navigateToSpot = (spot: Spot) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
@@ -53,6 +59,10 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
       useNativeDriver: true
     }).start();
   }, [selected, sheetAnim]);
+
+  useEffect(() => {
+    setSelected((current) => current ?? defaultSpot);
+  }, [defaultSpot]);
 
   return (
     <View style={styles.container}>
@@ -88,6 +98,13 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         <Text style={styles.topLabelTitle}>Scout spots in driving order</Text>
       </Animated.View>
 
+      <View style={styles.selectionNote}>
+        <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
+        <Text style={styles.selectionNoteText}>
+          Selected stop defaults to the nearest listed spot for quicker orientation. Use the close button to clear it.
+        </Text>
+      </View>
+
       {selected ? (
         <Animated.View
           style={[
@@ -118,6 +135,9 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           </View>
 
           <View style={styles.actions}>
+            <Pressable style={styles.ghostButton} onPress={() => setSelected(null)}>
+              <Text style={styles.ghostButtonText}>Clear</Text>
+            </Pressable>
             <Pressable style={styles.secondaryButton} onPress={() => onOpenSpot(selected.id)}>
               <Text style={styles.secondaryButtonText}>Details</Text>
             </Pressable>
@@ -170,6 +190,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#10202bdc',
     borderWidth: 1,
     borderColor: '#284657'
+  },
+  selectionNote: {
+    position: 'absolute',
+    top: 88,
+    left: 14,
+    right: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#112735e6',
+    borderWidth: 1,
+    borderColor: '#2c5265'
+  },
+  selectionNoteText: {
+    flex: 1,
+    color: palette.textSecondary,
+    fontSize: 13,
+    lineHeight: 18
   },
   topLabelEyebrow: {
     color: palette.auroraMint,
@@ -255,6 +296,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 14,
     gap: 10
+  },
+  ghostButton: {
+    minWidth: 78,
+    minHeight: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#355468',
+    backgroundColor: '#132836'
+  },
+  ghostButtonText: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    fontWeight: '700'
   },
   secondaryButton: {
     flex: 1,

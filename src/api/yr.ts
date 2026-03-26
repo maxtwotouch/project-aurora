@@ -14,6 +14,11 @@ type CacheEntry = {
 const forecastCache = new Map<string, CacheEntry>();
 const daylightHintCache = new Map<string, { timestamp: number; data: string | null }>();
 
+export type ForecastFetchResult = {
+  hourly: HourlyForecast[];
+  usedFallback: boolean;
+};
+
 const getSpotKey = (spot: Spot) => `${spot.lat.toFixed(4)},${spot.lon.toFixed(4)}`;
 const getPointKey = (lat: number, lon: number, hours: number) => `${lat.toFixed(4)},${lon.toFixed(4)},${hours}`;
 const getDaylightKey = (lat: number, lon: number, dayKey: string) => `${lat.toFixed(4)},${lon.toFixed(4)},${dayKey}`;
@@ -122,12 +127,15 @@ function extractSunsetIso(payload: any): string | null {
   return null;
 }
 
-export async function fetchSpotForecast(spot: Spot): Promise<HourlyForecast[]> {
+export async function fetchSpotForecastDetailed(spot: Spot): Promise<ForecastFetchResult> {
   const key = getSpotKey(spot);
   const cached = forecastCache.get(key);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
+    return {
+      hourly: cached.data,
+      usedFallback: false
+    };
   }
 
   const url = `${MET_BASE_URL}?lat=${spot.lat}&lon=${spot.lon}`;
@@ -162,7 +170,10 @@ export async function fetchSpotForecast(spot: Spot): Promise<HourlyForecast[]> {
       data: hourly
     });
 
-    return hourly;
+    return {
+      hourly,
+      usedFallback: false
+    };
   } catch {
     const fallback = buildFallbackForecast();
     forecastCache.set(key, {
@@ -170,16 +181,22 @@ export async function fetchSpotForecast(spot: Spot): Promise<HourlyForecast[]> {
       data: fallback
     });
 
-    return fallback;
+    return {
+      hourly: fallback,
+      usedFallback: true
+    };
   }
 }
 
-export async function fetchPointForecast(lat: number, lon: number, hours = 48): Promise<HourlyForecast[]> {
+export async function fetchPointForecastDetailed(lat: number, lon: number, hours = 48): Promise<ForecastFetchResult> {
   const key = getPointKey(lat, lon, hours);
   const cached = forecastCache.get(key);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
+    return {
+      hourly: cached.data,
+      usedFallback: false
+    };
   }
 
   const url = `${MET_BASE_URL}?lat=${lat}&lon=${lon}`;
@@ -214,7 +231,10 @@ export async function fetchPointForecast(lat: number, lon: number, hours = 48): 
       data: hourly
     });
 
-    return hourly;
+    return {
+      hourly,
+      usedFallback: false
+    };
   } catch {
     const fallback = buildFallbackForecast();
     forecastCache.set(key, {
@@ -222,7 +242,10 @@ export async function fetchPointForecast(lat: number, lon: number, hours = 48): 
       data: fallback
     });
 
-    return fallback;
+    return {
+      hourly: fallback,
+      usedFallback: true
+    };
   }
 }
 
@@ -270,4 +293,14 @@ export async function fetchSightingPossibleFrom(lat: number, lon: number): Promi
 export function clearForecastCache() {
   forecastCache.clear();
   daylightHintCache.clear();
+}
+
+export async function fetchSpotForecast(spot: Spot): Promise<HourlyForecast[]> {
+  const result = await fetchSpotForecastDetailed(spot);
+  return result.hourly;
+}
+
+export async function fetchPointForecast(lat: number, lon: number, hours = 48): Promise<HourlyForecast[]> {
+  const result = await fetchPointForecastDetailed(lat, lon, hours);
+  return result.hourly;
 }
