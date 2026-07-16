@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -10,19 +11,20 @@ type Props = {
 };
 
 export function DataQualityBanner({ dataQuality }: Props) {
+  const { t } = useTranslation();
   const messages: string[] = [];
 
   if (dataQuality.backendRequested && dataQuality.backendUnavailable) {
-    messages.push('Backend snapshot is unavailable. Showing live source data instead.');
+    messages.push(t('dataQuality.backendUnavailable'));
   }
 
   if (dataQuality.usingFallbackKp) {
-    messages.push('KP is using a backup estimate because the upstream feed failed.');
+    messages.push(t('dataQuality.kpFallback'));
   }
 
   if (dataQuality.fallbackWeatherSpotIds.length > 0) {
     const spotCount = dataQuality.fallbackWeatherSpotIds.length;
-    messages.push(`Weather data is estimated for ${spotCount} spot${spotCount === 1 ? '' : 's'} because forecast fetches failed.`);
+    messages.push(t('dataQuality.weatherFallback', { count: spotCount }));
   }
 
   if (messages.length === 0) {
@@ -31,7 +33,7 @@ export function DataQualityBanner({ dataQuality }: Props) {
 
   return (
     <View style={styles.card} accessibilityRole="alert">
-      <Text style={styles.eyebrow}>Data quality notice</Text>
+      <Text style={styles.eyebrow}>{t('dataQuality.eyebrow')}</Text>
       {messages.map((message) => (
         <Text key={message} style={styles.message}>
           {message}

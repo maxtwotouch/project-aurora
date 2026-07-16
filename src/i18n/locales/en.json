@@ -1,0 +1,278 @@
+{
+  "common": {
+    "back": "Back",
+    "goBack": "Go back",
+    "tryAgain": "Try again",
+    "navigate": "Navigate",
+    "bestWindow": "Best window",
+    "distance": "Distance",
+    "cloud": "Cloud",
+    "parking": "Parking",
+    "bus": "Bus",
+    "tonightEyebrow": "Tonight",
+    "spotDetailsFallback": "Spot Details",
+    "kmValue": "{{km}} km",
+    "distanceTromsoCenter": "{{km}} km from Tromso center",
+    "openNavigationTo": "Open navigation to {{name}}",
+    "chance": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "trend": {
+      "goodNow": "Good now",
+      "improving": "Better later",
+      "limited": "Limited tonight"
+    }
+  },
+  "nav": {
+    "tabs": {
+      "tonight": "Tonight",
+      "map": "Map",
+      "spots": "Spots",
+      "aurora": "Aurora",
+      "live": "Live"
+    }
+  },
+  "tonight": {
+    "loading": "Loading tonight's field report...",
+    "heroEyebrow": "Tonight",
+    "heroTitle": "Aurora outlook",
+    "recommendation": {
+      "great": "Great chance tonight",
+      "possible": "Possible but uncertain",
+      "low": "Low chance tonight"
+    },
+    "scoreSuffix": "out of 100",
+    "daytimeHint": "Daylight is still up. First realistic viewing window starts around {{time}}.",
+    "decision": {
+      "goNow": "Go Now",
+      "wait": "Wait",
+      "bestLater": "Best Later",
+      "laterTonight": "Later Tonight"
+    },
+    "why": {
+      "worthIt": "Why tonight is worth it",
+      "needsTiming": "Why tonight needs timing",
+      "difficult": "Why tonight looks difficult"
+    },
+    "band": {
+      "chance": "Chance",
+      "kpNow": "KP now",
+      "kpPeak": "KP peak",
+      "updated": "Updated"
+    },
+    "waitingForecast": "Waiting for fresh forecast data",
+    "bestWindowSummary": "{{cloud}}% cloud cover at the strongest moment, at {{spot}}.",
+    "pullToRefresh": "Pull to refresh when forecast data becomes available.",
+    "bestSpotNow": "Best spot now",
+    "distanceCityCenter": "{{km}} km from the city center",
+    "viewDetails": "View details",
+    "viewDetailsFor": "View details for {{name}}",
+    "noRecommendation": "No spot recommendation yet. Try refreshing once the forecast feed stabilizes.",
+    "quickNav": {
+      "fullSpotList": "Full spot list",
+      "map": "Map",
+      "cameras": "Cameras",
+      "auroraMap": "Aurora map"
+    },
+    "outlook": {
+      "eyebrow": "Looking ahead",
+      "tomorrowEvening": "Tomorrow evening",
+      "score": "Score",
+      "peakKp": "Peak KP",
+      "geomagnetic": "Geomagnetic outlook",
+      "dayLabels": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "day3": "Day 3"
+      }
+    },
+    "topSpotsTitle": "Top aurora spots right now",
+    "topSpotsSubtitle": "Short preview here. Use the Spots tab for sorting and the full ranked list.",
+    "openAllRankedSpots": "Open all ranked spots",
+    "closerAlternatives": "Closer alternatives",
+    "closerAlternativesSubtitle": "Nearest options for a faster departure.",
+    "compareNearbySpots": "Compare nearby spots",
+    "errorTitle": "Forecast update failed",
+    "hourlyScoreA11y": "Hourly aurora score tonight, with the best window highlighted",
+    "windowRange": "{{start}} to {{end}}"
+  },
+  "allSpots": {
+    "title": "All spots",
+    "subtitle": "Compare spots without burying the important bits. Switch between strongest and quickest options.",
+    "showingSummary_one": "Showing {{count}} ranked spot by {{mode}}.",
+    "showingSummary_other": "Showing {{count}} ranked spots by {{mode}}.",
+    "modeForecastStrength": "forecast strength",
+    "modeDrivingDistance": "driving distance",
+    "topSpotsButton": "Top spots",
+    "nearbySpotsButton": "Nearby spots",
+    "firstPick": "First pick",
+    "modeLabel": "Mode",
+    "modeBestScore": "Best score",
+    "modeShortestDrive": "Shortest drive",
+    "emptyTitle": "No ranked spots yet",
+    "emptyText": "Pull to refresh once forecast data is available for tonight.",
+    "attribution": "Some spot details verified with Tromsø kommune"
+  },
+  "auroraMap": {
+    "eyebrow": "UiT feed",
+    "title": "Aurora frames",
+    "subtitle": "Switch between now, +1h, and +4h.",
+    "overheadNowLabel": "Overhead now",
+    "overhead": {
+      "likely": "Likely overhead",
+      "possible": "Possible overhead",
+      "low": "Low overhead"
+    },
+    "nextPeakLabel": "Next peak",
+    "kpFrameLabel": "KP frame",
+    "frameUnavailableTitle": "Aurora frame unavailable",
+    "frameUnavailableText": "The UiT image feed did not load. Open the source page directly to verify whether the feed is down or the frame path changed.",
+    "openSource": "Open UiT source",
+    "loadingFrame": "Loading aurora frame...",
+    "timeLabel": "Time",
+    "scrubberMeta": "Nowcast, +1h, or +4h.",
+    "now": "Now",
+    "plusHours": "+{{hours}}h",
+    "sourceLabel": "Source",
+    "legendText": "NO-SPACE weather lab at UiT. Frame mode: {{mode}}.",
+    "modeNowcast": "Nowcast",
+    "modeForecastHours": "Forecast +{{hours}}h"
+  },
+  "liveCameras": {
+    "eyebrow": "Live cameras",
+    "title": "Sky check",
+    "subtitle": "Quick horizon check before you head out. Auto-refreshes every minute.",
+    "headerMeta": "Grouped by location so multi-camera areas read like one overview instead of a long feed.",
+    "layoutLabel": "Layout",
+    "layoutValue": "2x2 overview",
+    "focusLabel": "Focus",
+    "focusValue": "All directions",
+    "actionLabel": "Action",
+    "actionValue": "Tap to expand",
+    "emptyTitle": "No live cameras available",
+    "emptyText": "Camera sources are temporarily unavailable. Try again later.",
+    "feedsCount_one": "{{count}} directional feed",
+    "feedsCount_other": "{{count}} directional feeds",
+    "singleCamera": "Single live camera",
+    "viewsCount_one": "{{count}} view",
+    "viewsCount_other": "{{count}} views",
+    "expandCamera": "Expand {{name}}",
+    "openSourcePage": "Open source page",
+    "unavailableTitle": "Live image unavailable",
+    "unavailableText": "{{name}} did not return an image. Open the source page to check whether the feed is offline.",
+    "openSource": "Open source",
+    "liveFeedFallback": "Live feed"
+  },
+  "mapScreen": {
+    "eyebrow": "Map mode",
+    "title": "Scout spots in driving order",
+    "selectionNoteNative": "Selected stop defaults to the nearest listed spot for quicker orientation. Use the close button to clear it.",
+    "selectionNoteWeb": "Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.",
+    "distanceCityCenterShort": "{{km}} km from city center",
+    "scoreLabel": "Score {{score}}",
+    "selectedStop": "Selected stop",
+    "forecastScore": "Forecast score {{score}}",
+    "clear": "Clear",
+    "details": "Details",
+    "emptyTitle": "Tap a marker to inspect a viewing stop.",
+    "emptyText": "The bottom sheet updates with distance, score, and quick actions.",
+    "webTitle": "Map view is simplified on web beta.",
+    "noSpotSelected": "No spot selected",
+    "noSpotSelectedText": "Choose a spot from the list to see its score and quick actions.",
+    "spotScoreA11y": "{{name}}, score {{score}}"
+  },
+  "spotDetail": {
+    "eyebrow": "Spot",
+    "waitingNextRunNative": "Waiting for the next forecast run",
+    "waitingNextRunWeb": "Waiting for the next run",
+    "chanceSuffix": "{{chance}} chance",
+    "band": {
+      "temp": "Temp",
+      "wind": "Wind",
+      "coldScore": "Cold score"
+    },
+    "trendCloudSummary": "{{trend}}, {{cloud}}% cloud cover at the best hour.",
+    "forecastSettlingNative": "Forecast metrics are still settling. Pull to refresh from the main screen if needed.",
+    "forecastLoadingWeb": "Forecast metrics are still loading for this stop.",
+    "jump": {
+      "location": "Location",
+      "access": "Access",
+      "forecast": "Forecast",
+      "visuals": "Visuals"
+    },
+    "openNavigation": "Open navigation",
+    "position": {
+      "eyebrow": "Position",
+      "title": "Arrive at the viewing area"
+    },
+    "arrival": {
+      "eyebrow": "Arrival",
+      "title": "Parking and prep"
+    },
+    "verifiedKommune": "Verified with Tromsø kommune.",
+    "busStopLabel": "Bus stop",
+    "dressRecommendationLabel": "Dress recommendation",
+    "noDressRecommendation": "No recommendation available yet.",
+    "dressAdvice": {
+      "arctic": "Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots.",
+      "veryCold": "Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots.",
+      "cold": "Cold: layered top, insulated jacket, gloves, and warm footwear.",
+      "cool": "Cool: light layers plus a wind-resistant outer jacket."
+    },
+    "cloudForecastTitleNative": "Cloud cover over the next hours",
+    "cloudForecastTitleWeb": "Cloud cover next hours",
+    "hoursCount_one": "{{count}} hour",
+    "hoursCount_other": "{{count}} hours",
+    "noHourlyData": "No hourly data",
+    "timelineCaption": "Taller, brighter bars mean clearer sky.",
+    "noCloudData": "Hourly cloud data is not available for this spot right now.",
+    "visuals": {
+      "eyebrow": "Visual check",
+      "title": "Spot imagery"
+    },
+    "photosCount_one": "{{count}} photo",
+    "photosCount_other": "{{count}} photos",
+    "noPhotosYet": "No photos yet",
+    "noPhotosText": "Verified photos for this spot are coming soon.",
+    "mapPreviewSimplified": "Map preview is simplified on web beta.",
+    "openInGoogleMaps": "Open in Google Maps",
+    "hourlyClearnessA11y": "Hourly sky clearness for this spot"
+  },
+  "spotCard": {
+    "a11yLabel": "{{name}}, score {{score}} of 100, {{trend}}",
+    "busStopA11y": "Bus stop nearby: {{stop}}",
+    "parkingA11y": "Parking available near {{parking}}",
+    "trendLabel": "Trend"
+  },
+  "dataQuality": {
+    "eyebrow": "Data quality notice",
+    "backendUnavailable": "Backend snapshot is unavailable. Showing live source data instead.",
+    "kpFallback": "KP is using a backup estimate because the upstream feed failed.",
+    "weatherFallback_one": "Weather data is estimated for {{count}} spot because forecast fetches failed.",
+    "weatherFallback_other": "Weather data is estimated for {{count}} spots because forecast fetches failed."
+  },
+  "hourlyTimeline": {
+    "defaultA11yLabel": "Hourly forecast timeline",
+    "barLabelPlain": "{{hour}}, {{percent}} percent",
+    "barLabelBestWindow": "{{hour}}, {{percent}} percent, best window"
+  },
+  "scoreBadge": {
+    "a11yLabel": "Aurora score {{score}} out of 100"
+  },
+  "consent": {
+    "eyebrow": "Before you start",
+    "title": "Help improve aurora spots?",
+    "body": "Share anonymous usage — we count which spots people view and navigate to (never who you are, never your location, just spot names and the hour). You can say no and everything works the same.",
+    "acceptButton": "Share anonymous counts",
+    "declineButton": "No thanks",
+    "footnote": "You can change this later from the All Spots tab.",
+    "toggleLabel": "Anonymous usage sharing",
+    "toggleOnHelper": "Sharing anonymous spot views and navigation taps.",
+    "toggleOffHelper": "Not sharing any usage data."
+  },
+  "languagePicker": {
+    "label": "Language / Sprache / Langue / Idioma / 语言"
+  }
+}

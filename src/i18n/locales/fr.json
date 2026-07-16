@@ -1,0 +1,278 @@
+{
+  "common": {
+    "back": "Retour",
+    "goBack": "Retour",
+    "tryAgain": "Réessayer",
+    "navigate": "Naviguer",
+    "bestWindow": "Meilleur créneau",
+    "distance": "Distance",
+    "cloud": "Nuages",
+    "parking": "Stationnement",
+    "bus": "Bus",
+    "tonightEyebrow": "Ce soir",
+    "spotDetailsFallback": "Détails du site",
+    "kmValue": "{{km}} km",
+    "distanceTromsoCenter": "{{km}} km du centre de Tromsø",
+    "openNavigationTo": "Ouvrir l'itinéraire vers {{name}}",
+    "chance": {
+      "high": "Élevée",
+      "medium": "Moyenne",
+      "low": "Faible"
+    },
+    "trend": {
+      "goodNow": "Bon maintenant",
+      "improving": "Meilleur plus tard",
+      "limited": "Limité ce soir"
+    }
+  },
+  "nav": {
+    "tabs": {
+      "tonight": "Ce soir",
+      "map": "Carte",
+      "spots": "Sites",
+      "aurora": "Aurore",
+      "live": "Direct"
+    }
+  },
+  "tonight": {
+    "loading": "Chargement du rapport du soir...",
+    "heroEyebrow": "Ce soir",
+    "heroTitle": "Prévision d'aurore",
+    "recommendation": {
+      "great": "Très bonnes chances ce soir",
+      "possible": "Possible mais incertain",
+      "low": "Faibles chances ce soir"
+    },
+    "scoreSuffix": "sur 100",
+    "daytimeHint": "Il fait encore jour. Le premier créneau d'observation réaliste commence vers {{time}}.",
+    "decision": {
+      "goNow": "Partez maintenant",
+      "wait": "Patientez",
+      "bestLater": "Mieux plus tard",
+      "laterTonight": "Plus tard ce soir"
+    },
+    "why": {
+      "worthIt": "Pourquoi ce soir en vaut la peine",
+      "needsTiming": "Pourquoi le moment compte ce soir",
+      "difficult": "Pourquoi ce soir semble difficile"
+    },
+    "band": {
+      "chance": "Chance",
+      "kpNow": "KP actuel",
+      "kpPeak": "Pic KP",
+      "updated": "Mis à jour"
+    },
+    "waitingForecast": "En attente de nouvelles données de prévision",
+    "bestWindowSummary": "{{cloud}} % de couverture nuageuse au meilleur moment, à {{spot}}.",
+    "pullToRefresh": "Tirez pour actualiser dès que les données de prévision seront disponibles.",
+    "bestSpotNow": "Meilleur site maintenant",
+    "distanceCityCenter": "{{km}} km du centre-ville",
+    "viewDetails": "Voir les détails",
+    "viewDetailsFor": "Voir les détails de {{name}}",
+    "noRecommendation": "Aucune recommandation de site pour l'instant. Actualisez une fois que le flux de prévision se sera stabilisé.",
+    "quickNav": {
+      "fullSpotList": "Liste complète des sites",
+      "map": "Carte",
+      "cameras": "Caméras",
+      "auroraMap": "Carte de l'aurore"
+    },
+    "outlook": {
+      "eyebrow": "À venir",
+      "tomorrowEvening": "Demain soir",
+      "score": "Score",
+      "peakKp": "Pic KP",
+      "geomagnetic": "Prévisions géomagnétiques",
+      "dayLabels": {
+        "today": "Aujourd'hui",
+        "tomorrow": "Demain",
+        "day3": "Jour 3"
+      }
+    },
+    "topSpotsTitle": "Meilleurs sites d'aurore en ce moment",
+    "topSpotsSubtitle": "Aperçu rapide ici. Utilisez l'onglet Sites pour trier et voir le classement complet.",
+    "openAllRankedSpots": "Voir tous les sites classés",
+    "closerAlternatives": "Alternatives plus proches",
+    "closerAlternativesSubtitle": "Les options les plus proches pour un départ plus rapide.",
+    "compareNearbySpots": "Comparer les sites à proximité",
+    "errorTitle": "Échec de la mise à jour de la prévision",
+    "hourlyScoreA11y": "Score d'aurore horaire ce soir, avec le meilleur créneau mis en évidence",
+    "windowRange": "{{start}} à {{end}}"
+  },
+  "allSpots": {
+    "title": "Tous les sites",
+    "subtitle": "Comparez les sites sans en perdre l'essentiel. Basculez entre les options les plus fortes et les plus rapides.",
+    "showingSummary_one": "{{count}} site classé par {{mode}}.",
+    "showingSummary_other": "{{count}} sites classés par {{mode}}.",
+    "modeForecastStrength": "force de la prévision",
+    "modeDrivingDistance": "distance en voiture",
+    "topSpotsButton": "Meilleurs sites",
+    "nearbySpotsButton": "Sites à proximité",
+    "firstPick": "Premier choix",
+    "modeLabel": "Mode",
+    "modeBestScore": "Meilleur score",
+    "modeShortestDrive": "Trajet le plus court",
+    "emptyTitle": "Aucun site classé pour l'instant",
+    "emptyText": "Tirez pour actualiser dès que les données de prévision de ce soir seront disponibles.",
+    "attribution": "Certains détails des sites vérifiés avec la Tromsø kommune"
+  },
+  "auroraMap": {
+    "eyebrow": "Flux UiT",
+    "title": "Images de l'aurore",
+    "subtitle": "Basculez entre maintenant, +1 h et +4 h.",
+    "overheadNowLabel": "Au-dessus de vous maintenant",
+    "overhead": {
+      "likely": "Probablement au-dessus de vous",
+      "possible": "Possiblement au-dessus de vous",
+      "low": "Rarement au-dessus de vous"
+    },
+    "nextPeakLabel": "Prochain pic",
+    "kpFrameLabel": "KP de l'image",
+    "frameUnavailableTitle": "Image de l'aurore indisponible",
+    "frameUnavailableText": "Le flux d'images de l'UiT ne s'est pas chargé. Ouvrez directement la page source pour vérifier si le flux est en panne ou si le chemin de l'image a changé.",
+    "openSource": "Ouvrir la source UiT",
+    "loadingFrame": "Chargement de l'image de l'aurore...",
+    "timeLabel": "Heure",
+    "scrubberMeta": "Nowcast, +1 h ou +4 h.",
+    "now": "Maintenant",
+    "plusHours": "+{{hours}} h",
+    "sourceLabel": "Source",
+    "legendText": "Laboratoire météo NO-SPACE à l'UiT. Mode d'image : {{mode}}.",
+    "modeNowcast": "Nowcast",
+    "modeForecastHours": "Prévision +{{hours}} h"
+  },
+  "liveCameras": {
+    "eyebrow": "Caméras en direct",
+    "title": "Contrôle du ciel",
+    "subtitle": "Un coup d'œil rapide à l'horizon avant de partir. Actualisation automatique chaque minute.",
+    "headerMeta": "Regroupées par lieu afin que les zones à plusieurs caméras se lisent comme une seule vue d'ensemble plutôt que comme un long flux.",
+    "layoutLabel": "Disposition",
+    "layoutValue": "Vue d'ensemble 2x2",
+    "focusLabel": "Focus",
+    "focusValue": "Toutes les directions",
+    "actionLabel": "Action",
+    "actionValue": "Touchez pour agrandir",
+    "emptyTitle": "Aucune caméra en direct disponible",
+    "emptyText": "Les sources des caméras sont temporairement indisponibles. Réessayez plus tard.",
+    "feedsCount_one": "{{count}} flux directionnel",
+    "feedsCount_other": "{{count}} flux directionnels",
+    "singleCamera": "Caméra unique en direct",
+    "viewsCount_one": "{{count}} vue",
+    "viewsCount_other": "{{count}} vues",
+    "expandCamera": "Agrandir {{name}}",
+    "openSourcePage": "Ouvrir la page source",
+    "unavailableTitle": "Image en direct indisponible",
+    "unavailableText": "{{name}} n'a pas renvoyé d'image. Ouvrez la page source pour vérifier si le flux est hors ligne.",
+    "openSource": "Ouvrir la source",
+    "liveFeedFallback": "Flux en direct"
+  },
+  "mapScreen": {
+    "eyebrow": "Mode carte",
+    "title": "Explorez les sites dans l'ordre du trajet",
+    "selectionNoteNative": "Le site sélectionné est par défaut le site répertorié le plus proche pour une orientation plus rapide. Utilisez le bouton de fermeture pour effacer la sélection.",
+    "selectionNoteWeb": "Le site sélectionné est par défaut le site répertorié le plus proche, pour vous donner immédiatement un point de départ utile.",
+    "distanceCityCenterShort": "{{km}} km du centre-ville",
+    "scoreLabel": "Score {{score}}",
+    "selectedStop": "Site sélectionné",
+    "forecastScore": "Score de prévision {{score}}",
+    "clear": "Effacer",
+    "details": "Détails",
+    "emptyTitle": "Touchez un repère pour examiner un site d'observation.",
+    "emptyText": "La fiche en bas de l'écran affiche la distance, le score et les actions rapides.",
+    "webTitle": "La vue carte est simplifiée dans la version bêta web.",
+    "noSpotSelected": "Aucun site sélectionné",
+    "noSpotSelectedText": "Choisissez un site dans la liste pour voir son score et ses actions rapides.",
+    "spotScoreA11y": "{{name}}, score {{score}}"
+  },
+  "spotDetail": {
+    "eyebrow": "Site",
+    "waitingNextRunNative": "En attente du prochain calcul de prévision",
+    "waitingNextRunWeb": "En attente du prochain calcul",
+    "chanceSuffix": "Chance : {{chance}}",
+    "band": {
+      "temp": "Temp.",
+      "wind": "Vent",
+      "coldScore": "Indice de froid"
+    },
+    "trendCloudSummary": "{{trend}}, {{cloud}} % de couverture nuageuse à la meilleure heure.",
+    "forecastSettlingNative": "Les données de prévision se stabilisent encore. Actualisez depuis l'écran principal si besoin.",
+    "forecastLoadingWeb": "Les données de prévision pour ce site sont encore en cours de chargement.",
+    "jump": {
+      "location": "Emplacement",
+      "access": "Accès",
+      "forecast": "Prévision",
+      "visuals": "Photos"
+    },
+    "openNavigation": "Ouvrir l'itinéraire",
+    "position": {
+      "eyebrow": "Position",
+      "title": "Se rendre au point d'observation"
+    },
+    "arrival": {
+      "eyebrow": "Arrivée",
+      "title": "Stationnement et préparation"
+    },
+    "verifiedKommune": "Vérifié avec la Tromsø kommune.",
+    "busStopLabel": "Arrêt de bus",
+    "dressRecommendationLabel": "Recommandation vestimentaire",
+    "noDressRecommendation": "Aucune recommandation disponible pour l'instant.",
+    "dressAdvice": {
+      "arctic": "Équipement arctique : sous-vêtement thermique, couche intermédiaire isolante, doudoune, coupe-vent, moufles, bottes chaudes.",
+      "veryCold": "Très froid : sous-vêtement en laine, couche intermédiaire polaire/duvet, veste isolante, bonnet, gants, bottes d'hiver.",
+      "cold": "Froid : superposition de couches sur le haut, veste isolante, gants et chaussures chaudes.",
+      "cool": "Frais : couches légères et une veste extérieure coupe-vent."
+    },
+    "cloudForecastTitleNative": "Couverture nuageuse dans les prochaines heures",
+    "cloudForecastTitleWeb": "Couverture nuageuse, prochaines heures",
+    "hoursCount_one": "{{count}} heure",
+    "hoursCount_other": "{{count}} heures",
+    "noHourlyData": "Aucune donnée horaire",
+    "timelineCaption": "Des barres plus hautes et plus claires indiquent un ciel plus dégagé.",
+    "noCloudData": "Les données horaires de couverture nuageuse ne sont pas disponibles pour ce site actuellement.",
+    "visuals": {
+      "eyebrow": "Contrôle visuel",
+      "title": "Photos du site"
+    },
+    "photosCount_one": "{{count}} photo",
+    "photosCount_other": "{{count}} photos",
+    "noPhotosYet": "Aucune photo pour l'instant",
+    "noPhotosText": "Des photos vérifiées pour ce site arrivent bientôt.",
+    "mapPreviewSimplified": "L'aperçu de la carte est simplifié dans la version bêta web.",
+    "openInGoogleMaps": "Ouvrir dans Google Maps",
+    "hourlyClearnessA11y": "Clarté du ciel par heure pour ce site"
+  },
+  "spotCard": {
+    "a11yLabel": "{{name}}, score {{score}} sur 100, {{trend}}",
+    "busStopA11y": "Arrêt de bus à proximité : {{stop}}",
+    "parkingA11y": "Stationnement disponible près de {{parking}}",
+    "trendLabel": "Tendance"
+  },
+  "dataQuality": {
+    "eyebrow": "Avis sur la qualité des données",
+    "backendUnavailable": "L'état des données du serveur est indisponible. Les données des sources en direct sont affichées à la place.",
+    "kpFallback": "Le KP utilise une estimation de secours car le flux source a échoué.",
+    "weatherFallback_one": "Les données météo sont estimées pour {{count}} site car la récupération des prévisions a échoué.",
+    "weatherFallback_other": "Les données météo sont estimées pour {{count}} sites car la récupération des prévisions a échoué."
+  },
+  "hourlyTimeline": {
+    "defaultA11yLabel": "Chronologie de prévision horaire",
+    "barLabelPlain": "{{hour}}, {{percent}} pour cent",
+    "barLabelBestWindow": "{{hour}}, {{percent}} pour cent, meilleur créneau"
+  },
+  "scoreBadge": {
+    "a11yLabel": "Score d'aurore {{score}} sur 100"
+  },
+  "consent": {
+    "eyebrow": "Avant de commencer",
+    "title": "Nous aider à améliorer les sites d'aurore ?",
+    "body": "Partagez des données d'utilisation anonymes — nous comptons les sites que les utilisateurs consultent et vers lesquels ils se rendent (jamais qui vous êtes, jamais votre position, seulement les noms des sites et l'heure). Vous pouvez refuser et tout continue de fonctionner de la même façon.",
+    "acceptButton": "Partager les statistiques anonymes",
+    "declineButton": "Non merci",
+    "footnote": "Vous pouvez modifier ce choix plus tard depuis l'onglet Tous les sites.",
+    "toggleLabel": "Partage anonyme de l'utilisation",
+    "toggleOnHelper": "Les consultations de sites et les appuis de navigation anonymes sont partagés.",
+    "toggleOffHelper": "Aucune donnée d'utilisation n'est partagée."
+  },
+  "languagePicker": {
+    "label": "Language / Sprache / Langue / Idioma / 语言"
+  }
+}

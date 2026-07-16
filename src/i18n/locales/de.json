@@ -1,0 +1,278 @@
+{
+  "common": {
+    "back": "Zurück",
+    "goBack": "Zurück",
+    "tryAgain": "Erneut versuchen",
+    "navigate": "Navigation starten",
+    "bestWindow": "Bestes Zeitfenster",
+    "distance": "Entfernung",
+    "cloud": "Bewölkung",
+    "parking": "Parken",
+    "bus": "Bus",
+    "tonightEyebrow": "Heute Nacht",
+    "spotDetailsFallback": "Ortsdetails",
+    "kmValue": "{{km}} km",
+    "distanceTromsoCenter": "{{km}} km vom Zentrum von Tromsø entfernt",
+    "openNavigationTo": "Navigation zu {{name}} öffnen",
+    "chance": {
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig"
+    },
+    "trend": {
+      "goodNow": "Jetzt gut",
+      "improving": "Später besser",
+      "limited": "Heute Nacht eingeschränkt"
+    }
+  },
+  "nav": {
+    "tabs": {
+      "tonight": "Heute",
+      "map": "Karte",
+      "spots": "Orte",
+      "aurora": "Aurora",
+      "live": "Live"
+    }
+  },
+  "tonight": {
+    "loading": "Der heutige Lagebericht wird geladen ...",
+    "heroEyebrow": "Heute Nacht",
+    "heroTitle": "Aurora-Ausblick",
+    "recommendation": {
+      "great": "Heute Nacht sehr gute Chancen",
+      "possible": "Möglich, aber unsicher",
+      "low": "Heute Nacht geringe Chancen"
+    },
+    "scoreSuffix": "von 100",
+    "daytimeHint": "Es ist noch hell. Das erste realistische Zeitfenster beginnt gegen {{time}} Uhr.",
+    "decision": {
+      "goNow": "Jetzt losfahren",
+      "wait": "Warten",
+      "bestLater": "Später am besten",
+      "laterTonight": "Später heute Nacht"
+    },
+    "why": {
+      "worthIt": "Warum sich heute Nacht lohnt",
+      "needsTiming": "Warum heute Nacht der Zeitpunkt entscheidend ist",
+      "difficult": "Warum es heute Nacht schwierig aussieht"
+    },
+    "band": {
+      "chance": "Chance",
+      "kpNow": "KP jetzt",
+      "kpPeak": "KP-Spitze",
+      "updated": "Aktualisiert"
+    },
+    "waitingForecast": "Warten auf aktuelle Vorhersagedaten",
+    "bestWindowSummary": "{{cloud}} % Bewölkung im stärksten Moment, bei {{spot}}.",
+    "pullToRefresh": "Ziehen Sie zum Aktualisieren, sobald Vorhersagedaten verfügbar sind.",
+    "bestSpotNow": "Bester Ort jetzt",
+    "distanceCityCenter": "{{km}} km vom Stadtzentrum entfernt",
+    "viewDetails": "Details ansehen",
+    "viewDetailsFor": "Details für {{name}} ansehen",
+    "noRecommendation": "Noch keine Ortsempfehlung. Aktualisieren Sie erneut, sobald sich die Vorhersagedaten stabilisiert haben.",
+    "quickNav": {
+      "fullSpotList": "Alle Orte",
+      "map": "Karte",
+      "cameras": "Kameras",
+      "auroraMap": "Aurora-Karte"
+    },
+    "outlook": {
+      "eyebrow": "Ausblick",
+      "tomorrowEvening": "Morgen Abend",
+      "score": "Wert",
+      "peakKp": "KP-Höchstwert",
+      "geomagnetic": "Geomagnetischer Ausblick",
+      "dayLabels": {
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "day3": "Tag 3"
+      }
+    },
+    "topSpotsTitle": "Top-Aurora-Orte jetzt",
+    "topSpotsSubtitle": "Kurze Vorschau hier. Nutzen Sie den Tab „Orte“ zum Sortieren und für die vollständige Rangliste.",
+    "openAllRankedSpots": "Alle bewerteten Orte öffnen",
+    "closerAlternatives": "Näher gelegene Alternativen",
+    "closerAlternativesSubtitle": "Die nächstgelegenen Optionen für eine schnellere Abfahrt.",
+    "compareNearbySpots": "Nahegelegene Orte vergleichen",
+    "errorTitle": "Vorhersage-Aktualisierung fehlgeschlagen",
+    "hourlyScoreA11y": "Stündlicher Aurora-Wert heute Nacht, mit hervorgehobenem besten Zeitfenster",
+    "windowRange": "{{start}} bis {{end}} Uhr"
+  },
+  "allSpots": {
+    "title": "Alle Orte",
+    "subtitle": "Vergleichen Sie Orte, ohne die wichtigen Details zu verlieren. Wechseln Sie zwischen den stärksten und den schnellsten Optionen.",
+    "showingSummary_one": "{{count}} bewerteter Ort nach {{mode}}.",
+    "showingSummary_other": "{{count}} bewertete Orte nach {{mode}}.",
+    "modeForecastStrength": "Vorhersagestärke",
+    "modeDrivingDistance": "Fahrstrecke",
+    "topSpotsButton": "Top-Orte",
+    "nearbySpotsButton": "Orte in der Nähe",
+    "firstPick": "Erste Wahl",
+    "modeLabel": "Modus",
+    "modeBestScore": "Bester Wert",
+    "modeShortestDrive": "Kürzeste Fahrt",
+    "emptyTitle": "Noch keine bewerteten Orte",
+    "emptyText": "Ziehen Sie zum Aktualisieren, sobald Vorhersagedaten für heute Nacht verfügbar sind.",
+    "attribution": "Einige Ortsangaben mit der Tromsø kommune verifiziert"
+  },
+  "auroraMap": {
+    "eyebrow": "UiT-Feed",
+    "title": "Aurora-Bilder",
+    "subtitle": "Wechseln Sie zwischen jetzt, +1 Std. und +4 Std.",
+    "overheadNowLabel": "Gerade über uns",
+    "overhead": {
+      "likely": "Wahrscheinlich über uns",
+      "possible": "Möglicherweise über uns",
+      "low": "Selten über uns"
+    },
+    "nextPeakLabel": "Nächstes Maximum",
+    "kpFrameLabel": "KP im Bild",
+    "frameUnavailableTitle": "Aurora-Bild nicht verfügbar",
+    "frameUnavailableText": "Der Bild-Feed von UiT konnte nicht geladen werden. Öffnen Sie die Quellseite direkt, um zu prüfen, ob der Feed ausgefallen ist oder sich der Bildpfad geändert hat.",
+    "openSource": "UiT-Quelle öffnen",
+    "loadingFrame": "Aurora-Bild wird geladen ...",
+    "timeLabel": "Zeit",
+    "scrubberMeta": "Nowcast, +1 Std. oder +4 Std.",
+    "now": "Jetzt",
+    "plusHours": "+{{hours}} Std.",
+    "sourceLabel": "Quelle",
+    "legendText": "NO-SPACE Weather Lab an der UiT. Bildmodus: {{mode}}.",
+    "modeNowcast": "Nowcast",
+    "modeForecastHours": "Vorhersage +{{hours}} Std."
+  },
+  "liveCameras": {
+    "eyebrow": "Live-Kameras",
+    "title": "Himmel-Check",
+    "subtitle": "Schneller Blick zum Horizont, bevor Sie losfahren. Aktualisiert sich jede Minute automatisch.",
+    "headerMeta": "Nach Standort gruppiert, damit Bereiche mit mehreren Kameras wie eine Übersicht wirken statt wie ein langer Feed.",
+    "layoutLabel": "Layout",
+    "layoutValue": "2x2-Übersicht",
+    "focusLabel": "Fokus",
+    "focusValue": "Alle Richtungen",
+    "actionLabel": "Aktion",
+    "actionValue": "Zum Vergrößern tippen",
+    "emptyTitle": "Keine Live-Kameras verfügbar",
+    "emptyText": "Kameraquellen sind vorübergehend nicht verfügbar. Versuchen Sie es später erneut.",
+    "feedsCount_one": "{{count}} Blickrichtung",
+    "feedsCount_other": "{{count}} Blickrichtungen",
+    "singleCamera": "Einzelne Live-Kamera",
+    "viewsCount_one": "{{count}} Ansicht",
+    "viewsCount_other": "{{count}} Ansichten",
+    "expandCamera": "{{name}} vergrößern",
+    "openSourcePage": "Quellseite öffnen",
+    "unavailableTitle": "Live-Bild nicht verfügbar",
+    "unavailableText": "{{name}} hat kein Bild geliefert. Öffnen Sie die Quellseite, um zu prüfen, ob der Feed offline ist.",
+    "openSource": "Quelle öffnen",
+    "liveFeedFallback": "Live-Feed"
+  },
+  "mapScreen": {
+    "eyebrow": "Kartenmodus",
+    "title": "Orte auf der Route",
+    "selectionNoteNative": "Der ausgewählte Ort ist standardmäßig der nächstgelegene Ort zur schnelleren Orientierung. Nutzen Sie die Schließen-Schaltfläche, um die Auswahl zu löschen.",
+    "selectionNoteWeb": "Der ausgewählte Ort ist standardmäßig der nächstgelegene Ort, damit Sie sofort einen sinnvollen Ausgangspunkt haben.",
+    "distanceCityCenterShort": "{{km}} km vom Stadtzentrum",
+    "scoreLabel": "Wert {{score}}",
+    "selectedStop": "Ausgewählter Ort",
+    "forecastScore": "Vorhersagewert {{score}}",
+    "clear": "Zurücksetzen",
+    "details": "Details",
+    "emptyTitle": "Tippen Sie auf eine Markierung, um einen Ort zu prüfen.",
+    "emptyText": "Die untere Karte zeigt Entfernung, Wert und Schnellaktionen an.",
+    "webTitle": "Die Kartenansicht ist in der Web-Beta vereinfacht.",
+    "noSpotSelected": "Kein Ort ausgewählt",
+    "noSpotSelectedText": "Wählen Sie einen Ort aus der Liste, um Wert und Schnellaktionen zu sehen.",
+    "spotScoreA11y": "{{name}}, Wert {{score}}"
+  },
+  "spotDetail": {
+    "eyebrow": "Ort",
+    "waitingNextRunNative": "Warten auf den nächsten Vorhersagelauf",
+    "waitingNextRunWeb": "Warten auf den nächsten Durchlauf",
+    "chanceSuffix": "Chance: {{chance}}",
+    "band": {
+      "temp": "Temp.",
+      "wind": "Wind",
+      "coldScore": "Kältewert"
+    },
+    "trendCloudSummary": "{{trend}}, {{cloud}} % Bewölkung zur besten Stunde.",
+    "forecastSettlingNative": "Die Vorhersagewerte stabilisieren sich noch. Aktualisieren Sie bei Bedarf über den Hauptbildschirm.",
+    "forecastLoadingWeb": "Die Vorhersagewerte für diesen Ort werden noch geladen.",
+    "jump": {
+      "location": "Standort",
+      "access": "Zugang",
+      "forecast": "Vorhersage",
+      "visuals": "Bilder"
+    },
+    "openNavigation": "Navigation öffnen",
+    "position": {
+      "eyebrow": "Position",
+      "title": "Zum Aussichtspunkt gelangen"
+    },
+    "arrival": {
+      "eyebrow": "Ankunft",
+      "title": "Parken und Vorbereitung"
+    },
+    "verifiedKommune": "Verifiziert mit der Tromsø kommune.",
+    "busStopLabel": "Bushaltestelle",
+    "dressRecommendationLabel": "Kleidungsempfehlung",
+    "noDressRecommendation": "Noch keine Empfehlung verfügbar.",
+    "dressAdvice": {
+      "arctic": "Arktis-Ausrüstung: Thermo-Unterwäsche, isolierende Zwischenschicht, Daunenjacke, winddichte Außenschicht, Fäustlinge, warme Stiefel.",
+      "veryCold": "Sehr kalt: Wollunterwäsche, Fleece-/Daunen-Zwischenschicht, isolierende Jacke, Mütze, Handschuhe, Winterstiefel.",
+      "cold": "Kalt: Schichten am Oberkörper, isolierende Jacke, Handschuhe und warmes Schuhwerk.",
+      "cool": "Kühl: leichte Schichten plus eine winddichte Außenjacke."
+    },
+    "cloudForecastTitleNative": "Bewölkung in den nächsten Stunden",
+    "cloudForecastTitleWeb": "Bewölkung, nächste Stunden",
+    "hoursCount_one": "{{count}} Stunde",
+    "hoursCount_other": "{{count}} Stunden",
+    "noHourlyData": "Keine Stundendaten",
+    "timelineCaption": "Höhere, hellere Balken bedeuten klareren Himmel.",
+    "noCloudData": "Für diesen Ort sind derzeit keine stündlichen Bewölkungsdaten verfügbar.",
+    "visuals": {
+      "eyebrow": "Bildcheck",
+      "title": "Fotos zum Ort"
+    },
+    "photosCount_one": "{{count}} Foto",
+    "photosCount_other": "{{count}} Fotos",
+    "noPhotosYet": "Noch keine Fotos",
+    "noPhotosText": "Verifizierte Fotos für diesen Ort folgen in Kürze.",
+    "mapPreviewSimplified": "Die Kartenvorschau ist in der Web-Beta vereinfacht.",
+    "openInGoogleMaps": "In Google Maps öffnen",
+    "hourlyClearnessA11y": "Stündliche Himmelsklarheit für diesen Ort"
+  },
+  "spotCard": {
+    "a11yLabel": "{{name}}, Wert {{score}} von 100, {{trend}}",
+    "busStopA11y": "Bushaltestelle in der Nähe: {{stop}}",
+    "parkingA11y": "Parkmöglichkeit in der Nähe von {{parking}}",
+    "trendLabel": "Trend"
+  },
+  "dataQuality": {
+    "eyebrow": "Hinweis zur Datenqualität",
+    "backendUnavailable": "Der Backend-Datenstand ist nicht verfügbar. Es werden stattdessen Live-Quelldaten angezeigt.",
+    "kpFallback": "Der KP-Wert basiert auf einer Ersatzschätzung, da der Live-Feed fehlgeschlagen ist.",
+    "weatherFallback_one": "Die Wetterdaten für {{count}} Ort sind geschätzt, da der Vorhersageabruf fehlgeschlagen ist.",
+    "weatherFallback_other": "Die Wetterdaten für {{count}} Orte sind geschätzt, da der Vorhersageabruf fehlgeschlagen ist."
+  },
+  "hourlyTimeline": {
+    "defaultA11yLabel": "Stündliche Vorhersage-Zeitleiste",
+    "barLabelPlain": "{{hour}} Uhr, {{percent}} Prozent",
+    "barLabelBestWindow": "{{hour}} Uhr, {{percent}} Prozent, bestes Zeitfenster"
+  },
+  "scoreBadge": {
+    "a11yLabel": "Aurora-Wert {{score}} von 100"
+  },
+  "consent": {
+    "eyebrow": "Bevor Sie starten",
+    "title": "Helfen Sie, die Aurora-Orte zu verbessern?",
+    "body": "Teilen Sie anonyme Nutzungsdaten mit uns — wir zählen, welche Orte Nutzer ansehen und zu welchen sie navigieren (nie, wer Sie sind, nie Ihren Standort, nur Ortsnamen und die Uhrzeit). Sie können ablehnen, und alles funktioniert genauso weiter.",
+    "acceptButton": "Anonyme Zählung teilen",
+    "declineButton": "Nein, danke",
+    "footnote": "Sie können dies später jederzeit im Tab „Alle Orte“ ändern.",
+    "toggleLabel": "Anonyme Nutzungsfreigabe",
+    "toggleOnHelper": "Anonyme Ortsansichten und Navigations-Taps werden geteilt.",
+    "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt."
+  },
+  "languagePicker": {
+    "label": "Language / Sprache / Langue / Idioma / 语言"
+  }
+}

@@ -7,6 +7,8 @@ import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
+import { useTranslation } from '../i18n/useTranslation';
+import { dressLevelFromColdScore } from '../scoring/score';
 import { palette } from '../theme/palette';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -28,17 +30,17 @@ const formatLocalTime = (iso: string) =>
     hourCycle: 'h23'
   });
 
-function trendLabel(trend: SpotScoreResult['trend'] | undefined): string {
-  if (trend === 'good_now') return 'Good now';
-  if (trend === 'improving') return 'Better later';
-  return 'Limited tonight';
+function trendLabelKey(trend: SpotScoreResult['trend'] | undefined): string {
+  if (trend === 'good_now') return 'common.trend.goodNow';
+  if (trend === 'improving') return 'common.trend.improving';
+  return 'common.trend.limited';
 }
 
-function chanceLabel(score: number | undefined): string {
-  if (typeof score !== 'number') return '-';
-  if (score >= 70) return 'High';
-  if (score >= 45) return 'Medium';
-  return 'Low';
+function chanceLabelKey(score: number | undefined): string | null {
+  if (typeof score !== 'number') return null;
+  if (score >= 70) return 'common.chance.high';
+  if (score >= 45) return 'common.chance.medium';
+  return 'common.chance.low';
 }
 
 function clearnessTone(clearness: number): string {
@@ -47,7 +49,15 @@ function clearnessTone(clearness: number): string {
   return palette.danger;
 }
 
+// Uses the shared threshold helper from src/scoring/score.ts (also used by
+// SpotDetailScreen.native.tsx) so the >=80/60/40 cold-score bands live in one
+// place; only the i18n key mapping lives here at the display layer.
+function dressAdviceKeyFromColdScore(coldScore: number): string {
+  return `spotDetail.dressAdvice.${dressLevelFromColdScore(coldScore)}`;
+}
+
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const isWide = width >= 860;
   const imageUrls = getSpotImageUrls(spot);
@@ -84,51 +94,56 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
   };
 
   const hasVerifiedAccess = Boolean(spot.parking || spot.busStop);
+  const chanceKey = chanceLabelKey(result?.score);
 
   return (
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={[styles.container, isWide ? styles.containerWide : null]}
     >
-      <Text style={styles.eyebrow}>Spot</Text>
+      <Text style={styles.eyebrow}>{t('spotDetail.eyebrow')}</Text>
       <Text style={styles.title}>{spot.name}</Text>
-      <Text style={styles.subtitle}>{spot.distanceKm} km from Tromso center</Text>
+      <Text style={styles.subtitle}>{t('common.distanceTromsoCenter', { km: spot.distanceKm })}</Text>
 
       <View style={[styles.heroCard, isWide ? styles.heroCardWide : null]} onLayout={registerSection('overview')}>
         <View style={styles.scoreRow}>
           <View style={styles.scoreCopy}>
-            <Text style={styles.label}>Best window</Text>
+            <Text style={styles.label}>{t('common.bestWindow')}</Text>
             <Text style={styles.windowText}>
-              {result ? `${formatLocalTime(result.bestWindowStart)} to ${formatLocalTime(result.bestWindowEnd)}` : 'Waiting for the next run'}
+              {result
+                ? t('tonight.windowRange', { start: formatLocalTime(result.bestWindowStart), end: formatLocalTime(result.bestWindowEnd) })
+                : t('spotDetail.waitingNextRunWeb')}
             </Text>
             <Text style={styles.heroNote}>
               {result
-                ? `${trendLabel(result.trend)}, ${result.cloudCoverAtBestHour}% cloud cover at the best hour.`
-                : 'Forecast metrics are still loading for this stop.'}
+                ? t('spotDetail.trendCloudSummary', { trend: t(trendLabelKey(result.trend)), cloud: result.cloudCoverAtBestHour })
+                : t('spotDetail.forecastLoadingWeb')}
             </Text>
           </View>
           <View style={styles.scoreBadgeWrap}>
             <ScoreBadge score={result?.score ?? 0} size="lg" />
-            <Text style={styles.chanceText}>{chanceLabel(result?.score)} chance</Text>
+            <Text style={styles.chanceText}>
+              {t('spotDetail.chanceSuffix', { chance: chanceKey ? t(chanceKey) : '-' })}
+            </Text>
           </View>
         </View>
 
         <View style={styles.dataBand}>
           <View style={styles.bandItem}>
-            <Text style={styles.bandLabel}>Cloud</Text>
+            <Text style={styles.bandLabel}>{t('common.cloud')}</Text>
             <Text style={styles.bandValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
           </View>
           <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>Temp</Text>
+            <Text style={styles.bandLabel}>{t('spotDetail.band.temp')}</Text>
             <Text style={styles.bandValue}>{result?.temperatureAtBestHour ?? '-'}°C</Text>
           </View>
           <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>Wind</Text>
+            <Text style={styles.bandLabel}>{t('spotDetail.band.wind')}</Text>
             <Text style={styles.bandValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
           </View>
           <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>Distance</Text>
-            <Text style={styles.bandValue}>{spot.distanceKm} km</Text>
+            <Text style={styles.bandLabel}>{t('common.distance')}</Text>
+            <Text style={styles.bandValue}>{t('common.kmValue', { km: spot.distanceKm })}</Text>
           </View>
         </View>
 
@@ -150,15 +165,15 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         ) : null}
 
         <View style={styles.jumpRow}>
-          <JumpButton label="Location" onPress={() => jumpTo('location')} />
-          <JumpButton label="Access" onPress={() => jumpTo('access')} />
-          <JumpButton label="Forecast" onPress={() => jumpTo('forecast')} />
-          <JumpButton label="Visuals" onPress={() => jumpTo('visuals')} />
+          <JumpButton label={t('spotDetail.jump.location')} onPress={() => jumpTo('location')} />
+          <JumpButton label={t('spotDetail.jump.access')} onPress={() => jumpTo('access')} />
+          <JumpButton label={t('spotDetail.jump.forecast')} onPress={() => jumpTo('forecast')} />
+          <JumpButton label={t('spotDetail.jump.visuals')} onPress={() => jumpTo('visuals')} />
         </View>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Open navigation to ${spot.name}`}
+          accessibilityLabel={t('common.openNavigationTo', { name: spot.name })}
           style={({ pressed, focused }: WebPressableState) => [
             styles.navigateBtn,
             focused ? styles.focusRing : null,
@@ -166,22 +181,27 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           ]}
           onPress={navigateToSpot}
         >
-          <Text style={styles.navigateText}>Open navigation</Text>
+          <Text style={styles.navigateText}>{t('spotDetail.openNavigation')}</Text>
         </Pressable>
       </View>
 
       <View style={isWide ? styles.sectionsWide : null}>
         <View onLayout={registerSection('location')} style={isWide ? styles.sectionColumn : null}>
-          <CollapsibleSection eyebrow="Position" title="Arrive at the viewing area" meta={`${spot.distanceKm} km`} defaultOpen>
+          <CollapsibleSection
+            eyebrow={t('spotDetail.position.eyebrow')}
+            title={t('spotDetail.position.title')}
+            meta={t('common.kmValue', { km: spot.distanceKm })}
+            defaultOpen
+          >
             <View style={styles.mapWrap}>
               <View style={styles.webMapFallback}>
-                <Text style={styles.description}>Map preview is simplified on web beta.</Text>
+                <Text style={styles.description}>{t('spotDetail.mapPreviewSimplified')}</Text>
                 <Pressable
                   accessibilityRole="button"
                   style={({ focused }: WebPressableState) => [styles.webMapBtn, focused ? styles.focusRing : null]}
                   onPress={navigateToSpot}
                 >
-                  <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
+                  <Text style={styles.webMapBtnText}>{t('spotDetail.openInGoogleMaps')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -189,19 +209,21 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           </CollapsibleSection>
 
           <View onLayout={registerSection('access')}>
-            <CollapsibleSection eyebrow="Arrival" title="Parking and prep" defaultOpen={false}>
-              <Text style={styles.blockTitle}>Parking</Text>
+            <CollapsibleSection eyebrow={t('spotDetail.arrival.eyebrow')} title={t('spotDetail.arrival.title')} defaultOpen={false}>
+              <Text style={styles.blockTitle}>{t('common.parking')}</Text>
               <Text style={styles.description}>{access.parking.text}</Text>
-              {access.parking.verified ? <Text style={styles.verifiedNote}>Verified with Tromsø kommune.</Text> : null}
+              {access.parking.verified ? <Text style={styles.verifiedNote}>{t('spotDetail.verifiedKommune')}</Text> : null}
               {access.bus ? (
                 <>
-                  <Text style={styles.blockTitle}>Bus stop</Text>
+                  <Text style={styles.blockTitle}>{t('spotDetail.busStopLabel')}</Text>
                   <Text style={styles.description}>{access.bus.text}</Text>
-                  {access.bus.verified ? <Text style={styles.verifiedNote}>Verified with Tromsø kommune.</Text> : null}
+                  {access.bus.verified ? <Text style={styles.verifiedNote}>{t('spotDetail.verifiedKommune')}</Text> : null}
                 </>
               ) : null}
-              <Text style={styles.blockTitle}>Dress recommendation</Text>
-              <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
+              <Text style={styles.blockTitle}>{t('spotDetail.dressRecommendationLabel')}</Text>
+              <Text style={styles.description}>
+                {typeof result?.coldScore === 'number' ? t(dressAdviceKeyFromColdScore(result.coldScore)) : t('spotDetail.noDressRecommendation')}
+              </Text>
             </CollapsibleSection>
           </View>
         </View>
@@ -209,9 +231,9 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         <View style={isWide ? styles.sectionColumn : null}>
           <View onLayout={registerSection('forecast')}>
             <CollapsibleSection
-              eyebrow="Forecast"
-              title="Cloud cover next hours"
-              meta={forecastRows.length > 0 ? `${forecastRows.length} hours` : 'No hourly data'}
+              eyebrow={t('spotDetail.jump.forecast')}
+              title={t('spotDetail.cloudForecastTitleWeb')}
+              meta={forecastRows.length > 0 ? t('spotDetail.hoursCount', { count: forecastRows.length }) : t('spotDetail.noHourlyData')}
               defaultOpen={false}
             >
               {forecastRows.length > 0 ? (
@@ -219,21 +241,21 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
                   <HourlyTimeline
                     points={forecastRows.map((hour) => ({ time: hour.time, value: 100 - hour.cloudCover }))}
                     toneFor={clearnessTone}
-                    accessibilityLabel="Hourly sky clearness for this spot"
+                    accessibilityLabel={t('spotDetail.hourlyClearnessA11y')}
                   />
-                  <Text style={styles.timelineCaption}>Taller, brighter bars mean clearer sky.</Text>
+                  <Text style={styles.timelineCaption}>{t('spotDetail.timelineCaption')}</Text>
                 </>
               ) : (
-                <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
+                <Text style={styles.description}>{t('spotDetail.noCloudData')}</Text>
               )}
             </CollapsibleSection>
           </View>
 
           <View onLayout={registerSection('visuals')}>
             <CollapsibleSection
-              eyebrow="Visual check"
-              title="Spot imagery"
-              meta={imageUrls.length > 0 ? `${imageUrls.length} photo${imageUrls.length === 1 ? '' : 's'}` : 'No photos yet'}
+              eyebrow={t('spotDetail.visuals.eyebrow')}
+              title={t('spotDetail.visuals.title')}
+              meta={imageUrls.length > 0 ? t('spotDetail.photosCount', { count: imageUrls.length }) : t('spotDetail.noPhotosYet')}
               defaultOpen={false}
             >
               {imageUrls.length > 0 ? (
@@ -243,7 +265,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
                   ))}
                 </ScrollView>
               ) : (
-                <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
+                <Text style={styles.description}>{t('spotDetail.noPhotosText')}</Text>
               )}
             </CollapsibleSection>
           </View>

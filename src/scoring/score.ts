@@ -19,17 +19,35 @@ function computeColdScore(temperature: number, windSpeed: number): number {
   return clamp(Math.round((2 - perceived) * 6.5), 0, 100);
 }
 
+export type DressLevel = 'arctic' | 'veryCold' | 'cold' | 'cool';
+
+/**
+ * Shared threshold logic for cold-weather dress guidance. The i18n display
+ * layer (SpotDetailScreen.native.tsx / .web.tsx) maps this level to a
+ * translated string -- it no longer reads `SpotScoreResult.dressAdvice`
+ * directly, but that field is kept populated below for API/back-compat.
+ *
+ * NOTE: backend/src/scoring.ts mirrors these exact >=80/60/40 thresholds in
+ * its own dressAdviceFromColdScore(). That file is intentionally left
+ * untouched in this change (backend is out of scope) -- keep both in sync
+ * by hand if these thresholds ever move.
+ */
+export function dressLevelFromColdScore(coldScore: number): DressLevel {
+  if (coldScore >= 80) return 'arctic';
+  if (coldScore >= 60) return 'veryCold';
+  if (coldScore >= 40) return 'cold';
+  return 'cool';
+}
+
+const DRESS_ADVICE_TEXT: Record<DressLevel, string> = {
+  arctic: 'Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots.',
+  veryCold: 'Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots.',
+  cold: 'Cold: layered top, insulated jacket, gloves, and warm footwear.',
+  cool: 'Cool: light layers plus a wind-resistant outer jacket.'
+};
+
 function dressAdviceFromColdScore(coldScore: number): string {
-  if (coldScore >= 80) {
-    return 'Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots.';
-  }
-  if (coldScore >= 60) {
-    return 'Very cold: wool base layer, fleece/down mid-layer, insulated jacket, hat, gloves, winter boots.';
-  }
-  if (coldScore >= 40) {
-    return 'Cold: layered top, insulated jacket, gloves, and warm footwear.';
-  }
-  return 'Cool: light layers plus a wind-resistant outer jacket.';
+  return DRESS_ADVICE_TEXT[dressLevelFromColdScore(coldScore)];
 }
 
 function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] {

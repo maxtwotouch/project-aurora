@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { track } from '../analytics/events';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const isWide = width >= 860;
   const [selected, setSelected] = useState<Spot | null>(null);
@@ -42,12 +44,10 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
 
   const list = (
     <ScrollView contentContainerStyle={isWide ? styles.listWide : styles.listNarrow}>
-      <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
+      <Text style={styles.webTitle}>{t('mapScreen.webTitle')}</Text>
       <View style={styles.note}>
         <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
-        <Text style={styles.noteText}>
-          Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.
-        </Text>
+        <Text style={styles.noteText}>{t('mapScreen.selectionNoteWeb')}</Text>
       </View>
       {spots.map((spot) => {
         const isActive = selected?.id === spot.id;
@@ -55,7 +55,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           <Pressable
             key={spot.id}
             accessibilityRole="button"
-            accessibilityLabel={`${spot.name}, score ${scoreBySpot[spot.id] ?? 0}`}
+            accessibilityLabel={t('mapScreen.spotScoreA11y', { name: spot.name, score: scoreBySpot[spot.id] ?? 0 })}
             style={({ hovered, focused }: WebPressableState) => [
               styles.webItem,
               isActive ? styles.webItemActive : null,
@@ -66,7 +66,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           >
             <View style={styles.webItemCopy}>
               <Text style={styles.webItemName}>{spot.name}</Text>
-              <Text style={styles.webItemMeta}>{spot.distanceKm} km from city center</Text>
+              <Text style={styles.webItemMeta}>{t('mapScreen.distanceCityCenterShort', { km: spot.distanceKm })}</Text>
             </View>
             <ScoreBadge score={scoreBySpot[spot.id] ?? 0} />
           </Pressable>
@@ -79,10 +79,10 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     <View style={isWide ? styles.detailPaneWide : styles.sheet}>
       <View style={styles.sheetTop}>
         <View style={styles.sheetCopy}>
-          <Text style={styles.sheetEyebrow}>Selected stop</Text>
+          <Text style={styles.sheetEyebrow}>{t('mapScreen.selectedStop')}</Text>
           <Text style={styles.sheetTitle}>{selected.name}</Text>
-          <Text style={styles.sheetMeta}>{selected.distanceKm} km from Tromso center</Text>
-          <Text style={styles.sheetMeta}>Forecast score {scoreBySpot[selected.id] ?? 0}</Text>
+          <Text style={styles.sheetMeta}>{t('common.distanceTromsoCenter', { km: selected.distanceKm })}</Text>
+          <Text style={styles.sheetMeta}>{t('mapScreen.forecastScore', { score: scoreBySpot[selected.id] ?? 0 })}</Text>
         </View>
         <ScoreBadge score={scoreBySpot[selected.id] ?? 0} size="lg" />
       </View>
@@ -97,7 +97,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           ]}
           onPress={() => setSelected(null)}
         >
-          <Text style={styles.btnText}>Clear</Text>
+          <Text style={styles.btnText}>{t('mapScreen.clear')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -108,7 +108,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           ]}
           onPress={() => onOpenSpot(selected.id)}
         >
-          <Text style={styles.btnText}>Details</Text>
+          <Text style={styles.btnText}>{t('mapScreen.details')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -120,14 +120,14 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           ]}
           onPress={() => navigateToSpot(selected)}
         >
-          <Text style={[styles.btnText, styles.btnTextPrimary]}>Navigate</Text>
+          <Text style={[styles.btnText, styles.btnTextPrimary]}>{t('common.navigate')}</Text>
         </Pressable>
       </View>
     </View>
   ) : (
     <View style={isWide ? styles.detailPaneWide : styles.sheet}>
-      <Text style={styles.sheetTitle}>No spot selected</Text>
-      <Text style={styles.sheetMeta}>Choose a spot from the list to see its score and quick actions.</Text>
+      <Text style={styles.sheetTitle}>{t('mapScreen.noSpotSelected')}</Text>
+      <Text style={styles.sheetMeta}>{t('mapScreen.noSpotSelectedText')}</Text>
     </View>
   );
 

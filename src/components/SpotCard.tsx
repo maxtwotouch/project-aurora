@@ -2,6 +2,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from './ScoreBadge';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -21,10 +22,10 @@ const formatLocalTime = (iso: string) =>
     hourCycle: 'h23'
   });
 
-function trendLabel(trend: SpotScoreResult['trend']) {
-  if (trend === 'good_now') return 'Good now';
-  if (trend === 'improving') return 'Better later';
-  return 'Limited tonight';
+function trendLabel(trend: SpotScoreResult['trend'], t: (key: string) => string) {
+  if (trend === 'good_now') return t('common.trend.goodNow');
+  if (trend === 'improving') return t('common.trend.improving');
+  return t('common.trend.limited');
 }
 
 function trendStyle(trend: SpotScoreResult['trend']) {
@@ -44,12 +45,13 @@ function cloudTone(cloudCover: number): string {
 }
 
 export function SpotCard({ spot, result, onPress }: Props) {
+  const { t } = useTranslation();
   const trend = trendStyle(result.trend);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${spot.name}, score ${result.score} of 100, ${trendLabel(result.trend)}`}
+      accessibilityLabel={t('spotCard.a11yLabel', { name: spot.name, score: result.score, trend: trendLabel(result.trend, t) })}
       style={({ pressed, focused }: WebPressableState) => [
         styles.card,
         Platform.OS === 'web' ? styles.cardHover : null,
@@ -63,20 +65,20 @@ export function SpotCard({ spot, result, onPress }: Props) {
           <Text style={styles.name} numberOfLines={2}>
             {spot.name}
           </Text>
-          <Text style={styles.subtle}>{spot.distanceKm} km from Tromso center</Text>
+          <Text style={styles.subtle}>{t('common.distanceTromsoCenter', { km: spot.distanceKm })}</Text>
 
           {spot.busStop || spot.parking ? (
             <View style={styles.accessRow}>
               {spot.busStop ? (
-                <View style={styles.accessChip} accessibilityLabel={`Bus stop nearby: ${spot.busStop}`}>
+                <View style={styles.accessChip} accessibilityLabel={t('spotCard.busStopA11y', { stop: spot.busStop })}>
                   <Ionicons name="bus-outline" size={12} color={palette.auroraIce} />
-                  <Text style={styles.accessChipText}>Bus</Text>
+                  <Text style={styles.accessChipText}>{t('common.bus')}</Text>
                 </View>
               ) : null}
               {spot.parking ? (
-                <View style={styles.accessChip} accessibilityLabel={`Parking available near ${spot.parking}`}>
+                <View style={styles.accessChip} accessibilityLabel={t('spotCard.parkingA11y', { parking: spot.parking })}>
                   <Text style={styles.accessChipGlyph}>P</Text>
-                  <Text style={styles.accessChipText}>Parking</Text>
+                  <Text style={styles.accessChipText}>{t('common.parking')}</Text>
                 </View>
               ) : null}
             </View>
@@ -87,21 +89,21 @@ export function SpotCard({ spot, result, onPress }: Props) {
 
       <View style={styles.metaBand}>
         <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Best window</Text>
+          <Text style={styles.metaLabel}>{t('common.bestWindow')}</Text>
           <Text style={styles.metaValue}>
             {formatLocalTime(result.bestWindowStart)}–{formatLocalTime(result.bestWindowEnd)}
           </Text>
         </View>
         <View style={[styles.metaItem, styles.metaItemDivided]}>
-          <Text style={styles.metaLabel}>Cloud</Text>
+          <Text style={styles.metaLabel}>{t('common.cloud')}</Text>
           <Text style={[styles.metaValue, { color: cloudTone(result.cloudCoverAtBestHour) }]}>
             {result.cloudCoverAtBestHour}%
           </Text>
         </View>
         <View style={[styles.metaItem, styles.metaItemDivided]}>
-          <Text style={styles.metaLabel}>Trend</Text>
+          <Text style={styles.metaLabel}>{t('spotCard.trendLabel')}</Text>
           <View style={[styles.trendPill, { backgroundColor: trend.backgroundColor, borderColor: trend.borderColor }]}>
-            <Text style={[styles.trendText, { color: trend.color }]}>{trendLabel(result.trend)}</Text>
+            <Text style={[styles.trendText, { color: trend.color }]}>{trendLabel(result.trend, t)}</Text>
           </View>
         </View>
       </View>

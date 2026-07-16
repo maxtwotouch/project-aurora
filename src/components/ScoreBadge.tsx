@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { palette } from '../theme/palette';
 import { elevation, radius } from '../theme/tokens';
+import { useTranslation } from '../i18n/useTranslation';
 
 type Props = {
   score: number;
@@ -14,13 +15,14 @@ function colorForScore(score: number) {
 }
 
 export function ScoreBadge({ score, size = 'sm' }: Props) {
+  const { t } = useTranslation();
   const color = colorForScore(score);
 
   return (
     <View
       style={[styles.badge, { backgroundColor: color }, size === 'lg' ? styles.lg : styles.sm]}
       accessible
-      accessibilityLabel={`Aurora score ${score} out of 100`}
+      accessibilityLabel={t('scoreBadge.a11yLabel', { score })}
     >
       <Text style={size === 'lg' ? styles.textLg : styles.text}>{score}</Text>
     </View>

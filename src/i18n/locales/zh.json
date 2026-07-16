@@ -1,0 +1,278 @@
+{
+  "common": {
+    "back": "返回",
+    "goBack": "返回",
+    "tryAgain": "重试",
+    "navigate": "导航",
+    "bestWindow": "最佳观测时段",
+    "distance": "距离",
+    "cloud": "云量",
+    "parking": "停车",
+    "bus": "公交",
+    "tonightEyebrow": "今晚",
+    "spotDetailsFallback": "地点详情",
+    "kmValue": "{{km}} 公里",
+    "distanceTromsoCenter": "距特罗姆瑟市中心 {{km}} 公里",
+    "openNavigationTo": "打开前往{{name}}的导航",
+    "chance": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "trend": {
+      "goodNow": "现在不错",
+      "improving": "稍后更好",
+      "limited": "今晚有限"
+    }
+  },
+  "nav": {
+    "tabs": {
+      "tonight": "今晚",
+      "map": "地图",
+      "spots": "地点",
+      "aurora": "极光",
+      "live": "实时"
+    }
+  },
+  "tonight": {
+    "loading": "正在加载今晚的实况报告...",
+    "heroEyebrow": "今晚",
+    "heroTitle": "极光展望",
+    "recommendation": {
+      "great": "今晚机会很大",
+      "possible": "可能但不确定",
+      "low": "今晚机会较低"
+    },
+    "scoreSuffix": "满分100",
+    "daytimeHint": "现在天还亮着。最早可行的观测时段大约从{{time}}开始。",
+    "decision": {
+      "goNow": "现在出发",
+      "wait": "稍等",
+      "bestLater": "稍后更佳",
+      "laterTonight": "今晚稍后"
+    },
+    "why": {
+      "worthIt": "为什么今晚值得一试",
+      "needsTiming": "为什么今晚要把握时机",
+      "difficult": "为什么今晚看起来困难"
+    },
+    "band": {
+      "chance": "几率",
+      "kpNow": "当前KP",
+      "kpPeak": "KP峰值",
+      "updated": "更新时间"
+    },
+    "waitingForecast": "正在等待最新预报数据",
+    "bestWindowSummary": "在{{spot}}，最佳时刻云量为{{cloud}}%。",
+    "pullToRefresh": "预报数据可用后，请下拉刷新。",
+    "bestSpotNow": "当前最佳地点",
+    "distanceCityCenter": "距市中心 {{km}} 公里",
+    "viewDetails": "查看详情",
+    "viewDetailsFor": "查看{{name}}的详情",
+    "noRecommendation": "暂无地点推荐。预报数据稳定后请刷新重试。",
+    "quickNav": {
+      "fullSpotList": "完整地点列表",
+      "map": "地图",
+      "cameras": "摄像头",
+      "auroraMap": "极光地图"
+    },
+    "outlook": {
+      "eyebrow": "展望",
+      "tomorrowEvening": "明晚",
+      "score": "分数",
+      "peakKp": "KP峰值",
+      "geomagnetic": "地磁展望",
+      "dayLabels": {
+        "today": "今天",
+        "tomorrow": "明天",
+        "day3": "第3天"
+      }
+    },
+    "topSpotsTitle": "当前热门极光地点",
+    "topSpotsSubtitle": "这里只是简要预览。请前往“地点”标签查看排序及完整排行榜。",
+    "openAllRankedSpots": "查看全部排行地点",
+    "closerAlternatives": "更近的替代地点",
+    "closerAlternativesSubtitle": "出发更快的最近选择。",
+    "compareNearbySpots": "比较附近地点",
+    "errorTitle": "预报更新失败",
+    "hourlyScoreA11y": "今晚每小时极光分数，已标出最佳时段",
+    "windowRange": "{{start}} 至 {{end}}"
+  },
+  "allSpots": {
+    "title": "全部地点",
+    "subtitle": "比较各地点而不遗漏重点信息。可在最强和最快选项之间切换。",
+    "showingSummary_one": "按{{mode}}显示 {{count}} 个排行地点。",
+    "showingSummary_other": "按{{mode}}显示 {{count}} 个排行地点。",
+    "modeForecastStrength": "预报强度",
+    "modeDrivingDistance": "行车距离",
+    "topSpotsButton": "热门地点",
+    "nearbySpotsButton": "附近地点",
+    "firstPick": "首选",
+    "modeLabel": "模式",
+    "modeBestScore": "最高分数",
+    "modeShortestDrive": "最短车程",
+    "emptyTitle": "暂无排行地点",
+    "emptyText": "今晚预报数据可用后请下拉刷新。",
+    "attribution": "部分地点信息已与特罗姆瑟市政府（kommune）核实"
+  },
+  "auroraMap": {
+    "eyebrow": "UiT数据源",
+    "title": "极光影像",
+    "subtitle": "可在当前、+1小时和+4小时之间切换。",
+    "overheadNowLabel": "当前头顶",
+    "overhead": {
+      "likely": "很可能出现在头顶",
+      "possible": "可能出现在头顶",
+      "low": "较少出现在头顶"
+    },
+    "nextPeakLabel": "下一个峰值",
+    "kpFrameLabel": "画面KP值",
+    "frameUnavailableTitle": "极光影像不可用",
+    "frameUnavailableText": "UiT图像数据源未能加载。请直接打开源页面，确认数据源是否中断或图像路径是否已更改。",
+    "openSource": "打开UiT数据源",
+    "loadingFrame": "正在加载极光影像...",
+    "timeLabel": "时间",
+    "scrubberMeta": "实况、+1小时或+4小时。",
+    "now": "现在",
+    "plusHours": "+{{hours}}小时",
+    "sourceLabel": "来源",
+    "legendText": "UiT的NO-SPACE空间天气实验室。画面模式：{{mode}}。",
+    "modeNowcast": "实况",
+    "modeForecastHours": "预报 +{{hours}}小时"
+  },
+  "liveCameras": {
+    "eyebrow": "实时摄像头",
+    "title": "天空实况",
+    "subtitle": "出发前快速查看地平线情况，每分钟自动刷新。",
+    "headerMeta": "按位置分组，让多摄像头区域呈现为一个整体概览，而不是冗长的信息流。",
+    "layoutLabel": "布局",
+    "layoutValue": "2x2 概览",
+    "focusLabel": "视角",
+    "focusValue": "全方位",
+    "actionLabel": "操作",
+    "actionValue": "点按可放大",
+    "emptyTitle": "暂无可用的实时摄像头",
+    "emptyText": "摄像头数据源暂时不可用，请稍后重试。",
+    "feedsCount_one": "{{count}} 个方向画面",
+    "feedsCount_other": "{{count}} 个方向画面",
+    "singleCamera": "单一实时摄像头",
+    "viewsCount_one": "{{count}} 个画面",
+    "viewsCount_other": "{{count}} 个画面",
+    "expandCamera": "放大{{name}}",
+    "openSourcePage": "打开来源页面",
+    "unavailableTitle": "实时画面不可用",
+    "unavailableText": "{{name}}未返回图像。请打开来源页面确认数据源是否离线。",
+    "openSource": "打开来源",
+    "liveFeedFallback": "实时画面"
+  },
+  "mapScreen": {
+    "eyebrow": "地图模式",
+    "title": "按行车顺序查看地点",
+    "selectionNoteNative": "默认选中列表中最近的地点，方便快速定位。点击关闭按钮可清除选择。",
+    "selectionNoteWeb": "默认选中列表中最近的地点，让您立即获得有用的起点。",
+    "distanceCityCenterShort": "距市中心 {{km}} 公里",
+    "scoreLabel": "分数 {{score}}",
+    "selectedStop": "已选地点",
+    "forecastScore": "预报分数 {{score}}",
+    "clear": "清除",
+    "details": "详情",
+    "emptyTitle": "点按标记以查看观测地点。",
+    "emptyText": "底部面板会显示距离、分数和快捷操作。",
+    "webTitle": "网页测试版的地图视图为简化版本。",
+    "noSpotSelected": "未选择地点",
+    "noSpotSelectedText": "从列表中选择一个地点以查看其分数和快捷操作。",
+    "spotScoreA11y": "{{name}}，分数 {{score}}"
+  },
+  "spotDetail": {
+    "eyebrow": "地点",
+    "waitingNextRunNative": "正在等待下一次预报运行",
+    "waitingNextRunWeb": "正在等待下一次更新",
+    "chanceSuffix": "机会：{{chance}}",
+    "band": {
+      "temp": "气温",
+      "wind": "风速",
+      "coldScore": "寒冷指数"
+    },
+    "trendCloudSummary": "{{trend}}，最佳时段云量为{{cloud}}%。",
+    "forecastSettlingNative": "预报数据仍在稳定中。如有需要，请从主屏幕下拉刷新。",
+    "forecastLoadingWeb": "该地点的预报数据仍在加载中。",
+    "jump": {
+      "location": "位置",
+      "access": "交通",
+      "forecast": "预报",
+      "visuals": "图片"
+    },
+    "openNavigation": "打开导航",
+    "position": {
+      "eyebrow": "位置",
+      "title": "前往观测点"
+    },
+    "arrival": {
+      "eyebrow": "到达",
+      "title": "停车与准备"
+    },
+    "verifiedKommune": "已与特罗姆瑟市政府（kommune）核实。",
+    "busStopLabel": "公交站",
+    "dressRecommendationLabel": "穿着建议",
+    "noDressRecommendation": "暂无可用建议。",
+    "dressAdvice": {
+      "arctic": "极地装备：保暖内层、隔热中层、羽绒服、防风外壳、连指手套、保暖靴。",
+      "veryCold": "严寒：羊毛内层、抓绒或羽绒中层、隔热外套、帽子、手套、雪地靴。",
+      "cold": "寒冷：上身多层穿着、隔热外套、手套和保暖鞋。",
+      "cool": "凉爽：轻薄多层衣物，外加一件防风外套。"
+    },
+    "cloudForecastTitleNative": "未来数小时云量",
+    "cloudForecastTitleWeb": "未来数小时云量",
+    "hoursCount_one": "{{count}} 小时",
+    "hoursCount_other": "{{count}} 小时",
+    "noHourlyData": "暂无小时数据",
+    "timelineCaption": "柱状越高越亮，表示天空越晴朗。",
+    "noCloudData": "该地点目前暂无每小时云量数据。",
+    "visuals": {
+      "eyebrow": "视觉查看",
+      "title": "地点图片"
+    },
+    "photosCount_one": "{{count}} 张照片",
+    "photosCount_other": "{{count}} 张照片",
+    "noPhotosYet": "暂无照片",
+    "noPhotosText": "该地点的核实照片即将上线。",
+    "mapPreviewSimplified": "网页测试版的地图预览为简化版本。",
+    "openInGoogleMaps": "在谷歌地图中打开",
+    "hourlyClearnessA11y": "该地点每小时的天空晴朗度"
+  },
+  "spotCard": {
+    "a11yLabel": "{{name}}，分数 {{score}} 分（满分100），{{trend}}",
+    "busStopA11y": "附近有公交站：{{stop}}",
+    "parkingA11y": "{{parking}}附近有停车位",
+    "trendLabel": "趋势"
+  },
+  "dataQuality": {
+    "eyebrow": "数据质量提示",
+    "backendUnavailable": "后端数据当前不可用，正在改为显示实时数据源。",
+    "kpFallback": "由于上游数据源失败，KP值使用备用估算。",
+    "weatherFallback_one": "由于预报获取失败，{{count}} 个地点的天气数据为估算值。",
+    "weatherFallback_other": "由于预报获取失败，{{count}} 个地点的天气数据为估算值。"
+  },
+  "hourlyTimeline": {
+    "defaultA11yLabel": "每小时预报时间轴",
+    "barLabelPlain": "{{hour}}，{{percent}}%",
+    "barLabelBestWindow": "{{hour}}，{{percent}}%，最佳时段"
+  },
+  "scoreBadge": {
+    "a11yLabel": "极光分数 {{score}} 分（满分100）"
+  },
+  "consent": {
+    "eyebrow": "开始之前",
+    "title": "帮助改进极光观测地点？",
+    "body": "分享匿名使用数据——我们只统计用户查看和导航前往的地点（绝不记录您是谁，绝不记录您的位置，仅记录地点名称和时间）。您可以拒绝，一切功能照常使用。",
+    "acceptButton": "分享匿名统计数据",
+    "declineButton": "不用了",
+    "footnote": "您可以稍后在“全部地点”标签中更改此设置。",
+    "toggleLabel": "匿名使用数据共享",
+    "toggleOnHelper": "正在共享匿名的地点浏览和导航点击数据。",
+    "toggleOffHelper": "未共享任何使用数据。"
+  },
+  "languagePicker": {
+    "label": "Language / Sprache / Langue / Idioma / 语言"
+  }
+}
