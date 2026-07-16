@@ -13,18 +13,10 @@ import {
   recordRefreshOutcome,
   setLatestSnapshot
 } from './store.js';
+import { config } from './config.js';
 import { registerEventRoutes } from './events.js';
 import { registerStatsRoutes } from './stats.js';
 import { usageCounterStore } from './usageStore.js';
-
-const PORT = Number(process.env.PORT ?? 8080);
-const HOST = process.env.HOST ?? '0.0.0.0';
-const REFRESH_MS = Number(process.env.REFRESH_MS ?? 5 * 60 * 1000);
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? '';
-const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:8081,http://127.0.0.1:8081')
-  .split(',')
-  .map((value) => value.trim())
-  .filter(Boolean);
 
 export type BuildAppOptions = {
   adminToken?: string;
@@ -47,8 +39,8 @@ export async function refreshSnapshot(): Promise<void> {
  * directly. The real entry point (`bootstrap`, below) adds `listen` + the
  * refresh interval on top of this. */
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-  const adminToken = options.adminToken ?? ADMIN_TOKEN;
-  const corsOrigins = options.corsOrigins ?? CORS_ORIGINS;
+  const adminToken = options.adminToken ?? config.adminToken;
+  const corsOrigins = options.corsOrigins ?? config.corsOrigins;
 
   const app = Fastify({ logger: true });
 
@@ -161,8 +153,8 @@ async function bootstrap() {
   // hung upstream must not delay (or, pre-timeout-fix, block) server startup.
   await loadSnapshotFromDisk();
 
-  await app.listen({ host: HOST, port: PORT });
-  app.log.info(`Backend listening on ${HOST}:${PORT}`);
+  await app.listen({ host: config.host, port: config.port });
+  app.log.info(`Backend listening on ${config.host}:${config.port}`);
 
   void refreshSnapshot().catch((error) => {
     app.log.error({ err: error }, 'Initial snapshot refresh failed');
@@ -172,7 +164,7 @@ async function bootstrap() {
     void refreshSnapshot().catch((error) => {
       app.log.error({ err: error }, 'Background snapshot refresh failed');
     });
-  }, REFRESH_MS);
+  }, config.refreshMs);
 
   async function shutdown(signal: string): Promise<void> {
     app.log.info(`Received ${signal}, flushing usage counters and shutting down`);
