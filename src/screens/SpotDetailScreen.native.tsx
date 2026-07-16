@@ -1,12 +1,17 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 
+import { track } from '../analytics/events';
 import { CollapsibleSection } from '../components/CollapsibleSection';
+import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
-import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
+import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
+import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
+import { typography } from '../theme/type';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
 
 type Props = {
@@ -38,6 +43,12 @@ function chanceLabel(score: number | undefined): string {
   return 'Low';
 }
 
+function clearnessTone(clearness: number): string {
+  if (clearness >= 65) return palette.auroraGreen;
+  if (clearness >= 30) return palette.warning;
+  return palette.danger;
+}
+
 function timeSummary(result: SpotScoreResult | undefined) {
   if (!result) return 'Waiting for the next forecast run';
   return `${formatLocalTime(result.bestWindowStart)} to ${formatLocalTime(result.bestWindowEnd)}`;
@@ -45,8 +56,8 @@ function timeSummary(result: SpotScoreResult | undefined) {
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
-  const parking = getSpotParking(spot);
-  const forecastRows = (forecast ?? []).slice(0, 6);
+  const access = getSpotAccessInfo(spot);
+  const forecastRows = (forecast ?? []).slice(0, 10);
   const scrollRef = useRef<ScrollView | null>(null);
   const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({
     overview: 0,
@@ -56,7 +67,14 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
     visuals: 0
   });
 
+  useEffect(() => {
+    // Only re-fires if the viewed spot itself changes (e.g. navigating from
+    // one spot's detail screen to another without unmounting).
+    track('spot_view', spot.id);
+  }, [spot.id]);
+
   const navigateToSpot = () => {
+    track('navigate_pressed', spot.id);
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
@@ -70,6 +88,8 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
     scrollRef.current?.scrollTo({ y: Math.max(sectionOffsets[key] - 12, 0), animated: true });
   };
 
+  const hasVerifiedAccess = Boolean(spot.parking || spot.busStop);
+
   return (
     <ScrollView
       ref={scrollRef}
@@ -78,10 +98,13 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
       automaticallyAdjustContentInsets={false}
     >
       <View style={styles.atmosphere} />
+
+      {/* Hero: status summary first -- the reader should know the score,
+          window and conditions before anything else on the page. */}
       <View style={styles.heroCard} onLayout={registerSection('overview')}>
         <Text style={styles.eyebrow}>Spot</Text>
         <Text style={styles.title}>{spot.name}</Text>
-        <Text style={styles.subtitle}>{spot.distanceKm} km from Tromso center. The essentials first.</Text>
+        <Text style={styles.subtitle}>{spot.distanceKm} km from Tromso center</Text>
 
         <View style={styles.heroTop}>
           <View style={styles.heroPrimary}>
@@ -89,7 +112,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
             <Text style={styles.windowValue}>{timeSummary(result)}</Text>
             <Text style={styles.helper}>
               {result
-                ? `${trendLabel(result.trend)} conditions with ${result.cloudCoverAtBestHour}% cloud cover at the best hour.`
+                ? `${trendLabel(result.trend)}, ${result.cloudCoverAtBestHour}% cloud cover at the best hour.`
                 : 'Forecast metrics are still settling. Pull to refresh from the main screen if needed.'}
             </Text>
           </View>
@@ -99,40 +122,61 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           </View>
         </View>
 
-        <View style={styles.metricsBand}>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Cloud</Text>
-            <Text style={styles.metricValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
+        <View style={styles.dataBand}>
+          <View style={styles.bandItem}>
+            <Text style={styles.bandLabel}>Cloud</Text>
+            <Text style={styles.bandValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
           </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Temp</Text>
-            <Text style={styles.metricValue}>{result?.temperatureAtBestHour ?? '-'}°C</Text>
+          <View style={[styles.bandItem, styles.bandItemDivided]}>
+            <Text style={styles.bandLabel}>Temp</Text>
+            <Text style={styles.bandValue}>{result?.temperatureAtBestHour ?? '-'}°C</Text>
           </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Wind</Text>
-            <Text style={styles.metricValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
+          <View style={[styles.bandItem, styles.bandItemDivided]}>
+            <Text style={styles.bandLabel}>Wind</Text>
+            <Text style={styles.bandValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
           </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Cold score</Text>
-            <Text style={styles.metricValue}>{result?.coldScore ?? '-'} / 100</Text>
-          </View>
-        </View>
-
-        <View style={styles.jumpCard}>
-          <Text style={styles.jumpTitle}>On this page</Text>
-          <View style={styles.jumpRow}>
-            <JumpButton label="Location" onPress={() => jumpTo('location')} />
-            <JumpButton label="Access" onPress={() => jumpTo('access')} />
-            <JumpButton label="Forecast" onPress={() => jumpTo('forecast')} />
-            <JumpButton label="Visuals" onPress={() => jumpTo('visuals')} />
+          <View style={[styles.bandItem, styles.bandItemDivided]}>
+            <Text style={styles.bandLabel}>Cold score</Text>
+            <Text style={styles.bandValue}>{result?.coldScore ?? '-'}/100</Text>
           </View>
         </View>
 
-        <View style={styles.heroActions}>
-          <Pressable style={styles.primaryButton} onPress={navigateToSpot}>
-            <Text style={styles.primaryButtonText}>Open navigation</Text>
-          </Pressable>
+        {hasVerifiedAccess ? (
+          <View style={styles.accessRow}>
+            {spot.busStop ? (
+              <View style={styles.accessChip}>
+                <Ionicons name="bus-outline" size={13} color={palette.auroraIce} />
+                <Text style={styles.accessChipText}>{spot.busStop}</Text>
+              </View>
+            ) : null}
+            {spot.parking ? (
+              <View style={styles.accessChip}>
+                <Text style={styles.accessChipGlyph}>P</Text>
+                <Text style={styles.accessChipText}>{spot.parking}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View style={styles.jumpRow}>
+          <JumpButton label="Location" onPress={() => jumpTo('location')} />
+          <JumpButton label="Access" onPress={() => jumpTo('access')} />
+          <JumpButton label="Forecast" onPress={() => jumpTo('forecast')} />
+          <JumpButton label="Visuals" onPress={() => jumpTo('visuals')} />
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Open navigation to ${spot.name}`}
+          style={({ pressed, focused }: WebPressableState) => [
+            styles.primaryButton,
+            focused ? styles.focusRing : null,
+            pressed ? styles.buttonPressed : null
+          ]}
+          onPress={navigateToSpot}
+        >
+          <Text style={styles.primaryButtonText}>Open navigation</Text>
+        </Pressable>
       </View>
 
       <View onLayout={registerSection('location')}>
@@ -159,7 +203,15 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
       <View onLayout={registerSection('access')}>
         <CollapsibleSection eyebrow="Arrival" title="Parking and prep" defaultOpen={false}>
           <Text style={styles.blockTitle}>Parking</Text>
-          <Text style={styles.description}>{parking}</Text>
+          <Text style={styles.description}>{access.parking.text}</Text>
+          {access.parking.verified ? <Text style={styles.verifiedNote}>Verified with Tromsø kommune.</Text> : null}
+          {access.bus ? (
+            <>
+              <Text style={styles.blockTitle}>Bus stop</Text>
+              <Text style={styles.description}>{access.bus.text}</Text>
+              {access.bus.verified ? <Text style={styles.verifiedNote}>Verified with Tromsø kommune.</Text> : null}
+            </>
+          ) : null}
           <Text style={styles.blockTitle}>Dress recommendation</Text>
           <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
         </CollapsibleSection>
@@ -173,12 +225,14 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           defaultOpen={false}
         >
           {forecastRows.length > 0 ? (
-            forecastRows.map((hour) => (
-              <View key={hour.time} style={styles.hourRow}>
-                <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
-                <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
-              </View>
-            ))
+            <>
+              <HourlyTimeline
+                points={forecastRows.map((hour) => ({ time: hour.time, value: 100 - hour.cloudCover }))}
+                toneFor={clearnessTone}
+                accessibilityLabel="Hourly sky clearness for this spot"
+              />
+              <Text style={styles.timelineCaption}>Taller, brighter bars mean clearer sky.</Text>
+            </>
           ) : (
             <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
           )}
@@ -209,7 +263,15 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
 
 function JumpButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable style={({ pressed }) => [styles.jumpButton, pressed ? styles.jumpButtonPressed : null]} onPress={onPress}>
+    <Pressable
+      accessibilityRole="link"
+      style={({ pressed, focused }: WebPressableState) => [
+        styles.jumpButton,
+        focused ? styles.focusRing : null,
+        pressed ? styles.buttonPressed : null
+      ]}
+      onPress={onPress}
+    >
       <Text style={styles.jumpButtonText}>{label}</Text>
     </Pressable>
   );
@@ -217,8 +279,8 @@ function JumpButton({ label, onPress }: { label: string; onPress: () => void }) 
 
 const styles = StyleSheet.create({
   container: {
-    padding: 18,
-    paddingBottom: 30,
+    padding: space.md,
+    paddingBottom: space.xxl,
     backgroundColor: palette.night
   },
   atmosphere: {
@@ -228,197 +290,184 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: '#7cf2c71a'
+    backgroundColor: palette.glowMint
   },
   heroCard: {
     backgroundColor: palette.nightPanel,
-    borderRadius: 28,
-    padding: 20,
+    borderRadius: radius.xl,
+    padding: space.lg,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    marginBottom: 14,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.24,
-    shadowRadius: 22,
-    elevation: 6
+    marginBottom: space.sm,
+    ...elevation.lg,
+    gap: space.md
   },
   eyebrow: {
-    color: palette.auroraMint,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    marginBottom: 6
+    ...typography.eyebrow,
+    color: palette.auroraMint
   },
   title: {
-    fontSize: 30,
-    lineHeight: 34,
-    fontWeight: '800',
-    color: palette.textPrimary,
-    marginBottom: 6
+    ...typography.title,
+    color: palette.textPrimary
   },
   subtitle: {
-    color: palette.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18
+    ...typography.body,
+    color: palette.textSecondary
   },
   heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 14,
-    marginBottom: 16
+    gap: space.sm
   },
   heroPrimary: {
     flex: 1,
-    minWidth: 0
+    minWidth: 0,
+    gap: 3
   },
   kicker: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 4
+    ...typography.eyebrow,
+    fontSize: 10,
+    color: palette.textMuted
   },
   windowValue: {
-    color: palette.textPrimary,
-    fontSize: 23,
-    lineHeight: 28,
-    fontWeight: '800',
-    marginBottom: 6
+    ...typography.heading,
+    color: palette.textPrimary
   },
   helper: {
-    color: palette.textSecondary,
-    fontSize: 14,
-    lineHeight: 20
+    ...typography.body,
+    color: palette.textSecondary
   },
   scoreWrap: {
     alignItems: 'center',
-    gap: 8
+    gap: space.xxs
   },
   scoreLabel: {
+    ...typography.caption,
     color: palette.auroraMint,
-    fontSize: 13,
     fontWeight: '700'
   },
-  metricsBand: {
+  dataBand: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10
+    gap: space.md,
+    paddingTop: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: palette.borderHairline
   },
-  metricTile: {
-    minWidth: 100,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    backgroundColor: '#152835',
+  bandItem: {
+    minWidth: 80,
+    gap: 3
+  },
+  bandItemDivided: {
+    borderLeftWidth: 1,
+    borderLeftColor: palette.borderHairline,
+    paddingLeft: space.md
+  },
+  bandLabel: {
+    ...typography.eyebrow,
+    fontSize: 10,
+    color: palette.textMuted
+  },
+  bandValue: {
+    ...typography.bodyStrong,
+    fontSize: 17,
+    color: palette.textPrimary
+  },
+  accessRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space.xs
+  },
+  accessChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: space.xs,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: palette.surfaceSunkenAlt,
     borderWidth: 1,
-    borderColor: '#284657'
+    borderColor: palette.borderHairline
   },
-  metricLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 4
+  accessChipGlyph: {
+    ...typography.caption,
+    fontWeight: '800',
+    color: palette.auroraIce
   },
-  metricValue: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '800'
-  },
-  jumpCard: {
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: '#12263a',
-    borderWidth: 1,
-    borderColor: '#29475f'
-  },
-  jumpTitle: {
-    color: palette.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 10
+  accessChipText: {
+    ...typography.caption,
+    color: palette.textSecondary
   },
   jumpRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8
+    gap: space.xs
   },
   jumpButton: {
     minHeight: 40,
-    paddingHorizontal: 12,
-    borderRadius: 999,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#17303c',
     borderWidth: 1,
-    borderColor: '#2e5667'
+    borderColor: palette.borderHairlineStrong
   },
-  jumpButtonPressed: {
+  jumpButtonText: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: palette.auroraMint
+  },
+  buttonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.985 }]
   },
-  jumpButtonText: {
-    color: palette.auroraMint,
-    fontSize: 13,
-    fontWeight: '700'
-  },
-  heroActions: {
-    marginTop: 16
-  },
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: 2
+  } as any,
   primaryButton: {
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: radius.md,
     backgroundColor: palette.auroraGreen
   },
   primaryButtonText: {
-    color: palette.textOnAurora,
-    fontWeight: '800',
-    fontSize: 15
+    ...typography.bodyStrong,
+    fontSize: 15,
+    color: palette.textOnAurora
   },
   mapWrap: {
     height: 220,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    marginBottom: 12
+    marginBottom: space.sm
   },
   map: {
     flex: 1
   },
   blockTitle: {
-    color: palette.textPrimary,
+    ...typography.subheading,
     fontSize: 15,
-    fontWeight: '700',
-    marginTop: 6,
-    marginBottom: 6
+    color: palette.textPrimary,
+    marginTop: space.xxs,
+    marginBottom: space.xxs
   },
   description: {
-    color: palette.textSecondary,
-    fontSize: 14,
-    lineHeight: 21
+    ...typography.body,
+    color: palette.textSecondary
   },
-  hourRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#284657'
+  verifiedNote: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: 2
   },
-  hourTime: {
-    color: palette.textPrimary,
-    fontSize: 14,
-    fontWeight: '600'
-  },
-  hourCloud: {
-    color: palette.auroraMint,
-    fontSize: 14,
-    fontWeight: '700'
+  timelineCaption: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: space.xs
   },
   imagesRow: {
     marginTop: 4
@@ -426,8 +475,8 @@ const styles = StyleSheet.create({
   image: {
     width: 220,
     height: 150,
-    borderRadius: 14,
-    marginRight: 10,
+    borderRadius: radius.md,
+    marginRight: space.xs,
     borderWidth: 1,
     borderColor: palette.cardBorder
   }

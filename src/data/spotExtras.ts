@@ -27,13 +27,41 @@ const extras: Record<string, SpotExtra> = {
   kilpisjarvi: { parking: 'Public parking near village services and trail access points.' }
 };
 
-export function getSpotParking(spot: Spot): string {
+function getSpotParkingFallback(spot: Spot): string {
   const details = extras[spot.id]?.parking;
   if (!details) {
     return 'Parking information is not verified yet for this spot. Please check local signs and restrictions on arrival.';
   }
 
   return `Beta note: parking details are not yet verified. ${details}`;
+}
+
+export type SpotAccessField = {
+  text: string;
+  verified: boolean;
+};
+
+export type SpotAccessInfo = {
+  /** Parking guidance: always present, either kommune-verified or a beta fallback note. */
+  parking: SpotAccessField;
+  /** Bus guidance: only present when the kommune has supplied a verified stop. */
+  bus: SpotAccessField | null;
+};
+
+/**
+ * Single source of truth for spot access copy. Each field is verified
+ * independently -- a spot can have a verified bus stop with no verified
+ * parking (or vice versa), so the "verified with Tromsø kommune" claim must
+ * never be shown as a blanket statement covering both fields at once.
+ */
+export function getSpotAccessInfo(spot: Spot): SpotAccessInfo {
+  const parking: SpotAccessField = spot.parking
+    ? { text: `${spot.parking}.`, verified: true }
+    : { text: getSpotParkingFallback(spot), verified: false };
+
+  const bus: SpotAccessField | null = spot.busStop ? { text: spot.busStop, verified: true } : null;
+
+  return { parking, bus };
 }
 
 export function getSpotImageUrls(spot: Spot): string[] {

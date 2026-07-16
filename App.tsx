@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import spots from './src/data/spots.json';
+import { ConsentGate } from './src/components/ConsentGate';
 import { useForecast } from './src/hooks/useForecast';
 import { AllSpotsScreen } from './src/screens/AllSpotsScreen';
 import { AuroraMapScreen } from './src/screens/AuroraMapScreen';
@@ -198,68 +199,75 @@ export default function App() {
   );
 
   return (
-    <NavigationContainer theme={navTheme}>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: palette.night
-          },
-          headerTintColor: palette.textPrimary,
-          headerShadowVisible: false,
-          headerTitleStyle: {
-            fontSize: 18,
-            fontWeight: '800'
-          },
-          headerTitleAlign: 'left',
-          headerBackground: () => <View style={styles.headerBackground} />
-        }}
-      >
-        <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-          {({ navigation }) => (
-            <TabsRoot
-              onOpenSpot={(spotId) => {
-                navigation.navigate('SpotDetail', { spotId });
-              }}
-              rankedSpots={forecast.rankedSpots}
-              loading={forecast.loading}
-              error={forecast.error}
-              lastUpdatedAt={forecast.lastUpdatedAt}
-              dataQuality={forecast.dataQuality}
-              kp={forecast.kp}
-              topSpots={forecast.topSpots}
-              closeSpots={forecast.closeSpots}
-              spotsById={forecast.spotsById}
-              tonightScore={forecast.tonightScore}
-              tomorrowScore={forecast.tomorrowScore}
-              sightingPossibleFrom={forecast.sightingPossibleFrom}
-              recommendation={forecast.recommendation}
-              refresh={forecast.refresh}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen
-          name="SpotDetail"
-          options={({ route, navigation }) => ({
-            title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
-            headerBackVisible: false,
-            headerLeft: () => (
-              <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                <Text style={styles.backText}>Back</Text>
-              </Pressable>
-            )
-          })}
+    <ConsentGate>
+      <NavigationContainer theme={navTheme}>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: palette.night
+            },
+            headerTintColor: palette.textPrimary,
+            headerShadowVisible: false,
+            headerTitleStyle: {
+              fontSize: 18,
+              fontWeight: '800'
+            },
+            headerTitleAlign: 'left',
+            headerBackground: () => <View style={styles.headerBackground} />
+          }}
         >
-          {({ route }) => (
-            <SpotDetailScreen
-              spot={spotsById[route.params.spotId]}
-              result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-              forecast={forecast.forecastsBySpotId[route.params.spotId]}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+            {({ navigation }) => (
+              <TabsRoot
+                onOpenSpot={(spotId) => {
+                  navigation.navigate('SpotDetail', { spotId });
+                }}
+                rankedSpots={forecast.rankedSpots}
+                loading={forecast.loading}
+                error={forecast.error}
+                lastUpdatedAt={forecast.lastUpdatedAt}
+                dataQuality={forecast.dataQuality}
+                kp={forecast.kp}
+                topSpots={forecast.topSpots}
+                closeSpots={forecast.closeSpots}
+                spotsById={forecast.spotsById}
+                tonightScore={forecast.tonightScore}
+                tomorrowScore={forecast.tomorrowScore}
+                sightingPossibleFrom={forecast.sightingPossibleFrom}
+                recommendation={forecast.recommendation}
+                refresh={forecast.refresh}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen
+            name="SpotDetail"
+            options={({ route, navigation }) => ({
+              title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
+              headerBackVisible: false,
+              headerLeft: () => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  style={styles.backButton}
+                  onPress={() => navigation.goBack()}
+                >
+                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                  <Text style={styles.backText}>Back</Text>
+                </Pressable>
+              )
+            })}
+          >
+            {({ route }) => (
+              <SpotDetailScreen
+                spot={spotsById[route.params.spotId]}
+                result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                forecast={forecast.forecastsBySpotId[route.params.spotId]}
+              />
+            )}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ConsentGate>
   );
 }
 
@@ -275,7 +283,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#132330'
+    backgroundColor: palette.nightPanel
   },
   backText: {
     color: palette.textPrimary,

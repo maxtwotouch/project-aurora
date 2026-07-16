@@ -8,5 +8,10 @@ yarn-error.*
 .DS_Store
 .env
 
+# Aggregate-only usage counters mirror (backend/src/usageStore.ts). Not
+# latest-snapshot.json's sibling by intent: that file is tracked, this one
+# isn't, since it's a locally-regenerated cache of in-memory counters.
+backend/data/usage-stats.json
+
 .worktrees/.worktrees/
 .worktrees/

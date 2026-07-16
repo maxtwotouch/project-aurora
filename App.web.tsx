@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Pressable, Text } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import spots from './src/data/spots.json';
+import { ConsentGate } from './src/components/ConsentGate';
 import { useForecast } from './src/hooks/useForecast';
 import { AllSpotsScreen } from './src/screens/AllSpotsScreen';
 import { AuroraMapScreen } from './src/screens/AuroraMapScreen';
@@ -15,7 +17,20 @@ import { MapScreen } from './src/screens/MapScreen.web';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.web';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
+import { radius, space, type WebPressableState } from './src/theme/tokens';
 import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+
+// Desktop web should not read as a phone screen inside a browser: full-bleed
+// scroll surfaces are capped and centered so line lengths and layout stay
+// sane on wide viewports. Mobile web (narrow) is unaffected (maxWidth only
+// kicks in once content is already wider than the cap).
+function WebPage({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.webPage}>
+      <View style={styles.webPageInner}>{children}</View>
+    </View>
+  );
+}
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -131,22 +146,24 @@ function TabsRoot({
     >
       <Tabs.Screen name="Tonight" options={{ title: 'Tonight' }}>
         {() => (
-          <TonightScreen
-            onOpenSpot={onOpenSpot}
-            loading={loading}
-            error={error}
-            lastUpdatedAt={lastUpdatedAt}
-            dataQuality={dataQuality}
-            kp={kp}
-            topSpots={topSpots}
-            closeSpots={closeSpots}
-            spotsById={spotsById}
-            tonightScore={tonightScore}
-            tomorrowScore={tomorrowScore}
-            sightingPossibleFrom={sightingPossibleFrom}
-            recommendation={recommendation}
-            refresh={refresh}
-          />
+          <WebPage>
+            <TonightScreen
+              onOpenSpot={onOpenSpot}
+              loading={loading}
+              error={error}
+              lastUpdatedAt={lastUpdatedAt}
+              dataQuality={dataQuality}
+              kp={kp}
+              topSpots={topSpots}
+              closeSpots={closeSpots}
+              spotsById={spotsById}
+              tonightScore={tonightScore}
+              tomorrowScore={tomorrowScore}
+              sightingPossibleFrom={sightingPossibleFrom}
+              recommendation={recommendation}
+              refresh={refresh}
+            />
+          </WebPage>
         )}
       </Tabs.Screen>
       <Tabs.Screen name="SpotsMap" options={{ title: 'Map' }}>
@@ -154,21 +171,31 @@ function TabsRoot({
       </Tabs.Screen>
       <Tabs.Screen name="AllSpots" options={{ title: 'Spots' }}>
         {() => (
-          <AllSpotsScreen
-            rankedSpots={rankedSpots}
-            spotsById={spotsById}
-            dataQuality={dataQuality}
-            loading={loading}
-            refresh={refresh}
-            onOpenSpot={onOpenSpot}
-          />
+          <WebPage>
+            <AllSpotsScreen
+              rankedSpots={rankedSpots}
+              spotsById={spotsById}
+              dataQuality={dataQuality}
+              loading={loading}
+              refresh={refresh}
+              onOpenSpot={onOpenSpot}
+            />
+          </WebPage>
         )}
       </Tabs.Screen>
       <Tabs.Screen name="AuroraMap" options={{ title: 'Aurora' }}>
-        {() => <AuroraMapScreen kp={kp} />}
+        {() => (
+          <WebPage>
+            <AuroraMapScreen kp={kp} />
+          </WebPage>
+        )}
       </Tabs.Screen>
       <Tabs.Screen name="Live" options={{ title: 'Live' }}>
-        {() => <LiveCamerasScreen />}
+        {() => (
+          <WebPage>
+            <LiveCamerasScreen />
+          </WebPage>
+        )}
       </Tabs.Screen>
     </Tabs.Navigator>
   );
@@ -183,60 +210,99 @@ export default function App() {
   );
 
   return (
-    <NavigationContainer theme={navTheme}>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: palette.nightSoft
-          },
-          headerTintColor: palette.textPrimary
-        }}
-      >
-        <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-          {({ navigation }) => (
-            <TabsRoot
-              onOpenSpot={(spotId) => {
-                navigation.navigate('SpotDetail', { spotId });
-              }}
-              rankedSpots={forecast.rankedSpots}
-              loading={forecast.loading}
-              error={forecast.error}
-              lastUpdatedAt={forecast.lastUpdatedAt}
-              dataQuality={forecast.dataQuality}
-              kp={forecast.kp}
-              topSpots={forecast.topSpots}
-              closeSpots={forecast.closeSpots}
-              spotsById={forecast.spotsById}
-              tonightScore={forecast.tonightScore}
-              tomorrowScore={forecast.tomorrowScore}
-              sightingPossibleFrom={forecast.sightingPossibleFrom}
-              recommendation={forecast.recommendation}
-              refresh={forecast.refresh}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen
-          name="SpotDetail"
-          options={({ route, navigation }) => ({
-            title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
-            headerBackVisible: false,
-            headerLeft: () => (
-              <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => navigation.goBack()}>
-                <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                <Text style={{ color: palette.textPrimary, fontWeight: '700' }}>Back</Text>
-              </Pressable>
-            )
-          })}
+    <ConsentGate>
+      <NavigationContainer theme={navTheme}>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: palette.nightSoft
+            },
+            headerTintColor: palette.textPrimary
+          }}
         >
-          {({ route }) => (
-            <SpotDetailScreen
-              spot={spotsById[route.params.spotId]}
-              result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-              forecast={forecast.forecastsBySpotId[route.params.spotId]}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+            {({ navigation }) => (
+              <TabsRoot
+                onOpenSpot={(spotId) => {
+                  navigation.navigate('SpotDetail', { spotId });
+                }}
+                rankedSpots={forecast.rankedSpots}
+                loading={forecast.loading}
+                error={forecast.error}
+                lastUpdatedAt={forecast.lastUpdatedAt}
+                dataQuality={forecast.dataQuality}
+                kp={forecast.kp}
+                topSpots={forecast.topSpots}
+                closeSpots={forecast.closeSpots}
+                spotsById={forecast.spotsById}
+                tonightScore={forecast.tonightScore}
+                tomorrowScore={forecast.tomorrowScore}
+                sightingPossibleFrom={forecast.sightingPossibleFrom}
+                recommendation={forecast.recommendation}
+                refresh={forecast.refresh}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen
+            name="SpotDetail"
+            options={({ route, navigation }) => ({
+              title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
+              headerBackVisible: false,
+              headerLeft: () => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                  style={({ focused }: WebPressableState) => [styles.backButton, focused ? styles.focusRing : null]}
+                  onPress={() => navigation.goBack()}
+                >
+                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                  <Text style={styles.backText}>Back</Text>
+                </Pressable>
+              )
+            })}
+          >
+            {({ route }) => (
+              <WebPage>
+                <SpotDetailScreen
+                  spot={spotsById[route.params.spotId]}
+                  result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                  forecast={forecast.forecastsBySpotId[route.params.spotId]}
+                />
+              </WebPage>
+            )}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ConsentGate>
   );
 }
+
+const styles = StyleSheet.create({
+  webPage: {
+    flex: 1,
+    backgroundColor: palette.night
+  },
+  webPageInner: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center'
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xxs,
+    paddingHorizontal: space.xs,
+    paddingVertical: space.xxs,
+    borderRadius: radius.pill
+  },
+  backText: {
+    color: palette.textPrimary,
+    fontWeight: '700'
+  },
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: 2
+  } as any
+});
