@@ -129,6 +129,17 @@ export type UsageDayTotals = {
   total: number;
 };
 
+/** Small-cell / k-anonymity suppression status for GET /v1/stats/usage. Off
+ * by default (`minCell: 0`); when the owner sets `STATS_MIN_CELL` > 0,
+ * bySpot/byHour/byDay entries whose `total` falls below the threshold are
+ * omitted from those breakdowns (never zeroed-in-place -- omitted entirely),
+ * while `totalEvents`/`totalsByType` stay exact (computed over every record,
+ * suppression never touches those). */
+export type UsageSuppressionInfo = {
+  minCell: number;
+  suppressedCells: number;
+};
+
 /** Aggregate-only usage response for GET /v1/stats/usage. Never row-level. */
 export type UsageStatsResponse = {
   generatedAt: string;
@@ -139,4 +150,5 @@ export type UsageStatsResponse = {
   byHour: UsageHourTotals[];
   byDay: UsageDayTotals[];
   distinctCounterKeys: number;
+  suppression: UsageSuppressionInfo;
 };
