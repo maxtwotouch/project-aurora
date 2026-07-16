@@ -1,11 +1,27 @@
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Easing, Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Linking,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { DataQualityBanner } from '../components/DataQualityBanner';
+import { HourlyTimeline } from '../components/HourlyTimeline';
 import { SpotCard } from '../components/SpotCard';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { palette } from '../theme/palette';
+import { elevation, motion, radius, space, type WebPressableState } from '../theme/tokens';
+import { typography } from '../theme/type';
 import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type Props = {
@@ -33,10 +49,12 @@ const formatLocalTime = (iso: string) =>
     hourCycle: 'h23'
   });
 
+const formatUpdatedAt = formatLocalTime;
+
 function whyTitleFromScore(score: number): string {
-  if (score >= 70) return 'Why Tonight Is Worth It';
-  if (score >= 45) return 'Why Tonight Needs Timing';
-  return 'Why Tonight Looks Difficult';
+  if (score >= 70) return 'Why tonight is worth it';
+  if (score >= 45) return 'Why tonight needs timing';
+  return 'Why tonight looks difficult';
 }
 
 function chanceLabelFromScore(score: number): string {
@@ -58,12 +76,12 @@ function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later' | 'Later Tonight'
     return { bg: palette.successSurface, border: palette.auroraGreen, text: palette.auroraMint };
   }
   if (label === 'Later Tonight') {
-    return { bg: palette.infoSurface, border: palette.auroraBlue, text: palette.auroraIce };
+    return { bg: palette.infoSurface, border: palette.auroraBlue, text: palette.textOnInfoSurface };
   }
   if (label === 'Wait') {
-    return { bg: palette.warningSurface, border: palette.warning, text: '#fae7a3' };
+    return { bg: palette.warningSurface, border: palette.warning, text: palette.textOnWarningSurface };
   }
-  return { bg: palette.dangerSurface, border: palette.danger, text: '#ffd2d8' };
+  return { bg: palette.dangerSurface, border: palette.danger, text: palette.textOnDangerSurface };
 }
 
 function isLikelyDaytime(now: Date): boolean {
@@ -71,18 +89,16 @@ function isLikelyDaytime(now: Date): boolean {
   return hour >= 8 && hour < 17;
 }
 
-const formatUpdatedAt = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    hourCycle: 'h23'
-  });
+function toneColor(score: number): string {
+  if (score >= 70) return palette.auroraMint;
+  if (score >= 45) return palette.warning;
+  return palette.danger;
+}
 
-function metricTone(score: number) {
-  if (score >= 70) return styles.metricToneGood;
-  if (score >= 45) return styles.metricToneMixed;
-  return styles.metricToneLow;
+function scoreTone(score: number): string {
+  if (score >= 70) return palette.auroraGreen;
+  if (score >= 45) return palette.warning;
+  return palette.danger;
 }
 
 export function TonightScreen({
@@ -102,6 +118,9 @@ export function TonightScreen({
   refresh
 }: Props) {
   const navigation = useNavigation<any>();
+  const reducedMotion = useReducedMotion();
+  const { width } = useWindowDimensions();
+  const isWideWeb = Platform.OS === 'web' && width >= 860;
   const heroAnim = useRef(new Animated.Value(0)).current;
   const secondaryAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
@@ -117,6 +136,14 @@ export function TonightScreen({
     ? `Daylight is still up. First realistic viewing window starts around ${sightingPossibleFrom}.`
     : null;
 
+  const bandItems: { label: string; value: string; tone?: string }[] = [
+    { label: 'Chance', value: chanceLabelFromScore(tonightScoreValue) },
+    { label: 'Cloud', value: `${tonightScore?.cloudCover ?? '-'}%`, tone: toneColor(100 - (tonightScore?.cloudCover ?? 100)) },
+    { label: 'KP now', value: kp.current.toFixed(1), tone: toneColor(Math.round(kp.current * 18)) },
+    { label: 'KP peak', value: kp.tonightPeak.toFixed(1), tone: toneColor(Math.round(kp.tonightPeak * 18)) },
+    { label: 'Updated', value: lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '--:--' }
+  ];
+
   const navigateToBestSpot = () => {
     if (!bestSpotData) return;
 
@@ -125,27 +152,36 @@ export function TonightScreen({
   };
 
   useEffect(() => {
+    if (reducedMotion) {
+      heroAnim.setValue(1);
+      secondaryAnim.setValue(1);
+      listAnim.setValue(1);
+      return;
+    }
+
     Animated.stagger(110, [
       Animated.timing(heroAnim, {
         toValue: 1,
-        duration: 520,
-        easing: Easing.out(Easing.exp),
+        duration: motion.duration.enter,
+        easing: motion.easing.out,
         useNativeDriver: true
       }),
       Animated.timing(secondaryAnim, {
         toValue: 1,
-        duration: 460,
-        easing: Easing.out(Easing.exp),
+        duration: motion.duration.slow,
+        easing: motion.easing.out,
         useNativeDriver: true
       }),
       Animated.timing(listAnim, {
         toValue: 1,
-        duration: 420,
-        easing: Easing.out(Easing.exp),
+        duration: motion.duration.base,
+        easing: motion.easing.out,
         useNativeDriver: true
       })
     ]).start();
-  }, [heroAnim, listAnim, secondaryAnim]);
+  }, [heroAnim, listAnim, secondaryAnim, reducedMotion]);
+
+  const riseFrom = (distance: number) => (reducedMotion ? 0 : distance);
 
   if (loading && topSpots.length === 0) {
     return (
@@ -158,7 +194,7 @@ export function TonightScreen({
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, isWideWeb ? styles.containerWide : null]}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} />}
@@ -166,6 +202,8 @@ export function TonightScreen({
       <View style={styles.atmosphereTop} />
       <View style={styles.atmosphereBottom} />
 
+      {/* The hero is the one dominant recommendation block: go / when / where,
+          readable without scrolling. Everything below is supporting detail. */}
       <Animated.View
         style={[
           styles.hero,
@@ -175,79 +213,54 @@ export function TonightScreen({
               {
                 translateY: heroAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [18, 0]
+                  outputRange: [riseFrom(18), 0]
                 })
               }
             ]
           }
         ]}
       >
-        <View style={styles.heroHeader}>
+        <View style={styles.heroTopRow}>
           <View style={styles.heroCopy}>
             <Text style={styles.eyebrow}>Tonight</Text>
             <Text style={styles.heroTitle}>Aurora outlook</Text>
-            <Text style={styles.heroIntro}>
-              Best window, strongest spot, and live conditions.
-            </Text>
+            <Text style={styles.statusLabel}>{recommendation}</Text>
           </View>
-          <View style={styles.statusCluster}>
+
+          <View style={styles.decisionCluster}>
             <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
               <Text style={[styles.decisionText, { color: decisionColors.text }]}>{decision}</Text>
             </View>
-            <Text style={styles.statusLabel}>{recommendation}</Text>
             <Text style={styles.score}>{tonightScoreValue}</Text>
             <Text style={styles.scoreSuffix}>out of 100</Text>
           </View>
         </View>
 
-        <View style={styles.metricsBand}>
-          <View style={styles.metricBandItem}>
-            <Text style={styles.metricBandLabel}>Chance</Text>
-            <Text style={styles.metricBandValue}>{chanceLabelFromScore(tonightScoreValue)}</Text>
+        {daytimeHint ? (
+          <View style={styles.daylightNotice}>
+            <Ionicons name="sunny" size={18} color={palette.textOnWarningSurface} />
+            <Text style={styles.daylightNoticeText}>{daytimeHint}</Text>
           </View>
-          <View style={styles.metricBandItem}>
-            <Text style={styles.metricBandLabel}>KP now</Text>
-            <Text style={styles.metricBandValue}>{kp.current.toFixed(1)}</Text>
-          </View>
-          <View style={styles.metricBandItem}>
-            <Text style={styles.metricBandLabel}>KP peak</Text>
-            <Text style={styles.metricBandValue}>{kp.tonightPeak.toFixed(1)}</Text>
-          </View>
-          <View style={styles.metricBandItem}>
-            <Text style={styles.metricBandLabel}>Updated</Text>
-            <Text style={styles.metricBandValue}>{lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '--:--'}</Text>
+        ) : null}
+
+        <View style={styles.reasonBlock}>
+          <Text style={styles.sectionKicker}>{whyTitleFromScore(tonightScoreValue)}</Text>
+          <View style={styles.dataBand}>
+            {bandItems.map((item, index) => (
+              <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
+                <Text style={styles.bandLabel}>{item.label}</Text>
+                <Text style={[styles.bandValue, item.tone ? { color: item.tone } : null]}>{item.value}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         <DataQualityBanner dataQuality={dataQuality} />
 
-        {daytimeHint ? (
-          <View style={styles.daylightNotice}>
-            <Ionicons name="sunny" size={18} color="#ffe49a" />
-            <Text style={styles.daylightNoticeText}>{daytimeHint}</Text>
-          </View>
-        ) : null}
+        <View style={styles.divider} />
 
-        <View style={styles.quickNavCard}>
-          <Text style={styles.quickNavTitle}>On this page</Text>
-          <View style={styles.quickNavRow}>
-            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('AllSpots')}>
-              <Text style={styles.quickNavChipText}>Full spots</Text>
-            </Pressable>
-            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('SpotsMap')}>
-              <Text style={styles.quickNavChipText}>Map</Text>
-            </Pressable>
-            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('Live')}>
-              <Text style={styles.quickNavChipText}>Cameras</Text>
-            </Pressable>
-            <Pressable style={styles.quickNavChip} onPress={() => navigation.navigate('AuroraMap')}>
-              <Text style={styles.quickNavChipText}>Aurora map</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.heroColumns}>
-          <View style={styles.heroPrimary}>
+        <View style={[styles.heroColumns, isWideWeb ? styles.heroColumnsWide : null]}>
+          <View style={[styles.heroPrimary, isWideWeb ? styles.heroPrimaryWide : null]}>
             <Text style={styles.sectionKicker}>Best window</Text>
             <Text style={styles.windowLine}>
               {bestSpot
@@ -256,49 +269,38 @@ export function TonightScreen({
             </Text>
             <Text style={styles.helper}>
               {bestSpot
-                ? `${bestSpot.cloudCoverAtBestHour}% cloud cover at the strongest moment.`
+                ? `${bestSpot.cloudCoverAtBestHour}% cloud cover at the strongest moment, at ${bestSpot.spotName}.`
                 : 'Pull to refresh when forecast data becomes available.'}
             </Text>
 
-            <View style={styles.reasonPanel}>
-              <Text style={styles.reasonTitle}>{whyTitleFromScore(tonightScoreValue)}</Text>
-              <View style={styles.reasonMetrics}>
-                <View style={[styles.metricCard, metricTone(100 - (tonightScore?.cloudCover ?? 100))]}>
-                  <Text style={styles.metricLabel}>Cloud</Text>
-                  <Text style={styles.metricValue}>{tonightScore?.cloudCover ?? '-'}%</Text>
-                </View>
-                <View style={[styles.metricCard, metricTone(Math.round(kp.current * 18))]}>
-                  <Text style={styles.metricLabel}>KP now</Text>
-                  <Text style={styles.metricValue}>{kp.current.toFixed(1)}</Text>
-                </View>
-                <View style={[styles.metricCard, metricTone(Math.round(kp.tonightPeak * 18))]}>
-                  <Text style={styles.metricLabel}>KP peak</Text>
-                  <Text style={styles.metricValue}>{kp.tonightPeak.toFixed(1)}</Text>
-                </View>
-              </View>
-            </View>
+            {bestSpot && bestSpot.hourlyScores.length > 0 ? (
+              <HourlyTimeline
+                points={bestSpot.hourlyScores.map((hour) => ({ time: hour.time, value: hour.score }))}
+                highlightStart={bestSpot.bestWindowStart}
+                highlightEnd={bestSpot.bestWindowEnd}
+                toneFor={scoreTone}
+                accessibilityLabel="Hourly aurora score tonight, with the best window highlighted"
+              />
+            ) : null}
           </View>
 
-          <View style={styles.heroSecondary}>
+          <View style={[styles.heroSecondary, isWideWeb ? styles.heroSecondaryWide : null]}>
             <Text style={styles.sectionKicker}>Best spot now</Text>
             {bestSpot && bestSpotData ? (
               <View style={styles.bestSpotBox}>
                 <Text style={styles.bestSpotName} numberOfLines={2}>
                   {bestSpot.spotName}
                 </Text>
-                <Text style={styles.bestSpotMeta}>
-                  {bestSpotData.distanceKm} km from the city center
-                </Text>
-                <Text style={styles.bestSpotMeta}>
-                  Clearest stretch: {formatLocalTime(bestSpot.bestWindowStart)} to {formatLocalTime(bestSpot.bestWindowEnd)}
-                </Text>
+                <Text style={styles.bestSpotMeta}>{bestSpotData.distanceKm} km from the city center</Text>
 
                 <View style={styles.bestSpotActions}>
                   <Pressable
                     accessibilityRole="button"
-                    style={({ pressed }) => [
+                    accessibilityLabel={`View details for ${bestSpot.spotName}`}
+                    style={({ pressed, focused }: WebPressableState) => [
                       styles.secondaryButton,
                       Platform.OS === 'web' ? styles.secondaryButtonHover : null,
+                      focused ? styles.focusRing : null,
                       pressed ? styles.buttonPressed : null
                     ]}
                     onPress={() => onOpenSpot(bestSpot.spotId)}
@@ -307,9 +309,11 @@ export function TonightScreen({
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
-                    style={({ pressed }) => [
+                    accessibilityLabel={`Open navigation to ${bestSpot.spotName}`}
+                    style={({ pressed, focused }: WebPressableState) => [
                       styles.primaryButton,
                       Platform.OS === 'web' ? styles.primaryButtonHover : null,
+                      focused ? styles.focusRing : null,
                       pressed ? styles.buttonPressed : null
                     ]}
                     onPress={navigateToBestSpot}
@@ -327,7 +331,45 @@ export function TonightScreen({
         </View>
       </Animated.View>
 
-      {tomorrowScore ? (
+      <Animated.View
+        style={[
+          styles.quickNavRow,
+          {
+            opacity: secondaryAnim
+          }
+        ]}
+      >
+        <Pressable
+          accessibilityRole="link"
+          style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+          onPress={() => navigation.navigate('AllSpots')}
+        >
+          <Text style={styles.quickNavChipText}>Full spot list</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+          onPress={() => navigation.navigate('SpotsMap')}
+        >
+          <Text style={styles.quickNavChipText}>Map</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+          onPress={() => navigation.navigate('Live')}
+        >
+          <Text style={styles.quickNavChipText}>Cameras</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+          onPress={() => navigation.navigate('AuroraMap')}
+        >
+          <Text style={styles.quickNavChipText}>Aurora map</Text>
+        </Pressable>
+      </Animated.View>
+
+      {tomorrowScore || (kp.dailyOutlook && kp.dailyOutlook.length > 1) ? (
         <Animated.View
           style={[
             styles.outlookCard,
@@ -337,63 +379,52 @@ export function TonightScreen({
                 {
                   translateY: secondaryAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [16, 0]
+                    outputRange: [riseFrom(16), 0]
                   })
                 }
               ]
             }
           ]}
         >
-          <View style={styles.outlookHeader}>
-            <View>
-              <Text style={styles.outlookEyebrow}>Tomorrow</Text>
-              <Text style={styles.outlookTitle}>Early read for the next evening</Text>
-            </View>
-            <Text style={styles.outlookChance}>{tomorrowScore.chance}</Text>
-          </View>
-          <View style={styles.outlookGrid}>
-            <View style={styles.outlookTile}>
-              <Text style={styles.outlookTileLabel}>Score</Text>
-              <Text style={styles.outlookTileValue}>{tomorrowScore.score}</Text>
-            </View>
-            <View style={styles.outlookTile}>
-              <Text style={styles.outlookTileLabel}>Cloud</Text>
-              <Text style={styles.outlookTileValue}>{tomorrowScore.cloudCover}%</Text>
-            </View>
-            <View style={styles.outlookTile}>
-              <Text style={styles.outlookTileLabel}>Peak KP</Text>
-              <Text style={styles.outlookTileValue}>{tomorrowScore.peakKp.toFixed(1)}</Text>
-            </View>
-          </View>
-        </Animated.View>
-      ) : null}
+          <Text style={styles.outlookEyebrow}>Looking ahead</Text>
 
-      {kp.dailyOutlook && kp.dailyOutlook.length > 1 ? (
-        <Animated.View
-          style={[
-            styles.forecastStrip,
-            {
-              opacity: secondaryAnim,
-              transform: [
-                {
-                  translateY: secondaryAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [12, 0]
-                  })
-                }
-              ]
-            }
-          ]}
-        >
-          <Text style={styles.stripTitle}>Upcoming geomagnetic outlook</Text>
-          <View style={styles.stripRow}>
-            {kp.dailyOutlook.slice(1, 4).map((item) => (
-              <View key={item.label} style={styles.stripTile}>
-                <Text style={styles.stripLabel}>{item.label}</Text>
-                <Text style={styles.stripValue}>{item.peak.toFixed(1)}</Text>
+          {tomorrowScore ? (
+            <View style={styles.outlookRow}>
+              <Text style={styles.outlookTitle}>Tomorrow evening</Text>
+              <View style={styles.dataBand}>
+                <View style={styles.bandItem}>
+                  <Text style={styles.bandLabel}>Chance</Text>
+                  <Text style={styles.bandValue}>{tomorrowScore.chance}</Text>
+                </View>
+                <View style={[styles.bandItem, styles.bandItemDivided]}>
+                  <Text style={styles.bandLabel}>Score</Text>
+                  <Text style={styles.bandValue}>{tomorrowScore.score}</Text>
+                </View>
+                <View style={[styles.bandItem, styles.bandItemDivided]}>
+                  <Text style={styles.bandLabel}>Cloud</Text>
+                  <Text style={styles.bandValue}>{tomorrowScore.cloudCover}%</Text>
+                </View>
+                <View style={[styles.bandItem, styles.bandItemDivided]}>
+                  <Text style={styles.bandLabel}>Peak KP</Text>
+                  <Text style={styles.bandValue}>{tomorrowScore.peakKp.toFixed(1)}</Text>
+                </View>
               </View>
-            ))}
-          </View>
+            </View>
+          ) : null}
+
+          {kp.dailyOutlook && kp.dailyOutlook.length > 1 ? (
+            <View style={[styles.outlookRow, tomorrowScore ? styles.outlookRowDivided : null]}>
+              <Text style={styles.outlookTitle}>Geomagnetic outlook</Text>
+              <View style={styles.dataBand}>
+                {kp.dailyOutlook.slice(1, 4).map((item, index) => (
+                  <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
+                    <Text style={styles.bandLabel}>{item.label}</Text>
+                    <Text style={styles.bandValue}>{item.peak.toFixed(1)}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
         </Animated.View>
       ) : null}
 
@@ -406,7 +437,7 @@ export function TonightScreen({
               {
                 translateY: listAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [10, 0]
+                  outputRange: [riseFrom(10), 0]
                 })
               }
             ]
@@ -418,13 +449,17 @@ export function TonightScreen({
       </Animated.View>
       <Animated.View style={{ opacity: listAnim }}>
         {previewTopSpots.map((result) => {
-        const spot = spotsById[result.spotId];
-        if (!spot) return null;
+          const spot = spotsById[result.spotId];
+          if (!spot) return null;
 
-        return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
+          return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
         })}
         {topSpots.length > previewTopSpots.length ? (
-          <Pressable style={styles.inlineCta} onPress={() => navigation.navigate('AllSpots')}>
+          <Pressable
+            accessibilityRole="link"
+            style={({ pressed, focused }: WebPressableState) => [styles.inlineCta, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
+            onPress={() => navigation.navigate('AllSpots')}
+          >
             <Text style={styles.inlineCtaText}>Open all ranked spots</Text>
           </Pressable>
         ) : null}
@@ -441,7 +476,7 @@ export function TonightScreen({
                   {
                     translateY: listAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [10, 0]
+                      outputRange: [riseFrom(10), 0]
                     })
                   }
                 ]
@@ -453,13 +488,21 @@ export function TonightScreen({
           </Animated.View>
           <Animated.View style={{ opacity: listAnim }}>
             {previewCloseSpots.map((result) => {
-            const spot = spotsById[result.spotId];
-            if (!spot) return null;
+              const spot = spotsById[result.spotId];
+              if (!spot) return null;
 
-            return <SpotCard key={`close-${spot.id}`} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
+              return <SpotCard key={`close-${spot.id}`} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
             })}
             {closeSpots.length > previewCloseSpots.length ? (
-              <Pressable style={styles.inlineCta} onPress={() => navigation.navigate('AllSpots')}>
+              <Pressable
+                accessibilityRole="link"
+                style={({ pressed, focused }: WebPressableState) => [
+                  styles.inlineCta,
+                  focused ? styles.focusRing : null,
+                  pressed ? styles.buttonPressed : null
+                ]}
+                onPress={() => navigation.navigate('AllSpots')}
+              >
                 <Text style={styles.inlineCtaText}>Compare nearby spots</Text>
               </Pressable>
             ) : null}
@@ -471,7 +514,11 @@ export function TonightScreen({
         <View style={styles.errorCard}>
           <Text style={styles.errorTitle}>Forecast update failed</Text>
           <Text style={styles.error}>{error}</Text>
-          <Pressable style={styles.retryButton} onPress={() => void refresh()}>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
+            onPress={() => void refresh()}
+          >
             <Text style={styles.retryButtonText}>Try again</Text>
           </Pressable>
         </View>
@@ -482,9 +529,15 @@ export function TonightScreen({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 18,
-    paddingBottom: 32,
+    padding: space.md,
+    paddingBottom: space.xxl,
     backgroundColor: palette.night
+  },
+  containerWide: {
+    maxWidth: 920,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: space.xl
   },
   center: {
     flex: 1,
@@ -499,7 +552,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: '#82f3c41f'
+    backgroundColor: palette.glowMint
   },
   atmosphereBottom: {
     position: 'absolute',
@@ -508,462 +561,308 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: '#91beff14'
+    backgroundColor: palette.glowBlue
   },
   hero: {
     backgroundColor: palette.nightPanel,
-    borderRadius: 28,
-    padding: 22,
-    marginBottom: 20,
+    borderRadius: radius.xl,
+    padding: space.lg,
+    marginBottom: space.lg,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.26,
-    shadowRadius: 28,
-    elevation: 8,
-    gap: 18
+    ...elevation.lg,
+    gap: space.md
   },
-  heroHeader: {
-    gap: 18
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: space.md
   },
   heroCopy: {
-    gap: 6
+    flex: 1,
+    minWidth: 0,
+    gap: space.xxs
   },
   eyebrow: {
-    color: palette.auroraMint,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase'
+    ...typography.eyebrow,
+    color: palette.auroraMint
   },
   heroTitle: {
-    color: palette.textPrimary,
-    fontSize: 32,
-    lineHeight: 36,
-    fontWeight: '800',
-    maxWidth: 420
+    ...typography.display,
+    color: palette.textPrimary
   },
-  heroIntro: {
-    color: palette.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    maxWidth: 540
+  statusLabel: {
+    ...typography.subheading,
+    color: palette.auroraMint,
+    marginTop: space.xxs
   },
-  statusCluster: {
-    alignSelf: 'flex-start',
-    minWidth: 168,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 22,
-    backgroundColor: '#101d27',
-    borderWidth: 1,
-    borderColor: '#284657'
+  decisionCluster: {
+    alignItems: 'flex-end',
+    gap: space.xxs
   },
   decisionPill: {
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
     borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginBottom: 10
+    borderRadius: radius.pill,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xxs
   },
   decisionText: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '800',
     letterSpacing: 0.4
   },
-  statusLabel: {
-    color: palette.auroraMint,
-    fontSize: 17,
-    fontWeight: '700'
-  },
   score: {
-    color: palette.textPrimary,
-    fontSize: 54,
-    lineHeight: 58,
-    fontWeight: '800',
-    marginTop: 8
+    ...typography.numeralLg,
+    color: palette.textPrimary
   },
   scoreSuffix: {
-    color: palette.textMuted,
-    fontSize: 13
-  },
-  metricsBand: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10
-  },
-  metricBandItem: {
-    minWidth: 104,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    backgroundColor: '#101d27',
-    borderWidth: 1,
-    borderColor: '#274253'
-  },
-  metricBandLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7
-  },
-  metricBandValue: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '700'
+    ...typography.caption,
+    color: palette.textMuted
   },
   daylightNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 18,
+    gap: space.xs,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#726134',
-    backgroundColor: '#3a3119'
+    borderColor: palette.warning,
+    backgroundColor: palette.warningSurface
   },
   daylightNoticeText: {
     flex: 1,
-    color: '#ffe7af',
-    fontSize: 14,
-    lineHeight: 20
+    ...typography.body,
+    color: palette.textOnWarningSurface
   },
-  quickNavCard: {
-    padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#274253',
-    backgroundColor: '#0f202a'
-  },
-  quickNavTitle: {
-    color: palette.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10
-  },
-  quickNavRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
-  },
-  quickNavChip: {
-    minHeight: 40,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#17303c',
-    borderWidth: 1,
-    borderColor: '#2e5667'
-  },
-  quickNavChipText: {
-    color: palette.auroraMint,
-    fontSize: 13,
-    fontWeight: '700'
-  },
-  heroColumns: {
-    gap: 16
-  },
-  heroPrimary: {
-    gap: 10
-  },
-  heroSecondary: {
-    gap: 10
+  reasonBlock: {
+    gap: space.xs
   },
   sectionKicker: {
-    color: palette.auroraMint,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-    textTransform: 'uppercase'
+    ...typography.eyebrow,
+    color: palette.auroraMint
   },
-  windowLine: {
-    color: palette.textPrimary,
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: '800'
-  },
-  helper: {
-    color: palette.textSecondary,
-    fontSize: 14,
-    lineHeight: 20
-  },
-  reasonPanel: {
-    marginTop: 4,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: '#244150'
-  },
-  reasonTitle: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10
-  },
-  reasonMetrics: {
+  dataBand: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10
+    gap: space.lg
   },
-  metricCard: {
-    minWidth: 96,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    borderWidth: 1
+  bandItem: {
+    minWidth: 76,
+    gap: 3
   },
-  metricToneGood: {
-    backgroundColor: '#15352e',
-    borderColor: '#2d8d73'
+  bandItemDivided: {
+    borderLeftWidth: 1,
+    borderLeftColor: palette.borderHairline,
+    paddingLeft: space.lg
   },
-  metricToneMixed: {
-    backgroundColor: '#41371c',
-    borderColor: '#8c7440'
+  bandLabel: {
+    ...typography.eyebrow,
+    fontSize: 10,
+    letterSpacing: 0.7,
+    color: palette.textMuted
   },
-  metricToneLow: {
-    backgroundColor: '#41222b',
-    borderColor: '#8a4c5a'
+  bandValue: {
+    ...typography.subheading,
+    color: palette.textPrimary
   },
-  metricLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: palette.borderHairline
   },
-  metricValue: {
-    color: palette.textPrimary,
-    fontSize: 22,
-    fontWeight: '800'
+  heroColumns: {
+    gap: space.md
+  },
+  heroColumnsWide: {
+    flexDirection: 'row',
+    alignItems: 'stretch'
+  },
+  heroPrimary: {
+    gap: space.xs
+  },
+  heroPrimaryWide: {
+    flex: 1.3
+  },
+  heroSecondary: {
+    gap: space.xs
+  },
+  heroSecondaryWide: {
+    flex: 1,
+    borderLeftWidth: 1,
+    borderLeftColor: palette.borderHairline,
+    paddingLeft: space.lg
+  },
+  windowLine: {
+    ...typography.title,
+    color: palette.textPrimary
+  },
+  helper: {
+    ...typography.body,
+    color: palette.textSecondary
   },
   bestSpotBox: {
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: '#101d27',
-    borderWidth: 1,
-    borderColor: '#274253',
-    gap: 8
+    gap: space.xs
   },
   bestSpotName: {
-    color: palette.textPrimary,
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: '800'
+    ...typography.heading,
+    color: palette.textPrimary
   },
   bestSpotMeta: {
-    color: palette.textSecondary,
-    fontSize: 14,
-    lineHeight: 20
+    ...typography.bodySmall,
+    color: palette.textSecondary
   },
   bestSpotActions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 6
+    gap: space.xs,
+    marginTop: space.xxs
   },
   primaryButton: {
     minHeight: 46,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    paddingHorizontal: space.sm,
     backgroundColor: palette.auroraGreen
   },
   primaryButtonHover: {
-    backgroundColor: '#79f4ca'
+    backgroundColor: palette.auroraGlow
   },
   primaryButtonText: {
-    color: palette.textOnAurora,
-    fontWeight: '800',
-    fontSize: 14
+    ...typography.bodyStrong,
+    color: palette.textOnAurora
   },
   secondaryButton: {
     minHeight: 46,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
-    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    paddingHorizontal: space.sm,
     borderWidth: 1,
     borderColor: palette.cardBorderStrong,
-    backgroundColor: '#18303f'
+    backgroundColor: palette.chipSurface
   },
   secondaryButtonHover: {
-    backgroundColor: '#1d394a'
+    backgroundColor: palette.chipSurfaceActive
   },
   secondaryButtonText: {
-    color: palette.textPrimary,
-    fontWeight: '700',
-    fontSize: 14
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   },
   buttonPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
   },
-  outlookCard: {
-    marginBottom: 18,
-    padding: 18,
-    borderRadius: 24,
-    backgroundColor: palette.card,
-    borderWidth: 1,
-    borderColor: palette.cardBorder
-  },
-  outlookHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 14
-  },
-  outlookEyebrow: {
-    color: palette.auroraMint,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    marginBottom: 4
-  },
-  outlookTitle: {
-    color: palette.textPrimary,
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: '800',
-    maxWidth: 280
-  },
-  outlookChance: {
-    color: palette.auroraMint,
-    fontSize: 16,
-    fontWeight: '700'
-  },
-  outlookGrid: {
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: 2
+  } as any,
+  quickNavRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10
+    gap: space.xs,
+    marginBottom: space.lg
   },
-  outlookTile: {
-    minWidth: 98,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    backgroundColor: palette.cardElevated,
-    borderWidth: 1,
-    borderColor: palette.cardBorder
-  },
-  outlookTileLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 4
-  },
-  outlookTileValue: {
-    color: palette.textPrimary,
-    fontSize: 21,
-    fontWeight: '800'
-  },
-  forecastStrip: {
-    marginBottom: 18,
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: '#10202b',
-    borderWidth: 1,
-    borderColor: '#264455'
-  },
-  stripTitle: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12
-  },
-  stripRow: {
-    flexDirection: 'row',
-    gap: 10
-  },
-  stripTile: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    backgroundColor: '#16303f'
-  },
-  stripLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 4
-  },
-  stripValue: {
-    color: palette.textPrimary,
-    fontSize: 20,
-    fontWeight: '800'
-  },
-  sectionHeader: {
-    marginBottom: 12
-  },
-  sectionTitle: {
-    color: palette.textPrimary,
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: '800',
-    marginBottom: 4
-  },
-  sectionSubtitle: {
-    color: palette.textMuted,
-    fontSize: 14,
-    lineHeight: 20
-  },
-  inlineCta: {
-    minHeight: 46,
-    borderRadius: 16,
-    marginTop: 4,
+  quickNavChip: {
+    minHeight: 40,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#355468',
-    backgroundColor: '#132836'
+    borderColor: palette.borderHairlineStrong
+  },
+  quickNavChipText: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: palette.auroraMint
+  },
+  outlookCard: {
+    marginBottom: space.lg,
+    padding: space.lg,
+    borderRadius: radius.xl,
+    backgroundColor: palette.card,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    gap: space.sm
+  },
+  outlookEyebrow: {
+    ...typography.eyebrow,
+    color: palette.auroraMint
+  },
+  outlookRow: {
+    gap: space.xs
+  },
+  outlookRowDivided: {
+    marginTop: space.sm,
+    paddingTop: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: palette.borderHairline
+  },
+  outlookTitle: {
+    ...typography.heading,
+    color: palette.textPrimary
+  },
+  sectionHeader: {
+    marginBottom: space.sm
+  },
+  sectionTitle: {
+    ...typography.title,
+    color: palette.textPrimary
+  },
+  sectionSubtitle: {
+    ...typography.bodySmall,
+    color: palette.textMuted
+  },
+  inlineCta: {
+    minHeight: 46,
+    borderRadius: radius.md,
+    marginTop: space.xxs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: palette.borderHairlineStrong,
+    backgroundColor: palette.surfaceOverlay
   },
   inlineCtaText: {
-    color: palette.textPrimary,
-    fontWeight: '700',
-    fontSize: 14
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   },
   error: {
-    color: '#ffd5db',
-    fontSize: 14,
-    lineHeight: 21
+    ...typography.body,
+    color: palette.textOnDangerSurface
   },
   errorCard: {
-    marginTop: 6,
-    padding: 16,
-    borderRadius: 22,
+    marginTop: space.xxs,
+    padding: space.md,
+    borderRadius: radius.xl,
     backgroundColor: palette.dangerSurface,
     borderWidth: 1,
     borderColor: palette.danger
   },
   errorTitle: {
+    ...typography.heading,
     color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 6
+    marginBottom: space.xxs
   },
   retryButton: {
     alignSelf: 'flex-start',
     minHeight: 42,
-    marginTop: 12,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    marginTop: space.sm,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#5b2c36'
+    backgroundColor: palette.dangerSurface,
+    borderWidth: 1,
+    borderColor: palette.danger
   },
   retryButtonText: {
-    color: palette.textPrimary,
-    fontWeight: '700'
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   }
 });

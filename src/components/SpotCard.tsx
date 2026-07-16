@@ -1,7 +1,10 @@
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from './ScoreBadge';
 import { palette } from '../theme/palette';
+import { radius, space, type WebPressableState } from '../theme/tokens';
+import { typography } from '../theme/type';
 import type { Spot, SpotScoreResult } from '../types';
 
 type Props = {
@@ -24,20 +27,20 @@ function trendLabel(trend: SpotScoreResult['trend']) {
   return 'Limited tonight';
 }
 
-function chanceLabel(score: number): string {
-  if (score >= 70) return 'High';
-  if (score >= 45) return 'Medium';
-  return 'Low';
-}
-
 function trendStyle(trend: SpotScoreResult['trend']) {
   if (trend === 'good_now') {
     return { backgroundColor: palette.successSurface, borderColor: palette.auroraDeep, color: palette.auroraMint };
   }
   if (trend === 'improving') {
-    return { backgroundColor: palette.infoSurface, borderColor: palette.auroraBlue, color: palette.auroraIce };
+    return { backgroundColor: palette.infoSurface, borderColor: palette.auroraBlue, color: palette.textOnInfoSurface };
   }
-  return { backgroundColor: palette.dangerSurface, borderColor: palette.danger, color: '#ffd0d7' };
+  return { backgroundColor: palette.dangerSurface, borderColor: palette.danger, color: palette.textOnDangerSurface };
+}
+
+function cloudTone(cloudCover: number): string {
+  if (cloudCover <= 35) return palette.auroraMint;
+  if (cloudCover <= 70) return palette.warning;
+  return palette.danger;
 }
 
 export function SpotCard({ spot, result, onPress }: Props) {
@@ -46,42 +49,57 @@ export function SpotCard({ spot, result, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      style={({ pressed }) => [
+      accessibilityLabel={`${spot.name}, score ${result.score} of 100, ${trendLabel(result.trend)}`}
+      style={({ pressed, focused }: WebPressableState) => [
         styles.card,
         Platform.OS === 'web' ? styles.cardHover : null,
+        focused ? styles.focusRing : null,
         pressed ? styles.cardPressed : null
       ]}
       onPress={onPress}
     >
       <View style={styles.topRow}>
         <View style={styles.titleWrap}>
-          <Text style={styles.eyebrow}>Field pick</Text>
           <Text style={styles.name} numberOfLines={2}>
             {spot.name}
           </Text>
           <Text style={styles.subtle}>{spot.distanceKm} km from Tromso center</Text>
+
+          {spot.busStop || spot.parking ? (
+            <View style={styles.accessRow}>
+              {spot.busStop ? (
+                <View style={styles.accessChip} accessibilityLabel={`Bus stop nearby: ${spot.busStop}`}>
+                  <Ionicons name="bus-outline" size={12} color={palette.auroraIce} />
+                  <Text style={styles.accessChipText}>Bus</Text>
+                </View>
+              ) : null}
+              {spot.parking ? (
+                <View style={styles.accessChip} accessibilityLabel={`Parking available near ${spot.parking}`}>
+                  <Text style={styles.accessChipGlyph}>P</Text>
+                  <Text style={styles.accessChipText}>Parking</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
         </View>
         <ScoreBadge score={result.score} />
       </View>
 
-      <View style={styles.timingBand}>
-        <Text style={styles.timingLabel}>Best viewing window</Text>
-        <Text style={styles.timingValue}>
-          {formatLocalTime(result.bestWindowStart)} to {formatLocalTime(result.bestWindowEnd)}
-        </Text>
-      </View>
-
-      <View style={styles.metaGrid}>
-        <View style={styles.metaCell}>
-          <Text style={styles.metaKey}>Chance</Text>
-          <Text style={styles.metaValue}>{chanceLabel(result.score)}</Text>
+      <View style={styles.metaBand}>
+        <View style={styles.metaItem}>
+          <Text style={styles.metaLabel}>Best window</Text>
+          <Text style={styles.metaValue}>
+            {formatLocalTime(result.bestWindowStart)}–{formatLocalTime(result.bestWindowEnd)}
+          </Text>
         </View>
-        <View style={styles.metaCell}>
-          <Text style={styles.metaKey}>Cloud</Text>
-          <Text style={styles.metaValue}>{result.cloudCoverAtBestHour}%</Text>
+        <View style={[styles.metaItem, styles.metaItemDivided]}>
+          <Text style={styles.metaLabel}>Cloud</Text>
+          <Text style={[styles.metaValue, { color: cloudTone(result.cloudCoverAtBestHour) }]}>
+            {result.cloudCoverAtBestHour}%
+          </Text>
         </View>
-        <View style={styles.metaCell}>
-          <Text style={styles.metaKey}>Trend</Text>
+        <View style={[styles.metaItem, styles.metaItemDivided]}>
+          <Text style={styles.metaLabel}>Trend</Text>
           <View style={[styles.trendPill, { backgroundColor: trend.backgroundColor, borderColor: trend.borderColor }]}>
             <Text style={[styles.trendText, { color: trend.color }]}>{trendLabel(result.trend)}</Text>
           </View>
@@ -94,108 +112,110 @@ export function SpotCard({ spot, result, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.cardElevated,
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: radius.lg,
+    padding: space.md,
+    marginBottom: space.sm,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    elevation: 5
+    borderColor: palette.cardBorder
   },
   cardHover: {
     borderColor: palette.cardBorderStrong,
-    backgroundColor: '#1d3140'
+    backgroundColor: palette.chipSurfaceActive
   },
   cardPressed: {
     opacity: 0.92,
     transform: [{ scale: 0.988 }]
   },
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: 2
+  } as any,
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 12
+    gap: space.sm
   },
   titleWrap: {
     flex: 1,
-    minWidth: 0
-  },
-  eyebrow: {
-    color: palette.auroraMint,
-    fontSize: 11,
-    marginBottom: 4,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8
+    minWidth: 0,
+    gap: 3
   },
   name: {
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: '800',
+    ...typography.heading,
     color: palette.textPrimary
   },
   subtle: {
-    color: palette.textMuted,
-    fontSize: 13,
-    marginTop: 5
+    ...typography.bodySmall,
+    color: palette.textMuted
   },
-  timingBand: {
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: '#284657'
-  },
-  timingLabel: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 4
-  },
-  timingValue: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '700'
-  },
-  metaGrid: {
+  accessRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 14
+    gap: space.xxs,
+    marginTop: space.xxs
   },
-  metaCell: {
-    minWidth: 92,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    backgroundColor: '#162733',
+  accessChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: space.xxs,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: palette.surfaceSunkenAlt,
     borderWidth: 1,
-    borderColor: '#274253'
+    borderColor: palette.borderHairline
   },
-  metaKey: {
-    color: palette.textMuted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 4
+  accessChipGlyph: {
+    ...typography.caption,
+    fontSize: 10,
+    fontWeight: '800',
+    color: palette.auroraIce
+  },
+  accessChipText: {
+    ...typography.caption,
+    fontSize: 10,
+    color: palette.textSecondary
+  },
+  metaBand: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space.md,
+    marginTop: space.sm,
+    paddingTop: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: palette.borderHairline
+  },
+  metaItem: {
+    minWidth: 92,
+    gap: 3
+  },
+  metaItemDivided: {
+    borderLeftWidth: 1,
+    borderLeftColor: palette.borderHairline,
+    paddingLeft: space.md
+  },
+  metaLabel: {
+    ...typography.eyebrow,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    color: palette.textMuted
   },
   metaValue: {
-    color: palette.textPrimary,
-    fontSize: 16,
-    fontWeight: '700'
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   },
   trendPill: {
     alignSelf: 'flex-start',
-    borderRadius: 999,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    paddingHorizontal: 9,
-    paddingVertical: 4
+    paddingHorizontal: space.xs,
+    paddingVertical: 3
   },
   trendText: {
-    fontSize: 12,
+    ...typography.caption,
+    fontSize: 11,
     fontWeight: '700'
   }
 });
