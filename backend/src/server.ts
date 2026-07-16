@@ -14,6 +14,9 @@ import {
   setLatestSnapshot
 } from './store.js';
 import { config } from './config.js';
+import { registerEventRoutes } from './events.js';
+import { registerStatsRoutes } from './stats.js';
+import { usageCounterStore } from './usageStore.js';
 
 export type BuildAppOptions = {
   adminToken?: string;
@@ -127,11 +130,22 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     return { ok: true, updatedAt: snapshot?.updatedAt ?? null };
   });
 
+  // Anonymous, aggregate-only usage collection (see events.ts / stats.ts /
+  // usageStore.ts). Registered inside buildApp so injected tests exercise the
+  // same wiring as the real server.
+  registerEventRoutes(app);
+  registerStatsRoutes(app, adminToken);
+
   return app;
 }
 
 async function bootstrap() {
   const app = buildApp();
+
+  // Usage counters: restore persisted aggregates and route data-quality
+  // warnings through the app logger before any traffic arrives.
+  usageCounterStore.setWarningHandler((message) => app.log.warn(message));
+  await usageCounterStore.load();
 
   // Load the disk-mirrored snapshot first so /v1/tonight and /v1/health can
   // serve stale-but-real data as soon as we start listening -- we deliberately
@@ -151,6 +165,21 @@ async function bootstrap() {
       app.log.error({ err: error }, 'Background snapshot refresh failed');
     });
   }, config.refreshMs);
+
+  async function shutdown(signal: string): Promise<void> {
+    app.log.info(`Received ${signal}, flushing usage counters and shutting down`);
+    usageCounterStore.stop();
+    try {
+      await usageCounterStore.flush();
+    } catch (error) {
+      app.log.error({ err: error }, 'Failed to flush usage counters on shutdown');
+    }
+    await app.close();
+    process.exit(0);
+  }
+
+  process.once('SIGINT', () => void shutdown('SIGINT'));
+  process.once('SIGTERM', () => void shutdown('SIGTERM'));
 }
 
 const isEntryPoint = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1] as string).href;
