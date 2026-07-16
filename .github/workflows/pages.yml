@@ -1,0 +1,84 @@
+# Deploys the Expo web export as a static site to GitHub Pages, so the
+# frontend has a free public URL that works standalone with no backend
+# (direct-API mode: the browser calls MET/NOAA directly, same as
+# EXPO_PUBLIC_USE_BACKEND being unset). This workflow does not touch the
+# Fly.io backend deploy (see deploy.yml).
+#
+# One-time setup required from a human: Settings -> Pages -> Source:
+# GitHub Actions (see README "Web deployment" section).
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "App*.tsx"
+      - "app.json"
+      - "app.config.*"
+      - "package*.json"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# Least-privilege default for the whole workflow; the deploy job below adds
+# the extra pages/id-token scopes it needs, kept scoped to that job only.
+permissions:
+  contents: read
+
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and latest queued. Do NOT cancel in-progress runs so a
+# production deployment always completes.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install app deps
+        run: npm ci
+
+      - name: Export web (direct-API mode)
+        # Deliberately do NOT set EXPO_PUBLIC_USE_BACKEND / EXPO_PUBLIC_API_BASE_URL
+        # here: the deployed Pages site calls MET/NOAA directly from the
+        # browser, so it works standalone with no backend deployed.
+        run: npx expo export --platform web
+        env:
+          # GitHub Pages serves this site at /project-aurora/, not /. See
+          # app.config.js for how this env var is threaded into
+          # experiments.baseUrl (a no-op when unset, e.g. local dev/exports).
+          EXPO_WEB_BASE_URL: /project-aurora
+
+      - name: SPA fallback (survive refresh on client-side routes)
+        run: cp dist/index.html dist/404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

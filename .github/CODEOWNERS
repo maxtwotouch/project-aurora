@@ -11,6 +11,8 @@
 /backend/src/db*            @maxtwotouch
 /backend/src/**/events*     @maxtwotouch
 /backend/src/**/stats*      @maxtwotouch
+/src/analytics/             @maxtwotouch
+/src/components/Consent*    @maxtwotouch
 
 # PROPOSED (feat/usage-events, needs human confirmation before merge):
 /backend/src/usageStore*    @maxtwotouch
