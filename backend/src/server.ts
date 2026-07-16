@@ -4,6 +4,9 @@ import cors from '@fastify/cors';
 
 import { buildTonightSnapshot, getSpots } from './snapshot.js';
 import { getLatestSnapshot, loadSnapshotFromDisk, setLatestSnapshot } from './store.js';
+import { registerEventRoutes } from './events.js';
+import { registerStatsRoutes } from './stats.js';
+import { usageCounterStore } from './usageStore.js';
 
 const app = Fastify({ logger: true });
 const PORT = Number(process.env.PORT ?? 8080);
@@ -96,7 +99,25 @@ app.post('/v1/admin/refresh', async (request: FastifyRequest, reply: FastifyRepl
   return { ok: true, updatedAt: snapshot?.updatedAt ?? null };
 });
 
+// Anonymous, aggregate-only usage collection (see events.ts / stats.ts / usageStore.ts).
+registerEventRoutes(app);
+registerStatsRoutes(app, ADMIN_TOKEN);
+
+async function shutdown(signal: string): Promise<void> {
+  app.log.info(`Received ${signal}, flushing usage counters and shutting down`);
+  usageCounterStore.stop();
+  try {
+    await usageCounterStore.flush();
+  } catch (error) {
+    app.log.error({ err: error }, 'Failed to flush usage counters on shutdown');
+  }
+  await app.close();
+  process.exit(0);
+}
+
 async function bootstrap() {
+  usageCounterStore.setWarningHandler((message) => app.log.warn(message));
+  await usageCounterStore.load();
   await loadSnapshotFromDisk();
 
   try {
@@ -110,6 +131,9 @@ async function bootstrap() {
       app.log.error({ err: error }, 'Background snapshot refresh failed');
     });
   }, REFRESH_MS);
+
+  process.once('SIGINT', () => void shutdown('SIGINT'));
+  process.once('SIGTERM', () => void shutdown('SIGTERM'));
 
   await app.listen({ host: HOST, port: PORT });
   app.log.info(`Backend listening on ${HOST}:${PORT}`);
