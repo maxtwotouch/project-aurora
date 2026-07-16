@@ -2,6 +2,15 @@ import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
 
 import { getConsent, isConsentLoaded, subscribeConsent } from './consent';
+import {
+  MAX_QUEUE_SIZE_BEFORE_FLUSH,
+  bufferPendingEvent,
+  dropQueueOnRevoke,
+  mayFlush,
+  pushToQueue,
+  resolvePendingBeforeLoad,
+  takeNextBatch
+} from './core';
 
 /**
  * Anonymous usage event client for POST /v1/events (see backend/src/events.ts).
@@ -22,6 +31,12 @@ import { getConsent, isConsentLoaded, subscribeConsent } from './consent';
  *   surfaced to the user, never allowed to block the UI.
  * - If consent is withdrawn (toggled off) after events were queued but
  *   before they were flushed, the queue is dropped rather than sent.
+ *
+ * This module is a thin RN-bound wrapper: the queueing/buffering/flush-gate
+ * policy itself (buffer caps, promote-on-accepted, drop-on-revoke, the
+ * "may we flush?" predicate) lives in the framework-free ./core.ts, so it
+ * can be unit-tested directly under plain Node -- see
+ * test/analytics-core.test.ts at the repo root.
  */
 export type UsageEventType = 'spot_view' | 'navigate_pressed' | 'spot_shared';
 
@@ -33,15 +48,6 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 const USE_BACKEND = process.env.EXPO_PUBLIC_USE_BACKEND === 'true';
 
 const FLUSH_INTERVAL_MS = 30_000;
-const MAX_QUEUE_SIZE_BEFORE_FLUSH = 10;
-// Backend enforces a hard cap of 20 events per batch (see events.ts);
-// staying at 10 keeps every flush comfortably under that regardless of
-// how the queue built up.
-const MAX_BATCH_SIZE = 10;
-// Small cap on events held while we don't yet know the persisted consent
-// choice (see track()) -- this only ever covers the first render or two
-// right at app start, never a sustained backlog.
-const MAX_PENDING_BEFORE_LOAD = 10;
 
 let queue: QueuedEvent[] = [];
 // Events that arrive before loadConsent() resolves. Held here instead of
@@ -97,19 +103,18 @@ export function track(type: UsageEventType, spotId: string): void {
     // send nor permanently discard this event -- it goes into a small
     // buffer that the subscribeConsent handler resolves once load
     // completes (kept only if that resolves to 'accepted').
-    if (pendingBeforeLoad.length < MAX_PENDING_BEFORE_LOAD) {
-      pendingBeforeLoad.push({ type, spotId });
-    }
+    pendingBeforeLoad = bufferPendingEvent(pendingBeforeLoad, { type, spotId }).pendingBeforeLoad;
     return;
   }
 
   if (getConsent() !== 'accepted') return;
 
-  queue.push({ type, spotId });
+  const { queue: nextQueue, shouldFlush } = pushToQueue(queue, { type, spotId });
+  queue = nextQueue;
   ensureFlushTimer();
   ensureAppStateListener();
 
-  if (queue.length >= MAX_QUEUE_SIZE_BEFORE_FLUSH) {
+  if (shouldFlush) {
     void flush();
   }
 }
@@ -121,12 +126,13 @@ async function flush(): Promise<void> {
   // consent has loaded and is 'accepted' (see track(), ensureFlushTimer(),
   // and the subscribeConsent handler below), but fail closed here too --
   // never send while that isn't true.
-  if (!isConsentLoaded() || getConsent() !== 'accepted') {
-    queue = [];
+  if (!mayFlush({ loaded: isConsentLoaded(), consent: getConsent(), configured: isConfigured() })) {
+    queue = dropQueueOnRevoke();
     return;
   }
 
-  const batch = queue.splice(0, MAX_BATCH_SIZE);
+  const { batch, remaining } = takeNextBatch(queue);
+  queue = remaining;
 
   try {
     await fetch(`${API_BASE_URL}/v1/events`, {
@@ -147,10 +153,10 @@ subscribeConsent((state) => {
   // 'accepted' later -- they are kept here solely because load hadn't
   // resolved yet, not because they were already known-consented.
   if (pendingBeforeLoad.length > 0) {
-    const buffered = pendingBeforeLoad;
-    pendingBeforeLoad = [];
-    if (state === 'accepted') {
-      queue.push(...buffered);
+    const { pendingBeforeLoad: cleared, promoted } = resolvePendingBeforeLoad(pendingBeforeLoad, state);
+    pendingBeforeLoad = cleared;
+    if (promoted.length > 0) {
+      queue = [...queue, ...promoted];
     }
   }
 
@@ -173,7 +179,7 @@ subscribeConsent((state) => {
   // 'accepted' -- and stop the periodic flush. track() recreates the timer
   // via ensureFlushTimer() the next time an event is queued after consent
   // is accepted again.
-  queue = [];
+  queue = dropQueueOnRevoke();
   if (flushTimer) {
     clearInterval(flushTimer);
     flushTimer = null;
