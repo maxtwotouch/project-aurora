@@ -125,18 +125,19 @@ describe('rankSpots: best-3-hour-window selection', () => {
     assert.equal(result.bestWindowEnd, forecast[0].time);
   });
 
-  test('with fewer than 3 hours of data (2 hours), current behavior always reports hour 0 as best-hour data' +
-    ' even when hour 1 scores higher (documents existing <3-hour fallback path, not an ideal-best-hour search)', () => {
+  test('with fewer than 3 hours of data (2 hours), the actual best-scoring hour is reported' +
+    ' (fixed: previously always reported hour 0 even when a later hour scored higher)', () => {
     const spot = makeSpot();
     // hour0 is heavily overcast (low score), hour1 is clear (higher score)
     const forecast = hoursFrom([90, 10]);
 
     const [result] = rankSpots([spot], { [spot.id]: forecast }, [3, 3]);
 
+    // window bounds still span all available hours (there's no full 3-hour window to slide)
     assert.equal(result.bestWindowStart, forecast[0].time);
     assert.equal(result.bestWindowEnd, forecast[1].time);
-    // cloudCoverAtBestHour reflects hour[0] (90), not the actually-higher-scoring hour[1] (10)
-    assert.equal(result.cloudCoverAtBestHour, 90);
+    // cloudCoverAtBestHour now reflects the actually-higher-scoring hour[1] (10), not hour[0] (90)
+    assert.equal(result.cloudCoverAtBestHour, 10);
   });
 });
 
