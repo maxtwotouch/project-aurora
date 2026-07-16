@@ -23,6 +23,16 @@ jobs:
       - name: Typecheck app
         run: npm run typecheck
 
+      - name: i18n locale check
+        run: npm run test:i18n
+
+      # NOTE: `test:app` is introduced by the sibling PR feat/frontend-tests.
+      # Merge order matters: feat/frontend-tests must land before this branch,
+      # otherwise this step fails with "missing script: test:app". Deliberately
+      # not made conditional -- see report for this branch.
+      - name: App tests
+        run: npm run test:app
+
       - name: KP fetch/parse test
         run: npm run test:kp
 
