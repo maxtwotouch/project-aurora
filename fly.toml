@@ -1,0 +1,44 @@
+# Fly.io configuration for the aurora backend.
+#
+# Deployed by .github/workflows/deploy.yml (needs the FLY_API_TOKEN repo
+# secret). The Docker build context is the repo root because the backend
+# imports src/data/spots.json from outside backend/ — see backend/Dockerfile.
+#
+# If the app name below is already taken on Fly, change it here AND nowhere
+# else; the deploy workflow reads it from this file.
+
+app = "aurora-tromso-backend"
+primary_region = "arn" # Stockholm — closest Fly region to Tromsø
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "8080"
+  # ADMIN_TOKEN and CORS_ORIGINS are secrets/runtime config — set via
+  # `flyctl secrets set` or the Fly dashboard, never here.
+
+[[mounts]]
+  source = "aurora_data"
+  destination = "/app/backend/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # The server refreshes forecasts on an interval — it must never scale to
+  # zero or the snapshot goes stale between visitors.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/v1/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
