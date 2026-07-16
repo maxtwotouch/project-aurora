@@ -14,6 +14,14 @@ npm install
 npm run dev
 ```
 
+See `.env.example` for every environment variable this app reads (each with a
+one-line comment). This app does not auto-load `.env` files (no `dotenv`
+dependency) -- export these as real shell/process environment variables, or
+have your process manager / container runtime inject them. For building/
+running this as a deployed service (Docker or plain Node), required vs.
+optional env vars, and health-check/persistence notes, see
+[`docs/deploying.md`](../docs/deploying.md).
+
 ## Environment
 
 - `PORT` (default `8080`)

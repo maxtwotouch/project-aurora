@@ -1,0 +1,27 @@
+# NOTE on scope: backend/Dockerfile is built with the REPO ROOT as build
+# context (`docker build -f backend/Dockerfile .`), because it needs both
+# backend/ and src/data/spots.json in the same context -- see the comment at
+# the top of backend/Dockerfile. Docker only auto-applies a plain
+# `.dockerignore` from the root of the context, so the file that actually
+# takes effect for that build is the repo root's `.dockerignore`, not this
+# one. This file is kept for anyone who scopes a build to `backend/` only
+# (e.g. a future split repo, or `docker build backend/` with a
+# backend-local Dockerfile) and mirrors the same rules for that case.
+
+node_modules
+dist
+
+# Local dev artifacts, never needed in an image.
+*.log
+.env
+.env.*
+!.env.example
+
+# Test-run residue. NOTE: `backend/data/latest-snapshot.json` itself is
+# git-tracked and intentionally kept (see backend/Dockerfile) -- it seeds the
+# image with a real, if aging, snapshot mirror so a freshly-built container
+# behaves like a fresh git checkout instead of a totally empty store. Only
+# other/incidental files under data/ (e.g. anything a local `npm run dev` may
+# have additionally dropped there) are ignored.
+data/*
+!data/latest-snapshot.json
