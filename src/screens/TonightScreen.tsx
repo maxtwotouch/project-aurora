@@ -19,10 +19,11 @@ import { DataQualityBanner } from '../components/DataQualityBanner';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { SpotCard } from '../components/SpotCard';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { elevation, motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
-import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
+import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
@@ -37,9 +38,32 @@ type Props = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
-  recommendation: string;
+  level: AuroraLevel;
   refresh: () => Promise<void>;
 };
+
+function recommendationKeyFromLevel(level: AuroraLevel): string {
+  if (level === 'great') return 'tonight.recommendation.great';
+  if (level === 'possible') return 'tonight.recommendation.possible';
+  return 'tonight.recommendation.low';
+}
+
+// GeneralForecastScore['chance'] is produced upstream (useForecast.ts) as
+// the literal English words 'High'/'Medium'/'Low' -- map them back to
+// translation keys here rather than changing that shared type.
+function chanceValueToKey(chance: 'High' | 'Medium' | 'Low'): string {
+  if (chance === 'High') return 'common.chance.high';
+  if (chance === 'Medium') return 'common.chance.medium';
+  return 'common.chance.low';
+}
+
+// KpTrend['dailyOutlook'][number]['label'] is produced upstream (src/api/kp.ts)
+// as the literal English words 'Today'/'Tomorrow'/'Day 3'.
+function outlookDayLabelKey(label: string): string {
+  if (label === 'Today') return 'tonight.outlook.dayLabels.today';
+  if (label === 'Tomorrow') return 'tonight.outlook.dayLabels.tomorrow';
+  return 'tonight.outlook.dayLabels.day3';
+}
 
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
@@ -51,34 +75,36 @@ const formatLocalTime = (iso: string) =>
 
 const formatUpdatedAt = formatLocalTime;
 
-function whyTitleFromScore(score: number): string {
-  if (score >= 70) return 'Why tonight is worth it';
-  if (score >= 45) return 'Why tonight needs timing';
-  return 'Why tonight looks difficult';
+type DecisionKey = 'goNow' | 'wait' | 'bestLater' | 'laterTonight';
+
+function whyTitleKeyFromScore(score: number): string {
+  if (score >= 70) return 'tonight.why.worthIt';
+  if (score >= 45) return 'tonight.why.needsTiming';
+  return 'tonight.why.difficult';
 }
 
-function chanceLabelFromScore(score: number): string {
-  if (score >= 70) return 'High';
-  if (score >= 45) return 'Medium';
-  return 'Low';
+function chanceKeyFromScore(score: number): string {
+  if (score >= 70) return 'common.chance.high';
+  if (score >= 45) return 'common.chance.medium';
+  return 'common.chance.low';
 }
 
-function decisionLabel(score: number, isDaytimeNow: boolean, bestCloudCover?: number): 'Go Now' | 'Wait' | 'Best Later' | 'Later Tonight' {
-  if (isDaytimeNow) return 'Later Tonight';
-  if (typeof bestCloudCover === 'number' && bestCloudCover > 80) return 'Best Later';
-  if (score >= 65) return 'Go Now';
-  if (score >= 40) return 'Wait';
-  return 'Best Later';
+function decisionKey(score: number, isDaytimeNow: boolean, bestCloudCover?: number): DecisionKey {
+  if (isDaytimeNow) return 'laterTonight';
+  if (typeof bestCloudCover === 'number' && bestCloudCover > 80) return 'bestLater';
+  if (score >= 65) return 'goNow';
+  if (score >= 40) return 'wait';
+  return 'bestLater';
 }
 
-function decisionStyle(label: 'Go Now' | 'Wait' | 'Best Later' | 'Later Tonight') {
-  if (label === 'Go Now') {
+function decisionStyle(label: DecisionKey) {
+  if (label === 'goNow') {
     return { bg: palette.successSurface, border: palette.auroraGreen, text: palette.auroraMint };
   }
-  if (label === 'Later Tonight') {
+  if (label === 'laterTonight') {
     return { bg: palette.infoSurface, border: palette.auroraBlue, text: palette.textOnInfoSurface };
   }
-  if (label === 'Wait') {
+  if (label === 'wait') {
     return { bg: palette.warningSurface, border: palette.warning, text: palette.textOnWarningSurface };
   }
   return { bg: palette.dangerSurface, border: palette.danger, text: palette.textOnDangerSurface };
@@ -114,9 +140,10 @@ export function TonightScreen({
   tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
-  recommendation,
+  level,
   refresh
 }: Props) {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
@@ -129,19 +156,17 @@ export function TonightScreen({
   const previewCloseSpots = closeSpots.slice(0, 2);
   const isDaytimeNow = isLikelyDaytime(new Date());
   const tonightScoreValue = tonightScore?.score ?? 0;
-  const decision = decisionLabel(tonightScoreValue, isDaytimeNow, bestSpot?.cloudCoverAtBestHour);
+  const decision = decisionKey(tonightScoreValue, isDaytimeNow, bestSpot?.cloudCoverAtBestHour);
   const decisionColors = decisionStyle(decision);
   const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
-  const daytimeHint = isDaytimeNow && sightingPossibleFrom
-    ? `Daylight is still up. First realistic viewing window starts around ${sightingPossibleFrom}.`
-    : null;
+  const daytimeHint = isDaytimeNow && sightingPossibleFrom ? t('tonight.daytimeHint', { time: sightingPossibleFrom }) : null;
 
   const bandItems: { label: string; value: string; tone?: string }[] = [
-    { label: 'Chance', value: chanceLabelFromScore(tonightScoreValue) },
-    { label: 'Cloud', value: `${tonightScore?.cloudCover ?? '-'}%`, tone: toneColor(100 - (tonightScore?.cloudCover ?? 100)) },
-    { label: 'KP now', value: kp.current.toFixed(1), tone: toneColor(Math.round(kp.current * 18)) },
-    { label: 'KP peak', value: kp.tonightPeak.toFixed(1), tone: toneColor(Math.round(kp.tonightPeak * 18)) },
-    { label: 'Updated', value: lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '--:--' }
+    { label: t('tonight.band.chance'), value: t(chanceKeyFromScore(tonightScoreValue)) },
+    { label: t('common.cloud'), value: `${tonightScore?.cloudCover ?? '-'}%`, tone: toneColor(100 - (tonightScore?.cloudCover ?? 100)) },
+    { label: t('tonight.band.kpNow'), value: kp.current.toFixed(1), tone: toneColor(Math.round(kp.current * 18)) },
+    { label: t('tonight.band.kpPeak'), value: kp.tonightPeak.toFixed(1), tone: toneColor(Math.round(kp.tonightPeak * 18)) },
+    { label: t('tonight.band.updated'), value: lastUpdatedAt ? formatUpdatedAt(lastUpdatedAt) : '--:--' }
   ];
 
   const navigateToBestSpot = () => {
@@ -187,7 +212,7 @@ export function TonightScreen({
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={palette.auroraGreen} />
-        <Text style={styles.helper}>Loading tonight&apos;s field report...</Text>
+        <Text style={styles.helper}>{t('tonight.loading')}</Text>
       </View>
     );
   }
@@ -222,17 +247,17 @@ export function TonightScreen({
       >
         <View style={styles.heroTopRow}>
           <View style={styles.heroCopy}>
-            <Text style={styles.eyebrow}>Tonight</Text>
-            <Text style={styles.heroTitle}>Aurora outlook</Text>
-            <Text style={styles.statusLabel}>{recommendation}</Text>
+            <Text style={styles.eyebrow}>{t('tonight.heroEyebrow')}</Text>
+            <Text style={styles.heroTitle}>{t('tonight.heroTitle')}</Text>
+            <Text style={styles.statusLabel}>{t(recommendationKeyFromLevel(level))}</Text>
           </View>
 
           <View style={styles.decisionCluster}>
             <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
-              <Text style={[styles.decisionText, { color: decisionColors.text }]}>{decision}</Text>
+              <Text style={[styles.decisionText, { color: decisionColors.text }]}>{t(`tonight.decision.${decision}`)}</Text>
             </View>
             <Text style={styles.score}>{tonightScoreValue}</Text>
-            <Text style={styles.scoreSuffix}>out of 100</Text>
+            <Text style={styles.scoreSuffix}>{t('tonight.scoreSuffix')}</Text>
           </View>
         </View>
 
@@ -244,7 +269,7 @@ export function TonightScreen({
         ) : null}
 
         <View style={styles.reasonBlock}>
-          <Text style={styles.sectionKicker}>{whyTitleFromScore(tonightScoreValue)}</Text>
+          <Text style={styles.sectionKicker}>{t(whyTitleKeyFromScore(tonightScoreValue))}</Text>
           <View style={styles.dataBand}>
             {bandItems.map((item, index) => (
               <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
@@ -261,16 +286,19 @@ export function TonightScreen({
 
         <View style={[styles.heroColumns, isWideWeb ? styles.heroColumnsWide : null]}>
           <View style={[styles.heroPrimary, isWideWeb ? styles.heroPrimaryWide : null]}>
-            <Text style={styles.sectionKicker}>Best window</Text>
+            <Text style={styles.sectionKicker}>{t('common.bestWindow')}</Text>
             <Text style={styles.windowLine}>
               {bestSpot
-                ? `${formatLocalTime(bestSpot.bestWindowStart)} to ${formatLocalTime(bestSpot.bestWindowEnd)}`
-                : 'Waiting for fresh forecast data'}
+                ? t('tonight.windowRange', {
+                    start: formatLocalTime(bestSpot.bestWindowStart),
+                    end: formatLocalTime(bestSpot.bestWindowEnd)
+                  })
+                : t('tonight.waitingForecast')}
             </Text>
             <Text style={styles.helper}>
               {bestSpot
-                ? `${bestSpot.cloudCoverAtBestHour}% cloud cover at the strongest moment, at ${bestSpot.spotName}.`
-                : 'Pull to refresh when forecast data becomes available.'}
+                ? t('tonight.bestWindowSummary', { cloud: bestSpot.cloudCoverAtBestHour, spot: bestSpot.spotName })
+                : t('tonight.pullToRefresh')}
             </Text>
 
             {bestSpot && bestSpot.hourlyScores.length > 0 ? (
@@ -279,24 +307,24 @@ export function TonightScreen({
                 highlightStart={bestSpot.bestWindowStart}
                 highlightEnd={bestSpot.bestWindowEnd}
                 toneFor={scoreTone}
-                accessibilityLabel="Hourly aurora score tonight, with the best window highlighted"
+                accessibilityLabel={t('tonight.hourlyScoreA11y')}
               />
             ) : null}
           </View>
 
           <View style={[styles.heroSecondary, isWideWeb ? styles.heroSecondaryWide : null]}>
-            <Text style={styles.sectionKicker}>Best spot now</Text>
+            <Text style={styles.sectionKicker}>{t('tonight.bestSpotNow')}</Text>
             {bestSpot && bestSpotData ? (
               <View style={styles.bestSpotBox}>
                 <Text style={styles.bestSpotName} numberOfLines={2}>
                   {bestSpot.spotName}
                 </Text>
-                <Text style={styles.bestSpotMeta}>{bestSpotData.distanceKm} km from the city center</Text>
+                <Text style={styles.bestSpotMeta}>{t('tonight.distanceCityCenter', { km: bestSpotData.distanceKm })}</Text>
 
                 <View style={styles.bestSpotActions}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`View details for ${bestSpot.spotName}`}
+                    accessibilityLabel={t('tonight.viewDetailsFor', { name: bestSpot.spotName })}
                     style={({ pressed, focused }: WebPressableState) => [
                       styles.secondaryButton,
                       Platform.OS === 'web' ? styles.secondaryButtonHover : null,
@@ -305,11 +333,11 @@ export function TonightScreen({
                     ]}
                     onPress={() => onOpenSpot(bestSpot.spotId)}
                   >
-                    <Text style={styles.secondaryButtonText}>View details</Text>
+                    <Text style={styles.secondaryButtonText}>{t('tonight.viewDetails')}</Text>
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Open navigation to ${bestSpot.spotName}`}
+                    accessibilityLabel={t('common.openNavigationTo', { name: bestSpot.spotName })}
                     style={({ pressed, focused }: WebPressableState) => [
                       styles.primaryButton,
                       Platform.OS === 'web' ? styles.primaryButtonHover : null,
@@ -318,13 +346,13 @@ export function TonightScreen({
                     ]}
                     onPress={navigateToBestSpot}
                   >
-                    <Text style={styles.primaryButtonText}>Navigate</Text>
+                    <Text style={styles.primaryButtonText}>{t('common.navigate')}</Text>
                   </Pressable>
                 </View>
               </View>
             ) : (
               <View style={styles.bestSpotBox}>
-                <Text style={styles.helper}>No spot recommendation yet. Try refreshing once the forecast feed stabilizes.</Text>
+                <Text style={styles.helper}>{t('tonight.noRecommendation')}</Text>
               </View>
             )}
           </View>
@@ -344,28 +372,28 @@ export function TonightScreen({
           style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
           onPress={() => navigation.navigate('AllSpots')}
         >
-          <Text style={styles.quickNavChipText}>Full spot list</Text>
+          <Text style={styles.quickNavChipText}>{t('tonight.quickNav.fullSpotList')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
           onPress={() => navigation.navigate('SpotsMap')}
         >
-          <Text style={styles.quickNavChipText}>Map</Text>
+          <Text style={styles.quickNavChipText}>{t('tonight.quickNav.map')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
           onPress={() => navigation.navigate('Live')}
         >
-          <Text style={styles.quickNavChipText}>Cameras</Text>
+          <Text style={styles.quickNavChipText}>{t('tonight.quickNav.cameras')}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="link"
           style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
           onPress={() => navigation.navigate('AuroraMap')}
         >
-          <Text style={styles.quickNavChipText}>Aurora map</Text>
+          <Text style={styles.quickNavChipText}>{t('tonight.quickNav.auroraMap')}</Text>
         </Pressable>
       </Animated.View>
 
@@ -386,26 +414,26 @@ export function TonightScreen({
             }
           ]}
         >
-          <Text style={styles.outlookEyebrow}>Looking ahead</Text>
+          <Text style={styles.outlookEyebrow}>{t('tonight.outlook.eyebrow')}</Text>
 
           {tomorrowScore ? (
             <View style={styles.outlookRow}>
-              <Text style={styles.outlookTitle}>Tomorrow evening</Text>
+              <Text style={styles.outlookTitle}>{t('tonight.outlook.tomorrowEvening')}</Text>
               <View style={styles.dataBand}>
                 <View style={styles.bandItem}>
-                  <Text style={styles.bandLabel}>Chance</Text>
-                  <Text style={styles.bandValue}>{tomorrowScore.chance}</Text>
+                  <Text style={styles.bandLabel}>{t('tonight.band.chance')}</Text>
+                  <Text style={styles.bandValue}>{t(chanceValueToKey(tomorrowScore.chance))}</Text>
                 </View>
                 <View style={[styles.bandItem, styles.bandItemDivided]}>
-                  <Text style={styles.bandLabel}>Score</Text>
+                  <Text style={styles.bandLabel}>{t('tonight.outlook.score')}</Text>
                   <Text style={styles.bandValue}>{tomorrowScore.score}</Text>
                 </View>
                 <View style={[styles.bandItem, styles.bandItemDivided]}>
-                  <Text style={styles.bandLabel}>Cloud</Text>
+                  <Text style={styles.bandLabel}>{t('common.cloud')}</Text>
                   <Text style={styles.bandValue}>{tomorrowScore.cloudCover}%</Text>
                 </View>
                 <View style={[styles.bandItem, styles.bandItemDivided]}>
-                  <Text style={styles.bandLabel}>Peak KP</Text>
+                  <Text style={styles.bandLabel}>{t('tonight.outlook.peakKp')}</Text>
                   <Text style={styles.bandValue}>{tomorrowScore.peakKp.toFixed(1)}</Text>
                 </View>
               </View>
@@ -414,11 +442,11 @@ export function TonightScreen({
 
           {kp.dailyOutlook && kp.dailyOutlook.length > 1 ? (
             <View style={[styles.outlookRow, tomorrowScore ? styles.outlookRowDivided : null]}>
-              <Text style={styles.outlookTitle}>Geomagnetic outlook</Text>
+              <Text style={styles.outlookTitle}>{t('tonight.outlook.geomagnetic')}</Text>
               <View style={styles.dataBand}>
                 {kp.dailyOutlook.slice(1, 4).map((item, index) => (
                   <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
-                    <Text style={styles.bandLabel}>{item.label}</Text>
+                    <Text style={styles.bandLabel}>{t(outlookDayLabelKey(item.label))}</Text>
                     <Text style={styles.bandValue}>{item.peak.toFixed(1)}</Text>
                   </View>
                 ))}
@@ -444,8 +472,8 @@ export function TonightScreen({
           }
         ]}
       >
-        <Text style={styles.sectionTitle}>Top aurora spots right now</Text>
-        <Text style={styles.sectionSubtitle}>Short preview here. Use the Spots tab for sorting and the full ranked list.</Text>
+        <Text style={styles.sectionTitle}>{t('tonight.topSpotsTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('tonight.topSpotsSubtitle')}</Text>
       </Animated.View>
       <Animated.View style={{ opacity: listAnim }}>
         {previewTopSpots.map((result) => {
@@ -460,7 +488,7 @@ export function TonightScreen({
             style={({ pressed, focused }: WebPressableState) => [styles.inlineCta, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
             onPress={() => navigation.navigate('AllSpots')}
           >
-            <Text style={styles.inlineCtaText}>Open all ranked spots</Text>
+            <Text style={styles.inlineCtaText}>{t('tonight.openAllRankedSpots')}</Text>
           </Pressable>
         ) : null}
       </Animated.View>
@@ -483,8 +511,8 @@ export function TonightScreen({
               }
             ]}
           >
-            <Text style={styles.sectionTitle}>Closer alternatives</Text>
-            <Text style={styles.sectionSubtitle}>Nearest options for a faster departure.</Text>
+            <Text style={styles.sectionTitle}>{t('tonight.closerAlternatives')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('tonight.closerAlternativesSubtitle')}</Text>
           </Animated.View>
           <Animated.View style={{ opacity: listAnim }}>
             {previewCloseSpots.map((result) => {
@@ -503,7 +531,7 @@ export function TonightScreen({
                 ]}
                 onPress={() => navigation.navigate('AllSpots')}
               >
-                <Text style={styles.inlineCtaText}>Compare nearby spots</Text>
+                <Text style={styles.inlineCtaText}>{t('tonight.compareNearbySpots')}</Text>
               </Pressable>
             ) : null}
           </Animated.View>
@@ -512,14 +540,14 @@ export function TonightScreen({
 
       {error ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Forecast update failed</Text>
+          <Text style={styles.errorTitle}>{t('tonight.errorTitle')}</Text>
           <Text style={styles.error}>{error}</Text>
           <Pressable
             accessibilityRole="button"
             style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
             onPress={() => void refresh()}
           >
-            <Text style={styles.retryButtonText}>Try again</Text>
+            <Text style={styles.retryButtonText}>{t('common.tryAgain')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -575,13 +603,23 @@ const styles = StyleSheet.create({
   },
   heroTopRow: {
     flexDirection: 'row',
+    // Lets decisionCluster (score pill/number, natural width, not flexed)
+    // drop to its own line on very narrow screens instead of continuing to
+    // squeeze heroCopy's minWidth floor below -- see heroCopy comment.
+    flexWrap: 'wrap',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: space.md
   },
   heroCopy: {
     flex: 1,
-    minWidth: 0,
+    // A floor, not 0: long single-word/compound translations (e.g. German
+    // "Aurora-Ausblick") need enough width to wrap at a natural word/hyphen
+    // boundary rather than being squeezed so narrow that a sub-word has to
+    // break mid-character. Copy should still be kept short enough to fit
+    // comfortably (see src/i18n/locales) -- this is a layout safety net,
+    // not a substitute for that. Paired with heroTopRow's flexWrap above.
+    minWidth: 200,
     gap: space.xxs
   },
   eyebrow: {

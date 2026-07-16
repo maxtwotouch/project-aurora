@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useConsent } from '../analytics/consent';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -13,6 +14,7 @@ import { typography } from '../theme/type';
  */
 export function UsageConsentToggle() {
   const { state, loaded, accept, decline } = useConsent();
+  const { t } = useTranslation();
 
   if (!loaded) return null;
 
@@ -21,17 +23,13 @@ export function UsageConsentToggle() {
   return (
     <View style={styles.row}>
       <View style={styles.copy}>
-        <Text style={styles.label}>Anonymous usage sharing</Text>
-        <Text style={styles.helper}>
-          {isOn
-            ? 'Sharing anonymous spot views and navigation taps.'
-            : 'Not sharing any usage data.'}
-        </Text>
+        <Text style={styles.label}>{t('consent.toggleLabel')}</Text>
+        <Text style={styles.helper}>{isOn ? t('consent.toggleOnHelper') : t('consent.toggleOffHelper')}</Text>
       </View>
       <Pressable
         accessibilityRole="switch"
         accessibilityState={{ checked: isOn }}
-        accessibilityLabel="Anonymous usage sharing"
+        accessibilityLabel={t('consent.toggleLabel')}
         style={({ pressed, focused }: WebPressableState) => [
           styles.toggleTrack,
           isOn ? styles.toggleTrackOn : null,

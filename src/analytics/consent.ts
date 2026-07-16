@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { getStoredItem, setStoredItem } from './storage';
+import { getStoredItem, setStoredItem } from '../lib/storage';
 
 /**
  * Opt-in consent for anonymous usage instrumentation (see events.ts).

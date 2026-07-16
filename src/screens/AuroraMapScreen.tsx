@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import type { KpTrend } from '../types';
 
@@ -18,6 +19,7 @@ function buildFrameUrl(hourOffset: number, refreshBucket: number) {
 }
 
 export function AuroraMapScreen({ kp }: Props) {
+  const { t } = useTranslation();
   const introAnim = useRef(new Animated.Value(0)).current;
   const [hourOffset, setHourOffset] = useState<number>(0);
   const [timelineWidth, setTimelineWidth] = useState<number>(1);
@@ -55,7 +57,9 @@ export function AuroraMapScreen({ kp }: Props) {
     [refreshBucket]
   );
   const frameUrl = frameUrls[hourOffset];
-  const overheadNow = kp.current >= 5 ? 'Likely overhead' : kp.current >= 3.5 ? 'Possible overhead' : 'Low overhead';
+  const overheadNow = t(
+    kp.current >= 5 ? 'auroraMap.overhead.likely' : kp.current >= 3.5 ? 'auroraMap.overhead.possible' : 'auroraMap.overhead.low'
+  );
   const isCurrentFrameLoaded = Boolean(loadedFrameUrls[frameUrl]);
   const hasCurrentFrameFailed = Boolean(failedFrameUrls[frameUrl]);
   const peakIndex = kp.hourly.reduce((bestIndex, value, index, values) => {
@@ -118,9 +122,9 @@ export function AuroraMapScreen({ kp }: Props) {
           }
         ]}
       >
-        <Text style={styles.eyebrow}>UiT feed</Text>
-        <Text style={styles.title}>Aurora frames</Text>
-        <Text style={styles.subtitle}>Switch between now, +1h, and +4h.</Text>
+        <Text style={styles.eyebrow}>{t('auroraMap.eyebrow')}</Text>
+        <Text style={styles.title}>{t('auroraMap.title')}</Text>
+        <Text style={styles.subtitle}>{t('auroraMap.subtitle')}</Text>
       </Animated.View>
 
       <Animated.View
@@ -140,15 +144,15 @@ export function AuroraMapScreen({ kp }: Props) {
         ]}
       >
         <View style={styles.summaryTile}>
-          <Text style={styles.summaryLabel}>Overhead now</Text>
+          <Text style={styles.summaryLabel}>{t('auroraMap.overheadNowLabel')}</Text>
           <Text style={styles.summaryValue}>{overheadNow}</Text>
         </View>
         <View style={styles.summaryTile}>
-          <Text style={styles.summaryLabel}>Next peak</Text>
+          <Text style={styles.summaryLabel}>{t('auroraMap.nextPeakLabel')}</Text>
           <Text style={styles.summaryValue}>{peakTime}</Text>
         </View>
         <View style={styles.summaryTile}>
-          <Text style={styles.summaryLabel}>KP frame</Text>
+          <Text style={styles.summaryLabel}>{t('auroraMap.kpFrameLabel')}</Text>
           <Text style={styles.summaryValue}>{kpAtOffset.toFixed(1)}</Text>
         </View>
       </Animated.View>
@@ -178,19 +182,17 @@ export function AuroraMapScreen({ kp }: Props) {
           </>
         ) : (
           <View style={styles.frameFallback}>
-            <Text style={styles.frameFallbackTitle}>Aurora frame unavailable</Text>
-            <Text style={styles.frameFallbackText}>
-              The UiT image feed did not load. Open the source page directly to verify whether the feed is down or the frame path changed.
-            </Text>
+            <Text style={styles.frameFallbackTitle}>{t('auroraMap.frameUnavailableTitle')}</Text>
+            <Text style={styles.frameFallbackText}>{t('auroraMap.frameUnavailableText')}</Text>
             <Pressable style={styles.sourceButton} onPress={() => void Linking.openURL(AURORA_SOURCE_URL)}>
-              <Text style={styles.sourceButtonText}>Open UiT source</Text>
+              <Text style={styles.sourceButtonText}>{t('auroraMap.openSource')}</Text>
             </Pressable>
           </View>
         )}
         {!isCurrentFrameLoaded && !hasCurrentFrameFailed ? (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="small" color={palette.auroraGreen} />
-            <Text style={styles.loadingText}>Loading aurora frame...</Text>
+            <Text style={styles.loadingText}>{t('auroraMap.loadingFrame')}</Text>
           </View>
         ) : null}
       </View>
@@ -211,8 +213,8 @@ export function AuroraMapScreen({ kp }: Props) {
           }
         ]}
       >
-        <Text style={styles.scrubberTitle}>Time</Text>
-        <Text style={styles.scrubberMeta}>Nowcast, +1h, or +4h.</Text>
+        <Text style={styles.scrubberTitle}>{t('auroraMap.timeLabel')}</Text>
+        <Text style={styles.scrubberMeta}>{t('auroraMap.scrubberMeta')}</Text>
         <View
           style={styles.timelineTrack}
           onLayout={onTimelineLayout}
@@ -230,7 +232,7 @@ export function AuroraMapScreen({ kp }: Props) {
             return (
               <Pressable key={offset} style={styles.timelineLabelPill} onPress={() => setHourOffset(offset)}>
                 <Text style={[styles.timelineLabel, active ? styles.timelineLabelActive : null]}>
-                  {offset === 0 ? 'Now' : `+${offset}h`}
+                  {offset === 0 ? t('auroraMap.now') : t('auroraMap.plusHours', { hours: offset })}
                 </Text>
               </Pressable>
             );
@@ -239,8 +241,12 @@ export function AuroraMapScreen({ kp }: Props) {
       </Animated.View>
 
       <Animated.View style={[styles.legendCard, { opacity: introAnim }]}>
-        <Text style={styles.legendTitle}>Source</Text>
-        <Text style={styles.legendText}>NO-SPACE weather lab at UiT. Frame mode: {hourOffset === 0 ? 'Nowcast' : `Forecast +${hourOffset}h`}.</Text>
+        <Text style={styles.legendTitle}>{t('auroraMap.sourceLabel')}</Text>
+        <Text style={styles.legendText}>
+          {t('auroraMap.legendText', {
+            mode: hourOffset === 0 ? t('auroraMap.modeNowcast') : t('auroraMap.modeForecastHours', { hours: hourOffset })
+          })}
+        </Text>
       </Animated.View>
     </ScrollView>
   );
