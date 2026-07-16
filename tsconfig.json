@@ -5,5 +5,5 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "exclude": ["backend"]
+  "exclude": ["backend", "test"]
 }

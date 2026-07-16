@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { getStoredItem, setStoredItem } from '../lib/storage';
+import { resolveLoadedConsentState } from './core';
+import type { ConsentState } from './core';
 
 /**
  * Opt-in consent for anonymous usage instrumentation (see events.ts).
@@ -10,8 +12,13 @@ import { getStoredItem, setStoredItem } from '../lib/storage';
  * unless this is exactly 'accepted'. Decline is a first-class, permanent
  * choice: it persists the same way accept does, and is never re-prompted
  * automatically.
+ *
+ * This module is a thin RN-bound wrapper: the actual state-resolution logic
+ * (what 'unset'/'accepted'/'declined' a persisted value maps to) lives in
+ * the framework-free ./core.ts, so it can be unit-tested directly under
+ * plain Node -- see test/analytics-core.test.ts at the repo root.
  */
-export type ConsentState = 'unset' | 'accepted' | 'declined';
+export type { ConsentState };
 
 const STORAGE_KEY = 'aurora.analyticsConsent.v1';
 
@@ -21,10 +28,6 @@ let currentState: ConsentState = 'unset';
 let loaded = false;
 let loadPromise: Promise<ConsentState> | null = null;
 const listeners = new Set<Listener>();
-
-function isPersistedConsentState(value: string | null): value is 'accepted' | 'declined' {
-  return value === 'accepted' || value === 'declined';
-}
 
 function notify(): void {
   for (const listener of listeners) listener(currentState);
@@ -42,13 +45,13 @@ export function loadConsent(): Promise<ConsentState> {
 
   loadPromise = getStoredItem(STORAGE_KEY)
     .then((stored) => {
-      currentState = isPersistedConsentState(stored) ? stored : 'unset';
+      currentState = resolveLoadedConsentState(stored);
       loaded = true;
       notify();
       return currentState;
     })
     .catch(() => {
-      currentState = 'unset';
+      currentState = resolveLoadedConsentState(null);
       loaded = true;
       notify();
       return currentState;
