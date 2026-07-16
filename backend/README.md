@@ -6,6 +6,8 @@
 - `GET /v1/spots/:id`: spot details + hourly forecast + ranking
 - `GET /v1/health`: freshness and fallback status
 - `POST /v1/admin/refresh`: force refresh snapshot
+- `POST /v1/events`: anonymous, aggregate-only usage collection (event types: `spot_view`, `navigate_pressed`, `spot_shared`). Body is `{ type, spotId }` or an array of up to 20 such events. Immediately folded into in-memory (type, spotId, UTC-hour) counters — no raw events, timestamps, IPs, or identifiers are ever stored. See `src/events.ts`, `src/usageStore.ts`, and `../docs/privacy-usage-events.md`.
+- `GET /v1/stats/usage` (requires `x-admin-token`): aggregate-only usage counts by spot, hour, and day, for the municipality dataset. See `src/stats.ts`.
 
 ## Run
 
@@ -19,7 +21,7 @@ npm run dev
 - `PORT` (default `8080`)
 - `HOST` (default `0.0.0.0`)
 - `REFRESH_MS` (default `300000` = 5 minutes)
-- `ADMIN_TOKEN` for `POST /v1/admin/refresh`
+- `ADMIN_TOKEN` for `POST /v1/admin/refresh` and `GET /v1/stats/usage`
 - `CORS_ORIGINS` comma-separated allowed frontend origins. Default only allows localhost development origins.
 - `STALE_SNAPSHOT_MS` (default `1800000` = 30 minutes) — how old the on-disk mirrored snapshot can be before it's flagged as stale (`dataQuality.staleSnapshot`) after a restart.
 - `SOURCE_TIMEOUT_MS` (default `10000` = 10 seconds) — timeout applied to every outbound call to MET/NOAA; a hung upstream aborts instead of stalling a refresh cycle.
