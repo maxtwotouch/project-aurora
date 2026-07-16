@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { palette } from '../theme/palette';
+import { radius, space, type WebPressableState } from '../theme/tokens';
+import { typography } from '../theme/type';
 
 type Props = {
   title: string;
@@ -20,7 +22,12 @@ export function CollapsibleSection({ title, eyebrow, meta, defaultOpen = false, 
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        style={({ pressed }) => [styles.header, pressed ? styles.headerPressed : null]}
+        accessibilityLabel={title}
+        style={({ pressed, focused }: WebPressableState) => [
+          styles.header,
+          focused ? styles.focusRing : null,
+          pressed ? styles.headerPressed : null
+        ]}
         onPress={() => setOpen((current) => !current)}
       >
         <View style={styles.copy}>
@@ -49,64 +56,63 @@ export function CollapsibleSection({ title, eyebrow, meta, defaultOpen = false, 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.card,
-    borderRadius: 22,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    marginBottom: 12,
+    marginBottom: space.sm,
     overflow: 'hidden'
   },
   header: {
     minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12
+    gap: space.sm
   },
   headerPressed: {
     opacity: 0.92
   },
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: -2
+  } as any,
   copy: {
     flex: 1,
     minWidth: 0
   },
   eyebrow: {
+    ...typography.eyebrow,
     color: palette.auroraMint,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
     marginBottom: 4
   },
   title: {
-    color: palette.textPrimary,
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: '800'
+    ...typography.heading,
+    color: palette.textPrimary
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10
+    gap: space.xs
   },
   meta: {
-    color: palette.textMuted,
-    fontSize: 13,
-    fontWeight: '600'
+    ...typography.bodySmall,
+    color: palette.textMuted
   },
   iconWrap: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#18303d',
+    backgroundColor: palette.chipSurface,
     borderWidth: 1,
-    borderColor: '#2b5162'
+    borderColor: palette.borderHairlineStrong
   },
   body: {
-    paddingHorizontal: 16,
-    paddingBottom: 16
+    paddingHorizontal: space.md,
+    paddingBottom: space.md
   }
 });

@@ -66,6 +66,10 @@ export type GeneralForecastScore = {
 export type DataQuality = {
   usingFallbackKp: boolean;
   fallbackWeatherSpotIds: string[];
+  usingFallbackSighting?: boolean;
+  /** Set when the snapshot being served was loaded from the on-disk mirror
+   * (e.g. right after a restart) and is older than the staleness threshold. */
+  staleSnapshot?: boolean;
 };
 
 export type TonightSnapshot = {

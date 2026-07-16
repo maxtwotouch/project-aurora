@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { palette } from '../theme/palette';
+import { radius, space } from '../theme/tokens';
+import { typography } from '../theme/type';
 import type { AppDataQuality } from '../types';
 
 type Props = {
@@ -28,7 +30,7 @@ export function DataQualityBanner({ dataQuality }: Props) {
   }
 
   return (
-    <View style={styles.card}>
+    <View style={styles.card} accessibilityRole="alert">
       <Text style={styles.eyebrow}>Data quality notice</Text>
       {messages.map((message) => (
         <Text key={message} style={styles.message}>
@@ -42,22 +44,19 @@ export function DataQualityBanner({ dataQuality }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.warningSurface,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: radius.md,
+    padding: space.sm,
     borderWidth: 1,
-    borderColor: palette.warning
+    borderColor: palette.warning,
+    gap: 4
   },
   eyebrow: {
-    color: '#ffe7a3',
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 6
+    ...typography.eyebrow,
+    color: palette.textOnWarningSurface,
+    marginBottom: 2
   },
   message: {
-    color: '#fff2c8',
-    fontSize: 13,
-    lineHeight: 19
+    ...typography.bodySmall,
+    color: palette.textOnWarningSurface
   }
 });
