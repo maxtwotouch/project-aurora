@@ -1,0 +1,41 @@
+# Save as: .github/workflows/ci.yml
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --- App (root) ---
+      - name: Install app deps
+        run: npm ci
+
+      - name: Typecheck app
+        run: npm run typecheck
+
+      - name: KP fetch/parse test
+        run: npm run test:kp
+
+      # --- Backend ---
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Typecheck backend
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
