@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -21,22 +22,20 @@ type Props = {
  * choices without implying either one is the "recommended" action.
  */
 export function ConsentModal({ onAccept, onDecline }: Props) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.overlay} pointerEvents="box-none">
       <View style={styles.backdrop} pointerEvents="auto" />
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>Before you start</Text>
-        <Text style={styles.title}>Help improve aurora spots?</Text>
-        <Text style={styles.body}>
-          Share anonymous usage — we count which spots people view and navigate to (never who you
-          are, never your location, just spot names and the hour). You can say no and everything
-          works the same.
-        </Text>
+        <Text style={styles.eyebrow}>{t('consent.eyebrow')}</Text>
+        <Text style={styles.title}>{t('consent.title')}</Text>
+        <Text style={styles.body}>{t('consent.body')}</Text>
 
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Share anonymous counts"
+            accessibilityLabel={t('consent.acceptButton')}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
               focused ? styles.focusRing : null,
@@ -44,11 +43,11 @@ export function ConsentModal({ onAccept, onDecline }: Props) {
             ]}
             onPress={onAccept}
           >
-            <Text style={styles.acceptButtonText}>Share anonymous counts</Text>
+            <Text style={styles.acceptButtonText}>{t('consent.acceptButton')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="No thanks"
+            accessibilityLabel={t('consent.declineButton')}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
               focused ? styles.focusRing : null,
@@ -56,11 +55,11 @@ export function ConsentModal({ onAccept, onDecline }: Props) {
             ]}
             onPress={onDecline}
           >
-            <Text style={styles.declineButtonText}>No thanks</Text>
+            <Text style={styles.declineButtonText}>{t('consent.declineButton')}</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.footnote}>You can change this later from the All Spots tab.</Text>
+        <Text style={styles.footnote}>{t('consent.footnote')}</Text>
       </View>
     </View>
   );

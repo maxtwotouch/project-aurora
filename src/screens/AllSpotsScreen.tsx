@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DataQualityBanner } from '../components/DataQualityBanner';
+import { LanguagePicker } from '../components/LanguagePicker';
 import { SpotCard } from '../components/SpotCard';
 import { UsageConsentToggle } from '../components/UsageConsentToggle';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import type { AppDataQuality, Spot, SpotScoreResult } from '../types';
 
@@ -17,6 +19,7 @@ type Props = {
 };
 
 export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, refresh, onOpenSpot }: Props) {
+  const { t } = useTranslation();
   const [sortMode, setSortMode] = useState<'top' | 'nearby'>('top');
 
   const sortedSpots = useMemo(() => {
@@ -43,13 +46,14 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
       refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} />}
     >
       <View style={styles.headerCard}>
-        <Text style={styles.eyebrow}>Tonight</Text>
-        <Text style={styles.title}>All spots</Text>
-        <Text style={styles.subtitle}>
-          Compare stops without burying the important bits. Switch between strongest and quickest options.
-        </Text>
+        <Text style={styles.eyebrow}>{t('common.tonightEyebrow')}</Text>
+        <Text style={styles.title}>{t('allSpots.title')}</Text>
+        <Text style={styles.subtitle}>{t('allSpots.subtitle')}</Text>
         <Text style={styles.headerMeta}>
-          Showing {sortedSpots.length} ranked stop{sortedSpots.length === 1 ? '' : 's'} by {sortMode === 'top' ? 'forecast strength' : 'driving distance'}.
+          {t('allSpots.showingSummary', {
+            count: sortedSpots.length,
+            mode: t(sortMode === 'top' ? 'allSpots.modeForecastStrength' : 'allSpots.modeDrivingDistance')
+          })}
         </Text>
 
         <View style={styles.bannerWrap}>
@@ -66,7 +70,9 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
             ]}
             onPress={() => setSortMode('top')}
           >
-            <Text style={[styles.segmentText, sortMode === 'top' ? styles.segmentTextActive : null]}>Top spots</Text>
+            <Text style={[styles.segmentText, sortMode === 'top' ? styles.segmentTextActive : null]}>
+              {t('allSpots.topSpotsButton')}
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -77,25 +83,29 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
             ]}
             onPress={() => setSortMode('nearby')}
           >
-            <Text style={[styles.segmentText, sortMode === 'nearby' ? styles.segmentTextActive : null]}>Nearby spots</Text>
+            <Text style={[styles.segmentText, sortMode === 'nearby' ? styles.segmentTextActive : null]}>
+              {t('allSpots.nearbySpotsButton')}
+            </Text>
           </Pressable>
         </View>
 
         {bestSpot ? (
           <View style={styles.summaryStrip}>
             <View style={styles.summaryTile}>
-              <Text style={styles.summaryLabel}>First pick</Text>
+              <Text style={styles.summaryLabel}>{t('allSpots.firstPick')}</Text>
               <Text style={styles.summaryValue} numberOfLines={1}>
                 {bestSpot.name}
               </Text>
             </View>
             <View style={styles.summaryTile}>
-              <Text style={styles.summaryLabel}>Distance</Text>
-              <Text style={styles.summaryValue}>{bestSpot.distanceKm} km</Text>
+              <Text style={styles.summaryLabel}>{t('common.distance')}</Text>
+              <Text style={styles.summaryValue}>{t('common.kmValue', { km: bestSpot.distanceKm })}</Text>
             </View>
             <View style={styles.summaryTile}>
-              <Text style={styles.summaryLabel}>Mode</Text>
-              <Text style={styles.summaryValue}>{sortMode === 'top' ? 'Best score' : 'Shortest drive'}</Text>
+              <Text style={styles.summaryLabel}>{t('allSpots.modeLabel')}</Text>
+              <Text style={styles.summaryValue}>
+                {t(sortMode === 'top' ? 'allSpots.modeBestScore' : 'allSpots.modeShortestDrive')}
+              </Text>
             </View>
           </View>
         ) : null}
@@ -103,8 +113,8 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
 
       {!loading && rankedSpots.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>No ranked spots yet</Text>
-          <Text style={styles.emptyText}>Pull to refresh once forecast data is available for tonight.</Text>
+          <Text style={styles.emptyTitle}>{t('allSpots.emptyTitle')}</Text>
+          <Text style={styles.emptyText}>{t('allSpots.emptyText')}</Text>
         </View>
       ) : null}
 
@@ -115,8 +125,9 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
         return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
       })}
 
-      <Text style={styles.attribution}>Some spot details verified with Tromsø kommune</Text>
+      <Text style={styles.attribution}>{t('allSpots.attribution')}</Text>
       <UsageConsentToggle />
+      <LanguagePicker />
     </ScrollView>
   );
 }

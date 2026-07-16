@@ -79,9 +79,12 @@ return).
 
 ## Open items for human / GDPR review
 
-- **Consent banner.** Decide whether the app needs an in-app notice/consent step before
-  sending these anonymous aggregate events, even though no personal data is collected,
-  for transparency and applicable regulatory reasons.
+- ~~**Consent banner.**~~ **Resolved (owner decision, 2026-07-16): opt-in required.**
+  The app shows a consent prompt on first launch (`src/components/ConsentModal.tsx`);
+  nothing is ever sent unless the user explicitly accepts (`src/analytics/consent.ts`,
+  `src/analytics/events.ts`). Decline means zero collection, with no re-prompt; the
+  choice can be changed later via the "Anonymous usage sharing" toggle on the All Spots
+  screen. Revoking consent drops any queued, unsent events.
 - **Data-sharing agreement with the municipality.** Formalize what aggregate data is
   shared, how often, and under what terms, before `GET /v1/stats/usage` is used
   operationally by a third party.

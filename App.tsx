@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
 import { useForecast } from './src/hooks/useForecast';
+import { useTranslation } from './src/i18n/useTranslation';
 import { AllSpotsScreen } from './src/screens/AllSpotsScreen';
 import { AuroraMapScreen } from './src/screens/AuroraMapScreen';
 import { LiveCamerasScreen } from './src/screens/LiveCamerasScreen';
@@ -16,7 +17,7 @@ import { MapScreen } from './src/screens/MapScreen.native';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -61,7 +62,7 @@ type TabsRootProps = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
-  recommendation: string;
+  level: AuroraLevel;
   refresh: () => Promise<void>;
 };
 
@@ -79,9 +80,11 @@ function TabsRoot({
   tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
-  recommendation,
+  level,
   refresh
 }: TabsRootProps) {
+  const { t } = useTranslation();
+
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
@@ -145,7 +148,7 @@ function TabsRoot({
         headerBackground: () => <View style={styles.headerBackground} />
       })}
     >
-      <Tabs.Screen name="Tonight" options={{ title: 'Tonight' }}>
+      <Tabs.Screen name="Tonight" options={{ title: t('nav.tabs.tonight') }}>
         {() => (
           <TonightScreen
             onOpenSpot={onOpenSpot}
@@ -160,15 +163,15 @@ function TabsRoot({
             tonightScore={tonightScore}
             tomorrowScore={tomorrowScore}
             sightingPossibleFrom={sightingPossibleFrom}
-            recommendation={recommendation}
+            level={level}
             refresh={refresh}
           />
         )}
       </Tabs.Screen>
-      <Tabs.Screen name="SpotsMap" options={{ title: 'Map' }}>
+      <Tabs.Screen name="SpotsMap" options={{ title: t('nav.tabs.map') }}>
         {() => <MapScreen spots={typedSpots} rankedSpots={rankedSpots} onOpenSpot={onOpenSpot} />}
       </Tabs.Screen>
-      <Tabs.Screen name="AllSpots" options={{ title: 'Spots' }}>
+      <Tabs.Screen name="AllSpots" options={{ title: t('nav.tabs.spots') }}>
         {() => (
           <AllSpotsScreen
             rankedSpots={rankedSpots}
@@ -180,10 +183,10 @@ function TabsRoot({
           />
         )}
       </Tabs.Screen>
-      <Tabs.Screen name="AuroraMap" options={{ title: 'Aurora' }}>
+      <Tabs.Screen name="AuroraMap" options={{ title: t('nav.tabs.aurora') }}>
         {() => <AuroraMapScreen kp={kp} />}
       </Tabs.Screen>
-      <Tabs.Screen name="Live" options={{ title: 'Live' }}>
+      <Tabs.Screen name="Live" options={{ title: t('nav.tabs.live') }}>
         {() => <LiveCamerasScreen />}
       </Tabs.Screen>
     </Tabs.Navigator>
@@ -192,6 +195,7 @@ function TabsRoot({
 
 export default function App() {
   const forecast = useForecast();
+  const { t } = useTranslation();
 
   const spotsById = useMemo(
     () => typedSpots.reduce<Record<string, Spot>>((acc, spot) => ({ ...acc, [spot.id]: spot }), {}),
@@ -234,7 +238,7 @@ export default function App() {
                 tonightScore={forecast.tonightScore}
                 tomorrowScore={forecast.tomorrowScore}
                 sightingPossibleFrom={forecast.sightingPossibleFrom}
-                recommendation={forecast.recommendation}
+                level={forecast.level}
                 refresh={forecast.refresh}
               />
             )}
@@ -242,17 +246,17 @@ export default function App() {
           <Stack.Screen
             name="SpotDetail"
             options={({ route, navigation }) => ({
-              title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
+              title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
               headerBackVisible: false,
               headerLeft: () => (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Go back"
+                  accessibilityLabel={t('common.goBack')}
                   style={styles.backButton}
                   onPress={() => navigation.goBack()}
                 >
                   <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>Back</Text>
+                  <Text style={styles.backText}>{t('common.back')}</Text>
                 </Pressable>
               )
             })}

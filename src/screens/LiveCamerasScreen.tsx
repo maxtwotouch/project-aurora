@@ -3,9 +3,11 @@ import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } 
 import { Ionicons } from '@expo/vector-icons';
 
 import { liveCameras, type LiveCamera } from '../data/liveCameras';
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 
 export function LiveCamerasScreen() {
+  const { t } = useTranslation();
   const [refreshToken, setRefreshToken] = useState<number>(Date.now());
   const [fullscreen, setFullscreen] = useState<{ uri: string; name: string } | null>(null);
   const [failedCameraIds, setFailedCameraIds] = useState<Record<string, boolean>>({});
@@ -39,32 +41,30 @@ export function LiveCamerasScreen() {
       automaticallyAdjustContentInsets={false}
     >
       <View style={styles.headerCard}>
-        <Text style={styles.eyebrow}>Live cameras</Text>
-        <Text style={styles.title}>Sky check</Text>
-        <Text style={styles.subtitle}>Quick horizon check before you head out. Auto-refreshes every minute.</Text>
-        <Text style={styles.headerMeta}>
-          Grouped by location so multi-camera areas read like one overview instead of a long feed.
-        </Text>
+        <Text style={styles.eyebrow}>{t('liveCameras.eyebrow')}</Text>
+        <Text style={styles.title}>{t('liveCameras.title')}</Text>
+        <Text style={styles.subtitle}>{t('liveCameras.subtitle')}</Text>
+        <Text style={styles.headerMeta}>{t('liveCameras.headerMeta')}</Text>
         <View style={styles.summaryRow}>
           <View style={styles.summaryTile}>
-            <Text style={styles.summaryLabel}>Layout</Text>
-            <Text style={styles.summaryValue}>2x2 overview</Text>
+            <Text style={styles.summaryLabel}>{t('liveCameras.layoutLabel')}</Text>
+            <Text style={styles.summaryValue}>{t('liveCameras.layoutValue')}</Text>
           </View>
           <View style={styles.summaryTile}>
-            <Text style={styles.summaryLabel}>Focus</Text>
-            <Text style={styles.summaryValue}>All directions</Text>
+            <Text style={styles.summaryLabel}>{t('liveCameras.focusLabel')}</Text>
+            <Text style={styles.summaryValue}>{t('liveCameras.focusValue')}</Text>
           </View>
           <View style={styles.summaryTile}>
-            <Text style={styles.summaryLabel}>Action</Text>
-            <Text style={styles.summaryValue}>Tap to expand</Text>
+            <Text style={styles.summaryLabel}>{t('liveCameras.actionLabel')}</Text>
+            <Text style={styles.summaryValue}>{t('liveCameras.actionValue')}</Text>
           </View>
         </View>
       </View>
 
       {visibleCameras.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>No live cameras available</Text>
-          <Text style={styles.emptyText}>Camera sources are temporarily unavailable. Try again later.</Text>
+          <Text style={styles.emptyTitle}>{t('liveCameras.emptyTitle')}</Text>
+          <Text style={styles.emptyText}>{t('liveCameras.emptyText')}</Text>
         </View>
       ) : null}
 
@@ -74,11 +74,11 @@ export function LiveCamerasScreen() {
             <View style={styles.cardCopy}>
               <Text style={styles.name}>{area}</Text>
               <Text style={styles.meta}>
-                {cameras.length > 1 ? `${cameras.length} directional feeds` : 'Single live camera'}
+                {cameras.length > 1 ? t('liveCameras.feedsCount', { count: cameras.length }) : t('liveCameras.singleCamera')}
               </Text>
             </View>
             <View style={styles.areaPill}>
-              <Text style={styles.areaPillText}>{cameras.length} view{cameras.length > 1 ? 's' : ''}</Text>
+              <Text style={styles.areaPillText}>{t('liveCameras.viewsCount', { count: cameras.length })}</Text>
             </View>
           </View>
 
@@ -88,7 +88,7 @@ export function LiveCamerasScreen() {
                 {camera.imageUrl && !failedCameraIds[camera.id] ? (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Expand ${camera.name}`}
+                    accessibilityLabel={t('liveCameras.expandCamera', { name: camera.name })}
                     style={({ pressed }) => [pressed ? styles.mediaPressed : null]}
                     onPress={() => setFullscreen({ uri: `${camera.imageUrl}?t=${refreshToken}`, name: camera.name })}
                   >
@@ -120,7 +120,7 @@ export function LiveCamerasScreen() {
             style={({ pressed }) => [styles.sourceButton, pressed ? styles.buttonPressed : null]}
             onPress={() => void Linking.openURL(cameras[0].sourceUrl)}
           >
-            <Text style={styles.sourceButtonText}>Open source page</Text>
+            <Text style={styles.sourceButtonText}>{t('liveCameras.openSourcePage')}</Text>
           </Pressable>
         </View>
       ))}
@@ -129,7 +129,7 @@ export function LiveCamerasScreen() {
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalBackdrop} onPress={() => setFullscreen(null)} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{fullscreen?.name ?? 'Live feed'}</Text>
+            <Text style={styles.modalTitle}>{fullscreen?.name ?? t('liveCameras.liveFeedFallback')}</Text>
             <Pressable onPress={() => setFullscreen(null)} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={palette.textPrimary} />
             </Pressable>
@@ -142,18 +142,18 @@ export function LiveCamerasScreen() {
 }
 
 function CameraUnavailable({ camera, compact = false }: { camera: LiveCamera; compact?: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <View style={[styles.unavailableCard, compact ? styles.unavailableCardCompact : null]}>
-      <Text style={styles.unavailableTitle}>Live image unavailable</Text>
-      <Text style={styles.unavailableText}>
-        {camera.name} did not return an image. Open the source page to check whether the feed is offline.
-      </Text>
+      <Text style={styles.unavailableTitle}>{t('liveCameras.unavailableTitle')}</Text>
+      <Text style={styles.unavailableText}>{t('liveCameras.unavailableText', { name: camera.name })}</Text>
       <Pressable
         accessibilityRole="button"
         style={({ pressed }) => [styles.unavailableButton, pressed ? styles.buttonPressed : null]}
         onPress={() => void Linking.openURL(camera.sourceUrl)}
       >
-        <Text style={styles.unavailableButtonText}>Open source</Text>
+        <Text style={styles.unavailableButtonText}>{t('liveCameras.openSource')}</Text>
       </Pressable>
     </View>
   );

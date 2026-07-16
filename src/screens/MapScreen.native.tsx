@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { track } from '../analytics/events';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { useTranslation } from '../i18n/useTranslation';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { Spot, SpotScoreResult } from '../types';
@@ -23,6 +24,7 @@ const TROMSO_CENTER = {
 };
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
+  const { t } = useTranslation();
   const topLabelAnim = useRef(new Animated.Value(0)).current;
   const sheetAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<Spot | null>(null);
@@ -74,7 +76,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
             key={spot.id}
             coordinate={{ latitude: spot.lat, longitude: spot.lon }}
             title={spot.name}
-            description={`Score ${scoreBySpot[spot.id] ?? 0}`}
+            description={t('mapScreen.scoreLabel', { score: scoreBySpot[spot.id] ?? 0 })}
             onPress={() => setSelected(spot)}
           />
         ))}
@@ -96,15 +98,13 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           }
         ]}
       >
-        <Text style={styles.topLabelEyebrow}>Map mode</Text>
-        <Text style={styles.topLabelTitle}>Scout spots in driving order</Text>
+        <Text style={styles.topLabelEyebrow}>{t('mapScreen.eyebrow')}</Text>
+        <Text style={styles.topLabelTitle}>{t('mapScreen.title')}</Text>
       </Animated.View>
 
       <View style={styles.selectionNote}>
         <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
-        <Text style={styles.selectionNoteText}>
-          Selected stop defaults to the nearest listed spot for quicker orientation. Use the close button to clear it.
-        </Text>
+        <Text style={styles.selectionNoteText}>{t('mapScreen.selectionNoteNative')}</Text>
       </View>
 
       {selected ? (
@@ -126,25 +126,25 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         >
           <View style={styles.sheetTop}>
             <View style={styles.sheetCopy}>
-              <Text style={styles.sheetEyebrow}>Selected stop</Text>
+              <Text style={styles.sheetEyebrow}>{t('mapScreen.selectedStop')}</Text>
               <Text style={styles.sheetTitle} numberOfLines={2}>
                 {selected.name}
               </Text>
-              <Text style={styles.sheetMeta}>{selected.distanceKm} km from Tromso center</Text>
-              <Text style={styles.sheetMeta}>Forecast score {scoreBySpot[selected.id] ?? 0}</Text>
+              <Text style={styles.sheetMeta}>{t('common.distanceTromsoCenter', { km: selected.distanceKm })}</Text>
+              <Text style={styles.sheetMeta}>{t('mapScreen.forecastScore', { score: scoreBySpot[selected.id] ?? 0 })}</Text>
             </View>
             <ScoreBadge score={scoreBySpot[selected.id] ?? 0} />
           </View>
 
           <View style={styles.actions}>
             <Pressable style={styles.ghostButton} onPress={() => setSelected(null)}>
-              <Text style={styles.ghostButtonText}>Clear</Text>
+              <Text style={styles.ghostButtonText}>{t('mapScreen.clear')}</Text>
             </Pressable>
             <Pressable style={styles.secondaryButton} onPress={() => onOpenSpot(selected.id)}>
-              <Text style={styles.secondaryButtonText}>Details</Text>
+              <Text style={styles.secondaryButtonText}>{t('mapScreen.details')}</Text>
             </Pressable>
             <Pressable style={styles.primaryButton} onPress={() => navigateToSpot(selected)}>
-              <Text style={styles.primaryButtonText}>Navigate</Text>
+              <Text style={styles.primaryButtonText}>{t('common.navigate')}</Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -165,8 +165,8 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
             }
           ]}
         >
-          <Text style={styles.emptyTitle}>Tap a marker to inspect a viewing stop.</Text>
-          <Text style={styles.emptyText}>The bottom sheet updates with distance, score, and quick actions.</Text>
+          <Text style={styles.emptyTitle}>{t('mapScreen.emptyTitle')}</Text>
+          <Text style={styles.emptyText}>{t('mapScreen.emptyText')}</Text>
         </Animated.View>
       )}
     </View>

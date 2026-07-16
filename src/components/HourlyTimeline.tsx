@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -31,6 +32,7 @@ const TRACK_HEIGHT = 64;
  * the spot-detail cloud outlook.
  */
 export function HourlyTimeline({ points, highlightStart, highlightEnd, toneFor, maxPoints = 14, accessibilityLabel }: Props) {
+  const { t } = useTranslation();
   const shown = points.slice(0, maxPoints);
   if (shown.length === 0) return null;
 
@@ -42,7 +44,7 @@ export function HourlyTimeline({ points, highlightStart, highlightEnd, toneFor, 
     // into one generic node, which is exactly what previously hid per-hour
     // values from screen readers. `list`/`accessibilityLabel` describe the
     // group without swallowing the per-bar nodes below.
-    <View style={styles.wrap} accessibilityRole="list" accessibilityLabel={accessibilityLabel ?? 'Hourly forecast timeline'}>
+    <View style={styles.wrap} accessibilityRole="list" accessibilityLabel={accessibilityLabel ?? t('hourlyTimeline.defaultA11yLabel')}>
       <View style={styles.row}>
         {shown.map((point, index) => {
           const ms = new Date(point.time).getTime();
@@ -59,7 +61,10 @@ export function HourlyTimeline({ points, highlightStart, highlightEnd, toneFor, 
               style={styles.column}
               accessible
               accessibilityRole="text"
-              accessibilityLabel={`${formatHour(point.time)}, ${heightPct} percent${inWindow ? ', best window' : ''}`}
+              accessibilityLabel={t(inWindow ? 'hourlyTimeline.barLabelBestWindow' : 'hourlyTimeline.barLabelPlain', {
+                hour: formatHour(point.time),
+                percent: heightPct
+              })}
             >
               <View style={styles.track}>
                 <View
