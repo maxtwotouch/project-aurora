@@ -1,5 +1,3 @@
-# Save as: .github/CODEOWNERS
-#
 # Agents may work autonomously on their own branches, but changes to these
 # paths ALWAYS require review from a human owner before merge. Combined with
 # branch protection ("require review from Code Owners"), this makes the
