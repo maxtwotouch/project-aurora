@@ -1,5 +1,6 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { palette } from '../theme/palette';
@@ -18,16 +19,31 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     () => rankedSpots.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.spotId]: s.score }), {}),
     [rankedSpots]
   );
+  const defaultSpot = useMemo(() => {
+    const rankedIds = new Set(rankedSpots.map((item) => item.spotId));
+    const candidates = spots.filter((spot) => rankedIds.has(spot.id));
+    return [...(candidates.length > 0 ? candidates : spots)].sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null;
+  }, [rankedSpots, spots]);
 
   const navigateToSpot = (spot: Spot) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
 
+  useEffect(() => {
+    setSelected((current) => current ?? defaultSpot);
+  }, [defaultSpot]);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.webList}>
         <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
+        <View style={styles.note}>
+          <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
+          <Text style={styles.noteText}>
+            Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.
+          </Text>
+        </View>
         {spots.map((spot) => (
           <Pressable key={spot.id} style={styles.webItem} onPress={() => setSelected(spot)}>
             <View>
@@ -51,6 +67,9 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           </View>
 
           <View style={styles.actions}>
+            <Pressable style={styles.btn} onPress={() => setSelected(null)}>
+              <Text style={styles.btnText}>Clear</Text>
+            </Pressable>
             <Pressable style={styles.btn} onPress={() => onOpenSpot(selected.id)}>
               <Text style={styles.btnText}>Details</Text>
             </Pressable>
@@ -76,6 +95,23 @@ const styles = StyleSheet.create({
   webTitle: {
     color: palette.textSecondary,
     marginBottom: 6
+  },
+  note: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#2c5265',
+    backgroundColor: '#112735e6',
+    marginBottom: 10
+  },
+  noteText: {
+    flex: 1,
+    color: palette.textSecondary,
+    lineHeight: 19,
+    fontSize: 13
   },
   webItem: {
     flexDirection: 'row',

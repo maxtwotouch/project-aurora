@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,7 +15,7 @@ import { MapScreen } from './src/screens/MapScreen.native';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -37,7 +37,7 @@ const navTheme: Theme = {
   colors: {
     primary: palette.auroraGreen,
     background: palette.night,
-    card: palette.nightSoft,
+    card: palette.nightPanel,
     text: palette.textPrimary,
     border: palette.cardBorder,
     notification: palette.warning
@@ -52,6 +52,7 @@ type TabsRootProps = {
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
+  dataQuality: AppDataQuality;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
@@ -69,6 +70,7 @@ function TabsRoot({
   loading,
   error,
   lastUpdatedAt,
+  dataQuality,
   kp,
   topSpots,
   closeSpots,
@@ -83,7 +85,7 @@ function TabsRoot({
     <Tabs.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: palette.auroraGreen,
-        tabBarInactiveTintColor: palette.textSecondary,
+        tabBarInactiveTintColor: palette.textMuted,
         tabBarIcon: ({ color, size, focused }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'ellipse';
 
@@ -99,31 +101,47 @@ function TabsRoot({
             iconName = focused ? 'videocam' : 'videocam-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}>
+              <Ionicons name={iconName} size={size} color={color} />
+            </View>
+          );
+        },
+        tabBarShowLabel: true,
+        sceneStyle: {
+          backgroundColor: palette.night
         },
         tabBarStyle: {
-          backgroundColor: palette.nightSoft,
-          borderTopColor: palette.cardBorder,
-          height: 66,
-          paddingHorizontal: 6,
-          paddingTop: 8,
+          backgroundColor: '#10202be8',
+          borderTopColor: '#264455',
+          height: 70,
+          paddingHorizontal: 10,
+          paddingTop: 6,
           paddingBottom: 8
         },
         tabBarItemStyle: {
-          minWidth: 0
+          minWidth: 0,
+          borderRadius: 18,
+          paddingTop: 2
         },
+        tabBarActiveBackgroundColor: '#16303f',
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600'
+          fontWeight: '700',
+          letterSpacing: 0.2
         },
         headerStyle: {
-          backgroundColor: palette.nightSoft
+          backgroundColor: palette.night
         },
         headerTintColor: palette.textPrimary,
+        headerShown: false,
         headerTitleStyle: {
           fontSize: 18,
-          fontWeight: '700'
-        }
+          fontWeight: '800'
+        },
+        headerShadowVisible: false,
+        headerTitleAlign: 'left',
+        headerBackground: () => <View style={styles.headerBackground} />
       })}
     >
       <Tabs.Screen name="Tonight" options={{ title: 'Tonight' }}>
@@ -133,6 +151,7 @@ function TabsRoot({
             loading={loading}
             error={error}
             lastUpdatedAt={lastUpdatedAt}
+            dataQuality={dataQuality}
             kp={kp}
             topSpots={topSpots}
             closeSpots={closeSpots}
@@ -153,6 +172,7 @@ function TabsRoot({
           <AllSpotsScreen
             rankedSpots={rankedSpots}
             spotsById={spotsById}
+            dataQuality={dataQuality}
             loading={loading}
             refresh={refresh}
             onOpenSpot={onOpenSpot}
@@ -182,9 +202,16 @@ export default function App() {
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: palette.nightSoft
+            backgroundColor: palette.night
           },
-          headerTintColor: palette.textPrimary
+          headerTintColor: palette.textPrimary,
+          headerShadowVisible: false,
+          headerTitleStyle: {
+            fontSize: 18,
+            fontWeight: '800'
+          },
+          headerTitleAlign: 'left',
+          headerBackground: () => <View style={styles.headerBackground} />
         }}
       >
         <Stack.Screen name="Tabs" options={{ headerShown: false }}>
@@ -197,6 +224,7 @@ export default function App() {
               loading={forecast.loading}
               error={forecast.error}
               lastUpdatedAt={forecast.lastUpdatedAt}
+              dataQuality={forecast.dataQuality}
               kp={forecast.kp}
               topSpots={forecast.topSpots}
               closeSpots={forecast.closeSpots}
@@ -215,9 +243,9 @@ export default function App() {
             title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
             headerBackVisible: false,
             headerLeft: () => (
-              <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => navigation.goBack()}>
+              <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
                 <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                <Text style={{ color: palette.textPrimary, fontWeight: '700' }}>Back</Text>
+                <Text style={styles.backText}>Back</Text>
               </Pressable>
             )
           })}
@@ -234,3 +262,34 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  headerBackground: {
+    flex: 1,
+    backgroundColor: palette.night
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#132330'
+  },
+  backText: {
+    color: palette.textPrimary,
+    fontWeight: '700'
+  },
+  tabIconWrap: {
+    minWidth: 34,
+    minHeight: 28,
+    marginTop: -2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999
+  },
+  tabIconWrapActive: {
+    backgroundColor: '#214355'
+  }
+});

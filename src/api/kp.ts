@@ -9,6 +9,11 @@ const OSLO_TIME_ZONE = 'Europe/Oslo';
 
 let kpCache: { timestamp: number; value: KpTrend } | null = null;
 
+export type KpFetchResult = {
+  trend: KpTrend;
+  usingFallback: boolean;
+};
+
 function parseKpEntry(entry: unknown): number | null {
   if (!entry || typeof entry !== 'object') {
     return null;
@@ -236,9 +241,12 @@ function selectCurrentKp(nowPayload: unknown[]): number {
   return recentNonZero ?? latestKp;
 }
 
-export async function fetchKpTrend(): Promise<KpTrend> {
+export async function fetchKpTrendDetailed(): Promise<KpFetchResult> {
   if (kpCache && Date.now() - kpCache.timestamp < CACHE_TTL_MS) {
-    return kpCache.value;
+    return {
+      trend: kpCache.value,
+      usingFallback: false
+    };
   }
 
   try {
@@ -278,7 +286,10 @@ export async function fetchKpTrend(): Promise<KpTrend> {
         value
       };
 
-      return value;
+      return {
+        trend: value,
+        usingFallback: false
+      };
     }
 
     const value: KpTrend = {
@@ -298,7 +309,10 @@ export async function fetchKpTrend(): Promise<KpTrend> {
       value
     };
 
-    return value;
+    return {
+      trend: value,
+      usingFallback: false
+    };
   } catch {
     const value: KpTrend = {
       current: FALLBACK_CURRENT_KP,
@@ -317,8 +331,16 @@ export async function fetchKpTrend(): Promise<KpTrend> {
       value
     };
 
-    return value;
+    return {
+      trend: value,
+      usingFallback: true
+    };
   }
+}
+
+export async function fetchKpTrend(): Promise<KpTrend> {
+  const result = await fetchKpTrendDetailed();
+  return result.trend;
 }
 
 export async function fetchKpIndex(): Promise<number> {

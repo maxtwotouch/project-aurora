@@ -14,7 +14,7 @@ export const liveCameras: LiveCamera[] = [
     name: 'UiT Weather Camera South',
     provider: 'UiT Department of Computer Science',
     area: 'Tromso city view',
-    imageUrl: 'https://weather.cs.uit.no/wcam0/wcam0_1280.jpg',
+    imageUrl: 'https://weather.cs.uit.no/cam/cam_south.jpg',
     sourceUrl: 'http://weather.cs.uit.no',
     note: 'Live still image; refreshes regularly.'
   },
@@ -23,7 +23,7 @@ export const liveCameras: LiveCamera[] = [
     name: 'UiT Weather Camera East',
     provider: 'UiT Department of Computer Science',
     area: 'Tromso city view',
-    imageUrl: 'https://weather.cs.uit.no/wcam1/wcam1_1280.jpg',
+    imageUrl: 'https://weather.cs.uit.no/cam/cam_east.jpg',
     sourceUrl: 'https://weather.cs.uit.no/wcam1_latest.html',
     note: 'Live still image; refreshes regularly.'
   },
@@ -32,7 +32,7 @@ export const liveCameras: LiveCamera[] = [
     name: 'UiT Weather Camera West',
     provider: 'UiT Department of Computer Science',
     area: 'Tromso city view',
-    imageUrl: 'https://weather.cs.uit.no/wcam2/wcam2_1280.jpg',
+    imageUrl: 'https://weather.cs.uit.no/cam/cam_west.jpg',
     sourceUrl: 'https://weather.cs.uit.no/wcam2_latest.html',
     note: 'Live still image; refreshes regularly.'
   },
@@ -41,7 +41,7 @@ export const liveCameras: LiveCamera[] = [
     name: 'UiT Weather Camera North',
     provider: 'UiT Department of Computer Science',
     area: 'Tromso city view',
-    imageUrl: 'https://weather.cs.uit.no/wcam3/wcam3_1280.jpg',
+    imageUrl: 'https://weather.cs.uit.no/cam/cam_north.jpg',
     sourceUrl: 'https://weather.cs.uit.no/wcam3_latest.html',
     note: 'Live still image; refreshes regularly.'
   },

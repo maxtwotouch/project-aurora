@@ -15,7 +15,7 @@ import { MapScreen } from './src/screens/MapScreen.web';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.web';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -52,6 +52,7 @@ type TabsRootProps = {
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
+  dataQuality: AppDataQuality;
   kp: KpTrend;
   topSpots: SpotScoreResult[];
   closeSpots: SpotScoreResult[];
@@ -69,6 +70,7 @@ function TabsRoot({
   loading,
   error,
   lastUpdatedAt,
+  dataQuality,
   kp,
   topSpots,
   closeSpots,
@@ -104,13 +106,14 @@ function TabsRoot({
         tabBarStyle: {
           backgroundColor: palette.nightSoft,
           borderTopColor: palette.cardBorder,
-          height: 66,
+          height: 62,
           paddingHorizontal: 6,
-          paddingTop: 8,
-          paddingBottom: 8
+          paddingTop: 4,
+          paddingBottom: 6
         },
         tabBarItemStyle: {
-          minWidth: 0
+          minWidth: 0,
+          paddingTop: 2
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -133,6 +136,7 @@ function TabsRoot({
             loading={loading}
             error={error}
             lastUpdatedAt={lastUpdatedAt}
+            dataQuality={dataQuality}
             kp={kp}
             topSpots={topSpots}
             closeSpots={closeSpots}
@@ -153,6 +157,7 @@ function TabsRoot({
           <AllSpotsScreen
             rankedSpots={rankedSpots}
             spotsById={spotsById}
+            dataQuality={dataQuality}
             loading={loading}
             refresh={refresh}
             onOpenSpot={onOpenSpot}
@@ -197,6 +202,7 @@ export default function App() {
               loading={forecast.loading}
               error={forecast.error}
               lastUpdatedAt={forecast.lastUpdatedAt}
+              dataQuality={forecast.dataQuality}
               kp={forecast.kp}
               topSpots={forecast.topSpots}
               closeSpots={forecast.closeSpots}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { palette } from '../theme/palette';
 import type { KpTrend } from '../types';
@@ -9,6 +9,7 @@ type Props = {
 };
 
 const AVAILABLE_HOUR_OFFSETS = [0, 1, 4] as const;
+const AURORA_SOURCE_URL = 'https://site.uit.no/spaceweather/data-and-products/aurora/tromso/';
 
 function buildFrameUrl(hourOffset: number, refreshBucket: number) {
   const base = 'https://spaceweather2.uit.no/noswe/Aurora';
@@ -17,11 +18,12 @@ function buildFrameUrl(hourOffset: number, refreshBucket: number) {
 }
 
 export function AuroraMapScreen({ kp }: Props) {
+  const introAnim = useRef(new Animated.Value(0)).current;
   const [hourOffset, setHourOffset] = useState<number>(0);
   const [timelineWidth, setTimelineWidth] = useState<number>(1);
-  const [loadingImage, setLoadingImage] = useState<boolean>(true);
-  const [prefetchedUrls, setPrefetchedUrls] = useState<Record<string, boolean>>({});
   const [refreshBucket, setRefreshBucket] = useState<number>(Math.floor(Date.now() / (10 * 60 * 1000)));
+  const [loadedFrameUrls, setLoadedFrameUrls] = useState<Record<string, boolean>>({});
+  const [failedFrameUrls, setFailedFrameUrls] = useState<Record<string, boolean>>({});
   const selectedIndex = Math.max(
     0,
     AVAILABLE_HOUR_OFFSETS.indexOf(hourOffset as (typeof AVAILABLE_HOUR_OFFSETS)[number])
@@ -53,7 +55,9 @@ export function AuroraMapScreen({ kp }: Props) {
     [refreshBucket]
   );
   const frameUrl = frameUrls[hourOffset];
-  const overheadNow = kp.current >= 5 ? 'Likely' : kp.current >= 3.5 ? 'Possible' : 'Low';
+  const overheadNow = kp.current >= 5 ? 'Likely overhead' : kp.current >= 3.5 ? 'Possible overhead' : 'Low overhead';
+  const isCurrentFrameLoaded = Boolean(loadedFrameUrls[frameUrl]);
+  const hasCurrentFrameFailed = Boolean(failedFrameUrls[frameUrl]);
   const peakIndex = kp.hourly.reduce((bestIndex, value, index, values) => {
     return value > values[bestIndex] ? index : bestIndex;
   }, 0);
@@ -70,6 +74,15 @@ export function AuroraMapScreen({ kp }: Props) {
   }, [peakIndex]);
 
   useEffect(() => {
+    Animated.timing(introAnim, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true
+    }).start();
+  }, [introAnim]);
+
+  useEffect(() => {
     const id = setInterval(() => {
       const nextBucket = Math.floor(Date.now() / (10 * 60 * 1000));
       setRefreshBucket((current) => (current === nextBucket ? current : nextBucket));
@@ -79,63 +92,102 @@ export function AuroraMapScreen({ kp }: Props) {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    Promise.all(
-      Object.values(frameUrls).map(async (url) => {
-        try {
-          await Image.prefetch(url);
-          return [url, true] as const;
-        } catch {
-          return [url, false] as const;
-        }
-      })
-    ).then((results) => {
-      if (cancelled) {
-        return;
-      }
-
-      setPrefetchedUrls((current) => {
-        const next = { ...current };
-        for (const [url, ok] of results) {
-          next[url] = ok;
-        }
-        return next;
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [frameUrls]);
-
-  useEffect(() => {
-    setLoadingImage(!prefetchedUrls[frameUrl]);
-    const timeout = setTimeout(() => {
-      setLoadingImage(false);
-    }, 12000);
-
-    return () => clearTimeout(timeout);
-  }, [frameUrl, prefetchedUrls]);
+    setLoadedFrameUrls({});
+    setFailedFrameUrls({});
+  }, [refreshBucket]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Tromso Aurora Outlook</Text>
-        <Text style={styles.summaryLine}>Overhead now: {overheadNow}</Text>
-        <Text style={styles.summaryLine}>Next peak: {peakTime}</Text>
-      </View>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
+    >
+      <Animated.View
+        style={[
+          styles.headerCard,
+          {
+            opacity: introAnim,
+            transform: [
+              {
+                translateY: introAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [12, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Text style={styles.eyebrow}>UiT feed</Text>
+        <Text style={styles.title}>Aurora frames</Text>
+        <Text style={styles.subtitle}>Switch between now, +1h, and +4h.</Text>
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.summaryRow,
+          {
+            opacity: introAnim,
+            transform: [
+              {
+                translateY: introAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [16, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <View style={styles.summaryTile}>
+          <Text style={styles.summaryLabel}>Overhead now</Text>
+          <Text style={styles.summaryValue}>{overheadNow}</Text>
+        </View>
+        <View style={styles.summaryTile}>
+          <Text style={styles.summaryLabel}>Next peak</Text>
+          <Text style={styles.summaryValue}>{peakTime}</Text>
+        </View>
+        <View style={styles.summaryTile}>
+          <Text style={styles.summaryLabel}>KP frame</Text>
+          <Text style={styles.summaryValue}>{kpAtOffset.toFixed(1)}</Text>
+        </View>
+      </Animated.View>
 
       <View style={styles.frameWrap}>
-        <Image
-          source={{ uri: frameUrl }}
-          style={styles.frameImage}
-          resizeMode="cover"
-          onLoadStart={() => setLoadingImage(true)}
-          onLoadEnd={() => setLoadingImage(false)}
-          onError={() => setLoadingImage(false)}
-        />
-        {loadingImage ? (
+        {!hasCurrentFrameFailed ? (
+          <>
+            {AVAILABLE_HOUR_OFFSETS.map((offset) => {
+              const url = frameUrls[offset];
+              const visible = offset === hourOffset;
+
+              return (
+                <Image
+                  key={url}
+                  source={{ uri: url }}
+                  style={[styles.frameImage, visible ? styles.frameVisible : styles.frameHidden]}
+                  resizeMode="cover"
+                  onLoad={() => {
+                    setLoadedFrameUrls((current) => ({ ...current, [url]: true }));
+                  }}
+                  onError={() => {
+                    setFailedFrameUrls((current) => ({ ...current, [url]: true }));
+                  }}
+                />
+              );
+            })}
+          </>
+        ) : (
+          <View style={styles.frameFallback}>
+            <Text style={styles.frameFallbackTitle}>Aurora frame unavailable</Text>
+            <Text style={styles.frameFallbackText}>
+              The UiT image feed did not load. Open the source page directly to verify whether the feed is down or the frame path changed.
+            </Text>
+            <Pressable style={styles.sourceButton} onPress={() => void Linking.openURL(AURORA_SOURCE_URL)}>
+              <Text style={styles.sourceButtonText}>Open UiT source</Text>
+            </Pressable>
+          </View>
+        )}
+        {!isCurrentFrameLoaded && !hasCurrentFrameFailed ? (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="small" color={palette.auroraGreen} />
             <Text style={styles.loadingText}>Loading aurora frame...</Text>
@@ -143,14 +195,24 @@ export function AuroraMapScreen({ kp }: Props) {
         ) : null}
       </View>
 
-      <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Official UiT Aurora Frames (Tromso)</Text>
-        <Text style={styles.legendText}>Source: NO-SPACE weather lab at UiT.</Text>
-        <Text style={styles.legendText}>Frame time: {hourOffset === 0 ? 'Nowcast' : `Forecast +${hourOffset}h`} | KP {kpAtOffset.toFixed(1)}</Text>
-      </View>
-
-      <View style={styles.timePickerWrap}>
-        <Text style={styles.timeTitle}>Drag Time: Now, +1h, +4h</Text>
+      <Animated.View
+        style={[
+          styles.scrubberCard,
+          {
+            opacity: introAnim,
+            transform: [
+              {
+                translateY: introAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <Text style={styles.scrubberTitle}>Time</Text>
+        <Text style={styles.scrubberMeta}>Nowcast, +1h, or +4h.</Text>
         <View
           style={styles.timelineTrack}
           onLayout={onTimelineLayout}
@@ -160,111 +222,176 @@ export function AuroraMapScreen({ kp }: Props) {
           onResponderMove={(e) => updateFromX(e.nativeEvent.locationX)}
         >
           <View style={[styles.timelineFill, { width: `${(selectedIndex / maxIndex) * 100}%` }]} />
-          <View
-            style={[
-              styles.timelineThumb,
-              { left: (selectedIndex / maxIndex) * timelineWidth - 10 }
-            ]}
-          />
+          <View style={[styles.timelineThumb, { left: (selectedIndex / maxIndex) * timelineWidth - 12 }]} />
         </View>
         <View style={styles.timelineLabels}>
-          <Text style={styles.timelineLabel}>Now</Text>
-          <Text style={styles.timelineLabel}>+1h</Text>
-          <Text style={styles.timelineLabel}>+4h</Text>
+          {AVAILABLE_HOUR_OFFSETS.map((offset) => {
+            const active = hourOffset === offset;
+            return (
+              <Pressable key={offset} style={styles.timelineLabelPill} onPress={() => setHourOffset(offset)}>
+                <Text style={[styles.timelineLabel, active ? styles.timelineLabelActive : null]}>
+                  {offset === 0 ? 'Now' : `+${offset}h`}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-      </View>
-    </View>
+      </Animated.View>
+
+      <Animated.View style={[styles.legendCard, { opacity: introAnim }]}>
+        <Text style={styles.legendTitle}>Source</Text>
+        <Text style={styles.legendText}>NO-SPACE weather lab at UiT. Frame mode: {hourOffset === 0 ? 'Nowcast' : `Forecast +${hourOffset}h`}.</Text>
+      </Animated.View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: palette.night,
-    padding: 14
+    padding: 14,
+    paddingBottom: 28
+  },
+  headerCard: {
+    backgroundColor: palette.nightPanel,
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    marginBottom: 12
+  },
+  eyebrow: {
+    color: palette.auroraMint,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 6
+  },
+  title: {
+    color: palette.textPrimary,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '800',
+    marginBottom: 6
+  },
+  subtitle: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 21
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12
+  },
+  summaryTile: {
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    backgroundColor: palette.card,
+    borderWidth: 1,
+    borderColor: palette.cardBorder
+  },
+  summaryLabel: {
+    color: palette.textMuted,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: 4
+  },
+  summaryValue: {
+    color: palette.textPrimary,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '800'
   },
   frameWrap: {
-    flex: 1,
-    borderRadius: 16,
+    minHeight: 240,
+    height: 320,
+    borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.cardElevated
   },
-  summaryCard: {
-    marginBottom: 10,
-    backgroundColor: '#101a2fd9',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#2d466b'
-  },
-  summaryTitle: {
-    color: palette.textPrimary,
-    fontSize: 17,
-    fontWeight: '800',
-    marginBottom: 2
-  },
-  summaryLine: {
-    color: palette.textSecondary,
-    fontSize: 14
-  },
   frameImage: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%'
+  },
+  frameVisible: {
+    opacity: 1
+  },
+  frameHidden: {
+    opacity: 0
+  },
+  frameFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    gap: 10
+  },
+  frameFallbackTitle: {
+    color: palette.textPrimary,
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  frameFallbackText: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center'
+  },
+  sourceButton: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.auroraGreen
+  },
+  sourceButtonText: {
+    color: palette.textOnAurora,
+    fontWeight: '800'
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#03071299'
+    backgroundColor: '#061017a8'
   },
   loadingText: {
     marginTop: 8,
     color: palette.textSecondary
   },
-  legend: {
-    marginTop: 10,
-    backgroundColor: '#101a2fd9',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+  scrubberCard: {
+    marginTop: 12,
+    backgroundColor: palette.card,
+    borderRadius: 22,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#2d466b'
+    borderColor: palette.cardBorder
   },
-  legendTitle: {
+  scrubberTitle: {
     color: palette.textPrimary,
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 2
+    fontSize: 18,
+    fontWeight: '800'
   },
-  legendText: {
+  scrubberMeta: {
     color: palette.textSecondary,
-    fontSize: 12,
-    textAlign: 'center'
-  },
-  timePickerWrap: {
-    marginTop: 10,
-    backgroundColor: '#101a2fe8',
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#2d466b'
-  },
-  timeTitle: {
-    color: palette.textPrimary,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center'
+    marginTop: 4,
+    marginBottom: 12
   },
   timelineTrack: {
-    height: 14,
+    height: 16,
     borderRadius: 999,
-    backgroundColor: '#0b1424',
+    backgroundColor: '#0d1923',
     borderWidth: 1,
-    borderColor: '#3c5275',
+    borderColor: '#335163',
     justifyContent: 'center'
   },
   timelineFill: {
@@ -273,24 +400,56 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 999,
-    backgroundColor: '#2adf92'
+    backgroundColor: palette.auroraGreen
   },
   timelineThumb: {
     position: 'absolute',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#e7fff8',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ecfff7',
     borderWidth: 2,
-    borderColor: '#2adf92'
+    borderColor: palette.auroraGreen
   },
   timelineLabels: {
-    marginTop: 8,
+    marginTop: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: 8
+  },
+  timelineLabelPill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: '#152835'
   },
   timelineLabel: {
     color: palette.textSecondary,
-    fontSize: 12
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  timelineLabelActive: {
+    color: palette.auroraMint
+  },
+  legendCard: {
+    marginTop: 12,
+    backgroundColor: '#10202b',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#284657'
+  },
+  legendTitle: {
+    color: palette.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 3
+  },
+  legendText: {
+    color: palette.textSecondary,
+    fontSize: 13,
+    lineHeight: 19
   }
 });

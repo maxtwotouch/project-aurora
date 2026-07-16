@@ -1,5 +1,7 @@
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
+import { CollapsibleSection } from '../components/CollapsibleSection';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
 import { palette } from '../theme/palette';
@@ -10,6 +12,8 @@ type Props = {
   result: SpotScoreResult | undefined;
   forecast: HourlyForecast[] | undefined;
 };
+
+type SectionKey = 'overview' | 'location' | 'access' | 'forecast' | 'visuals';
 
 const formatLocalTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], {
@@ -35,26 +39,53 @@ function chanceLabel(score: number | undefined): string {
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
   const parking = getSpotParking(spot);
+  const forecastRows = (forecast ?? []).slice(0, 6);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({
+    overview: 0,
+    location: 0,
+    access: 0,
+    forecast: 0,
+    visuals: 0
+  });
 
   const navigateToSpot = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
 
+  const registerSection = (key: SectionKey) => (event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    setSectionOffsets((current) => ({ ...current, [key]: y }));
+  };
+
+  const jumpTo = (key: SectionKey) => {
+    scrollRef.current?.scrollTo({ y: Math.max(sectionOffsets[key] - 12, 0), animated: true });
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.container}>
       <Text style={styles.title}>{spot.name}</Text>
-      <Text style={styles.subtitle}>Detailed viewing conditions</Text>
+      <Text style={styles.subtitle}>Detailed viewing conditions with a shorter path to the useful parts.</Text>
 
-      <View style={styles.heroCard}>
+      <View style={styles.heroCard} onLayout={registerSection('overview')}>
         <View style={styles.scoreRow}>
-          <Text style={styles.label}>Spot score tonight</Text>
-          <ScoreBadge score={result?.score ?? 0} size="lg" />
+          <View style={styles.scoreCopy}>
+            <Text style={styles.label}>Spot score tonight</Text>
+            <Text style={styles.windowText}>
+              {result ? `${formatLocalTime(result.bestWindowStart)} to ${formatLocalTime(result.bestWindowEnd)}` : 'Waiting for the next run'}
+            </Text>
+            <Text style={styles.heroNote}>
+              {result
+                ? `${trendLabel(result.trend)} with ${result.cloudCoverAtBestHour}% cloud cover at the best hour.`
+                : 'Forecast metrics are still loading for this stop.'}
+            </Text>
+          </View>
+          <View style={styles.scoreBadgeWrap}>
+            <ScoreBadge score={result?.score ?? 0} size="lg" />
+            <Text style={styles.chanceText}>{chanceLabel(result?.score)} chance</Text>
+          </View>
         </View>
-
-        <Text style={styles.windowText}>
-          Best window: {result ? `${formatLocalTime(result.bestWindowStart)}-${formatLocalTime(result.bestWindowEnd)}` : '-'}
-        </Text>
 
         <View style={styles.metricsGrid}>
           <View style={styles.metricTile}>
@@ -70,76 +101,96 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
             <Text style={styles.metricValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
           </View>
           <View style={styles.metricTile}>
-            <Text style={styles.metricLabel}>Cold Score</Text>
-            <Text style={styles.metricValue}>{result?.coldScore ?? '-'} / 100</Text>
+            <Text style={styles.metricLabel}>Distance</Text>
+            <Text style={styles.metricValue}>{spot.distanceKm} km</Text>
           </View>
         </View>
 
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Trend</Text>
-          <Text style={styles.inlineValue}>{trendLabel(result?.trend)}</Text>
-        </View>
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Chance</Text>
-          <Text style={styles.inlineValue}>{chanceLabel(result?.score)}</Text>
-        </View>
-        <View style={styles.inlineRow}>
-          <Text style={styles.inlineLabel}>Distance</Text>
-          <Text style={styles.inlineValue}>{spot.distanceKm} km from city center</Text>
-        </View>
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Dress Recommendation</Text>
-        <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
-      </View>
-
-      <View style={styles.mapWrap}>
-        <View style={styles.webMapFallback}>
-          <Text style={styles.description}>Map preview is simplified on web beta.</Text>
-          <Pressable style={styles.webMapBtn} onPress={navigateToSpot}>
-            <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>{spot.description}</Text>
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Parking</Text>
-        <Text style={styles.description}>{parking}</Text>
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Spot Images</Text>
-        {imageUrls.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
-            {imageUrls.map((url) => (
-              <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
-            ))}
-          </ScrollView>
-        ) : (
-          <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
-        )}
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Cloud Cover Next Hours</Text>
-        {(forecast ?? []).slice(0, 6).map((hour) => (
-          <View key={hour.time} style={styles.hourRow}>
-            <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
-            <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
+        <View style={styles.jumpCard}>
+          <Text style={styles.jumpTitle}>On this page</Text>
+          <View style={styles.jumpRow}>
+            <JumpButton label="Location" onPress={() => jumpTo('location')} />
+            <JumpButton label="Access" onPress={() => jumpTo('access')} />
+            <JumpButton label="Forecast" onPress={() => jumpTo('forecast')} />
+            <JumpButton label="Visuals" onPress={() => jumpTo('visuals')} />
           </View>
-        ))}
+        </View>
+
+        <Pressable style={styles.navigateBtn} onPress={navigateToSpot}>
+          <Text style={styles.navigateText}>Open navigation</Text>
+        </Pressable>
       </View>
 
-      <Pressable style={styles.navigateBtn} onPress={navigateToSpot}>
-        <Text style={styles.navigateText}>Navigate</Text>
-      </Pressable>
+      <View onLayout={registerSection('location')}>
+        <CollapsibleSection eyebrow="Position" title="Arrive at the viewing area" meta={`${spot.distanceKm} km`} defaultOpen>
+          <View style={styles.mapWrap}>
+            <View style={styles.webMapFallback}>
+              <Text style={styles.description}>Map preview is simplified on web beta.</Text>
+              <Pressable style={styles.webMapBtn} onPress={navigateToSpot}>
+                <Text style={styles.webMapBtnText}>Open in Google Maps</Text>
+              </Pressable>
+            </View>
+          </View>
+          <Text style={styles.description}>{spot.description}</Text>
+        </CollapsibleSection>
+      </View>
+
+      <View onLayout={registerSection('access')}>
+        <CollapsibleSection eyebrow="Arrival" title="Parking and prep" defaultOpen={false}>
+          <Text style={styles.blockTitle}>Parking</Text>
+          <Text style={styles.description}>{parking}</Text>
+          <Text style={styles.blockTitle}>Dress recommendation</Text>
+          <Text style={styles.description}>{result?.dressAdvice ?? 'No recommendation available yet.'}</Text>
+        </CollapsibleSection>
+      </View>
+
+      <View onLayout={registerSection('forecast')}>
+        <CollapsibleSection
+          eyebrow="Forecast"
+          title="Cloud cover next hours"
+          meta={forecastRows.length > 0 ? `${forecastRows.length} hours` : 'No hourly data'}
+          defaultOpen={false}
+        >
+          {forecastRows.length > 0 ? (
+            forecastRows.map((hour) => (
+              <View key={hour.time} style={styles.hourRow}>
+                <Text style={styles.hourTime}>{formatLocalTime(hour.time)}</Text>
+                <Text style={styles.hourCloud}>{Math.round(hour.cloudCover)}%</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.description}>Hourly cloud data is not available for this spot right now.</Text>
+          )}
+        </CollapsibleSection>
+      </View>
+
+      <View onLayout={registerSection('visuals')}>
+        <CollapsibleSection
+          eyebrow="Visual check"
+          title="Spot imagery"
+          meta={imageUrls.length > 0 ? `${imageUrls.length} photo${imageUrls.length === 1 ? '' : 's'}` : 'No photos yet'}
+          defaultOpen={false}
+        >
+          {imageUrls.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
+              {imageUrls.map((url) => (
+                <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
+              ))}
+            </ScrollView>
+          ) : (
+            <Text style={styles.description}>Verified photos for this spot are coming soon.</Text>
+          )}
+        </CollapsibleSection>
+      </View>
     </ScrollView>
+  );
+}
+
+function JumpButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable style={({ pressed }) => [styles.jumpButton, pressed ? styles.jumpButtonPressed : null]} onPress={onPress}>
+      <Text style={styles.jumpButtonText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -162,81 +213,131 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     backgroundColor: '#0d1a30',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 16,
     borderWidth: 1,
     borderColor: '#2d466b',
     marginBottom: 14
   },
-  sectionCard: {
-    backgroundColor: palette.card,
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: palette.cardBorder,
-    marginBottom: 12
-  },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 14
+  },
+  scoreCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  scoreBadgeWrap: {
     alignItems: 'center',
-    marginBottom: 10
+    gap: 8
   },
   label: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
-    color: palette.textSecondary
+    color: palette.auroraMint,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 6
   },
   windowText: {
     color: palette.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 10
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 6
+  },
+  heroNote: {
+    color: palette.textSecondary,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  chanceText: {
+    color: palette.auroraMint,
+    fontSize: 13,
+    fontWeight: '700'
   },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 10
+    marginTop: 14
   },
   metricTile: {
     width: '48%',
     backgroundColor: '#101f38',
     borderWidth: 1,
     borderColor: '#2d466b',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 10
   },
   metricLabel: {
     color: palette.textMuted,
     fontSize: 11,
-    marginBottom: 4
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7
   },
   metricValue: {
     color: palette.textPrimary,
     fontSize: 17,
     fontWeight: '700'
   },
-  inlineRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4
+  jumpCard: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#12263a',
+    borderWidth: 1,
+    borderColor: '#29475f'
   },
-  inlineLabel: {
-    color: palette.textSecondary,
-    fontSize: 14
-  },
-  inlineValue: {
+  jumpTitle: {
     color: palette.textPrimary,
-    fontSize: 14,
-    fontWeight: '600'
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 10
+  },
+  jumpRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  jumpButton: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#17303c',
+    borderWidth: 1,
+    borderColor: '#2e5667'
+  },
+  jumpButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }]
+  },
+  jumpButtonText: {
+    color: palette.auroraMint,
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  navigateBtn: {
+    marginTop: 14,
+    minHeight: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.auroraGreen
+  },
+  navigateText: {
+    color: palette.textOnAurora,
+    fontWeight: '800'
   },
   mapWrap: {
     height: 180,
     borderRadius: 14,
     overflow: 'hidden',
-    marginTop: 10,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: palette.cardBorder
@@ -260,58 +361,44 @@ const styles = StyleSheet.create({
     color: palette.textPrimary,
     fontWeight: '700'
   },
-  sectionTitle: {
-    marginTop: 2,
-    marginBottom: 6,
-    fontSize: 16,
+  blockTitle: {
+    color: palette.textPrimary,
+    fontSize: 15,
     fontWeight: '700',
-    color: palette.textPrimary
+    marginTop: 6,
+    marginBottom: 6
   },
   description: {
     color: palette.textSecondary,
-    lineHeight: 21,
-    fontSize: 14
-  },
-  hourRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c2d49'
-  },
-  hourTime: {
-    color: palette.textPrimary,
-    fontWeight: '600'
-  },
-  hourCloud: {
-    color: palette.textSecondary,
-    fontWeight: '600'
+    fontSize: 14,
+    lineHeight: 21
   },
   imagesRow: {
-    marginBottom: 8
+    marginTop: 4
   },
   image: {
-    width: 260,
-    height: 160,
-    borderRadius: 12,
+    width: 220,
+    height: 150,
+    borderRadius: 14,
     marginRight: 10,
     borderWidth: 1,
     borderColor: palette.cardBorder
   },
-  navigateBtn: {
-    marginTop: 18,
-    backgroundColor: palette.auroraGreen,
-    borderRadius: 14,
-    paddingVertical: 13,
-    alignItems: 'center',
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.24,
-    shadowRadius: 12,
-    elevation: 5
+  hourRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#284657'
   },
-  navigateText: {
-    color: palette.night,
-    fontWeight: '800'
+  hourTime: {
+    color: palette.textPrimary,
+    fontSize: 14,
+    fontWeight: '600'
+  },
+  hourCloud: {
+    color: palette.auroraMint,
+    fontSize: 14,
+    fontWeight: '700'
   }
 });

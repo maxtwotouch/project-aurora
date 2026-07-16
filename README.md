@@ -79,6 +79,42 @@ npx expo export --platform web
 
 The output folder is `dist/` and can be deployed to Cloudflare Pages.
 
+For deployed web, make sure the backend allows your production frontend origin:
+
+```bash
+CORS_ORIGINS=https://your-web-domain.com
+```
+
+## Ship To TestFlight Beta
+
+This project now has a dedicated EAS `beta` profile for TestFlight builds.
+
+From the redesign branch:
+
+```bash
+git checkout redesign-2026-refresh
+npx eas build --platform ios --profile beta
+```
+
+If you want EAS to submit the finished build to App Store Connect automatically:
+
+```bash
+npx eas build --platform ios --profile beta --auto-submit
+```
+
+After Apple processes the build, assign it to your TestFlight beta group in App Store Connect.
+
+For frontend-only changes that do not add native dependencies or change the app version, publish an over-the-air update to the same beta users:
+
+```bash
+npx eas update --channel beta --message "Redesign refresh"
+```
+
+Important:
+- `beta` is the EAS Update channel used by TestFlight beta builds from this repo.
+- Changing native modules, Expo SDK, or `expo.version` requires a new TestFlight build, not just `eas update`.
+- With `runtimeVersion.policy = appVersion`, OTA updates are limited to builds on the same app version.
+
 ## Backend (Fastify)
 
 A backend MVP is included in `backend/` with:
@@ -106,6 +142,8 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
 ```
 
 If backend mode is off (or unset), the app keeps using direct MET/NOAA APIs.
+
+For a deployed web frontend, also set backend `CORS_ORIGINS` to your actual site origin. The default only allows localhost development origins.
 
 ## API Configuration
 

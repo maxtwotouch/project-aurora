@@ -76,3 +76,11 @@ export type GeneralForecastScore = {
 export type DaylightHint = {
   sightingPossibleFrom: string | null;
 };
+
+export type AppDataQuality = {
+  sourceMode: 'backend' | 'direct';
+  backendRequested: boolean;
+  backendUnavailable: boolean;
+  usingFallbackKp: boolean;
+  fallbackWeatherSpotIds: string[];
+};
