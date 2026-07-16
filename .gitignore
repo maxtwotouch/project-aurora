@@ -8,3 +8,5 @@ yarn-error.*
 .DS_Store
 .env
 
+.worktrees/.worktrees/
+.worktrees/

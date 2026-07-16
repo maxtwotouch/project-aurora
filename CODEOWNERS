@@ -1,0 +1,23 @@
+# Save as: .github/CODEOWNERS
+#
+# Agents may work autonomously on their own branches, but changes to these
+# paths ALWAYS require review from a human owner before merge. Combined with
+# branch protection ("require review from Code Owners"), this makes the
+# privacy-sensitive surface impossible to auto-merge.
+#
+# Replace @maxtwotouch with the GitHub handle(s) that must approve.
+
+# Anything that receives, stores, or exposes user data.
+/backend/src/events*        @maxtwotouch
+/backend/src/stats*         @maxtwotouch
+/backend/src/db*            @maxtwotouch
+/backend/src/**/events*     @maxtwotouch
+/backend/src/**/stats*      @maxtwotouch
+
+# Database schema / migrations (once they exist).
+/backend/migrations/        @maxtwotouch
+/backend/prisma/            @maxtwotouch
+
+# The rules of the game themselves.
+/CLAUDE.md                  @maxtwotouch
+/.github/                   @maxtwotouch
