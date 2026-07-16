@@ -243,7 +243,12 @@ export default function App() {
             title: spotsById[route.params.spotId]?.name ?? 'Spot Details',
             headerBackVisible: false,
             headerLeft: () => (
-              <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+              >
                 <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
                 <Text style={styles.backText}>Back</Text>
               </Pressable>
@@ -275,7 +280,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#132330'
+    backgroundColor: palette.nightPanel
   },
   backText: {
     color: palette.textPrimary,

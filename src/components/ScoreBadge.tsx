@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { palette } from '../theme/palette';
+import { elevation, radius } from '../theme/tokens';
 
 type Props = {
   score: number;
@@ -16,24 +17,24 @@ export function ScoreBadge({ score, size = 'sm' }: Props) {
   const color = colorForScore(score);
 
   return (
-    <View style={[styles.badge, { backgroundColor: color }, size === 'lg' ? styles.lg : styles.sm]}>
-      <Text style={styles.text}>{score}</Text>
+    <View
+      style={[styles.badge, { backgroundColor: color }, size === 'lg' ? styles.lg : styles.sm]}
+      accessible
+      accessibilityLabel={`Aurora score ${score} out of 100`}
+    >
+      <Text style={size === 'lg' ? styles.textLg : styles.text}>{score}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: 999,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#f4fff480',
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-    elevation: 3
+    ...elevation.sm
   },
   sm: {
     width: 42,
@@ -48,5 +49,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.2,
     fontSize: 16
+  },
+  textLg: {
+    color: palette.textOnAurora,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    fontSize: 21
   }
 });

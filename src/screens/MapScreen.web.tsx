@@ -1,9 +1,11 @@
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { palette } from '../theme/palette';
+import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
+import { typography } from '../theme/type';
 import type { Spot, SpotScoreResult } from '../types';
 
 type Props = {
@@ -13,6 +15,8 @@ type Props = {
 };
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
+  const { width } = useWindowDimensions();
+  const isWide = width >= 860;
   const [selected, setSelected] = useState<Spot | null>(null);
 
   const scoreBySpot = useMemo(
@@ -34,51 +38,110 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     setSelected((current) => current ?? defaultSpot);
   }, [defaultSpot]);
 
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.webList}>
-        <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
-        <View style={styles.note}>
-          <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
-          <Text style={styles.noteText}>
-            Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.
-          </Text>
-        </View>
-        {spots.map((spot) => (
-          <Pressable key={spot.id} style={styles.webItem} onPress={() => setSelected(spot)}>
-            <View>
+  const list = (
+    <ScrollView contentContainerStyle={isWide ? styles.listWide : styles.listNarrow}>
+      <Text style={styles.webTitle}>Map view is simplified on web beta.</Text>
+      <View style={styles.note}>
+        <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
+        <Text style={styles.noteText}>
+          Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.
+        </Text>
+      </View>
+      {spots.map((spot) => {
+        const isActive = selected?.id === spot.id;
+        return (
+          <Pressable
+            key={spot.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${spot.name}, score ${scoreBySpot[spot.id] ?? 0}`}
+            style={({ hovered, focused }: WebPressableState) => [
+              styles.webItem,
+              isActive ? styles.webItemActive : null,
+              hovered ? styles.webItemHover : null,
+              focused ? styles.focusRing : null
+            ]}
+            onPress={() => setSelected(spot)}
+          >
+            <View style={styles.webItemCopy}>
               <Text style={styles.webItemName}>{spot.name}</Text>
               <Text style={styles.webItemMeta}>{spot.distanceKm} km from city center</Text>
             </View>
             <ScoreBadge score={scoreBySpot[spot.id] ?? 0} />
           </Pressable>
-        ))}
-      </ScrollView>
+        );
+      })}
+    </ScrollView>
+  );
 
-      {selected ? (
-        <View style={styles.sheet}>
-          <View style={styles.sheetTop}>
-            <View>
-              <Text style={styles.sheetTitle}>{selected.name}</Text>
-              <Text style={styles.sheetMeta}>Distance: {selected.distanceKm} km</Text>
-              <Text style={styles.sheetMeta}>Score: {scoreBySpot[selected.id] ?? 0}</Text>
-            </View>
-            <ScoreBadge score={scoreBySpot[selected.id] ?? 0} />
-          </View>
-
-          <View style={styles.actions}>
-            <Pressable style={styles.btn} onPress={() => setSelected(null)}>
-              <Text style={styles.btnText}>Clear</Text>
-            </Pressable>
-            <Pressable style={styles.btn} onPress={() => onOpenSpot(selected.id)}>
-              <Text style={styles.btnText}>Details</Text>
-            </Pressable>
-            <Pressable style={[styles.btn, styles.btnPrimary]} onPress={() => navigateToSpot(selected)}>
-              <Text style={[styles.btnText, styles.btnTextPrimary]}>Navigate</Text>
-            </Pressable>
-          </View>
+  const detail = selected ? (
+    <View style={isWide ? styles.detailPaneWide : styles.sheet}>
+      <View style={styles.sheetTop}>
+        <View style={styles.sheetCopy}>
+          <Text style={styles.sheetEyebrow}>Selected stop</Text>
+          <Text style={styles.sheetTitle}>{selected.name}</Text>
+          <Text style={styles.sheetMeta}>{selected.distanceKm} km from Tromso center</Text>
+          <Text style={styles.sheetMeta}>Forecast score {scoreBySpot[selected.id] ?? 0}</Text>
         </View>
-      ) : null}
+        <ScoreBadge score={scoreBySpot[selected.id] ?? 0} size="lg" />
+      </View>
+
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          style={({ hovered, focused }: WebPressableState) => [
+            styles.btn,
+            hovered ? styles.btnHover : null,
+            focused ? styles.focusRing : null
+          ]}
+          onPress={() => setSelected(null)}
+        >
+          <Text style={styles.btnText}>Clear</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={({ hovered, focused }: WebPressableState) => [
+            styles.btn,
+            hovered ? styles.btnHover : null,
+            focused ? styles.focusRing : null
+          ]}
+          onPress={() => onOpenSpot(selected.id)}
+        >
+          <Text style={styles.btnText}>Details</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={({ hovered, focused }: WebPressableState) => [
+            styles.btn,
+            styles.btnPrimary,
+            hovered ? styles.btnPrimaryHover : null,
+            focused ? styles.focusRing : null
+          ]}
+          onPress={() => navigateToSpot(selected)}
+        >
+          <Text style={[styles.btnText, styles.btnTextPrimary]}>Navigate</Text>
+        </Pressable>
+      </View>
+    </View>
+  ) : (
+    <View style={isWide ? styles.detailPaneWide : styles.sheet}>
+      <Text style={styles.sheetTitle}>No spot selected</Text>
+      <Text style={styles.sheetMeta}>Choose a spot from the list to see its score and quick actions.</Text>
+    </View>
+  );
+
+  if (isWide) {
+    return (
+      <View style={styles.wideContainer}>
+        <View style={styles.wideList}>{list}</View>
+        <View style={styles.wideDetail}>{detail}</View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {list}
+      {selected ? detail : null}
     </View>
   );
 }
@@ -88,30 +151,51 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.night
   },
-  webList: {
-    padding: 14,
-    gap: 10
+  wideContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: palette.night,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center'
+  },
+  wideList: {
+    width: 360,
+    borderRightWidth: 1,
+    borderRightColor: palette.borderHairline
+  },
+  wideDetail: {
+    flex: 1,
+    padding: space.xl
+  },
+  listNarrow: {
+    padding: space.sm,
+    gap: space.xs
+  },
+  listWide: {
+    padding: space.md,
+    gap: space.xs
   },
   webTitle: {
+    ...typography.bodySmall,
     color: palette.textSecondary,
-    marginBottom: 6
+    marginBottom: space.xxs
   },
   note: {
     flexDirection: 'row',
-    gap: 8,
+    gap: space.xs,
     alignItems: 'flex-start',
-    padding: 12,
-    borderRadius: 14,
+    padding: space.sm,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#2c5265',
-    backgroundColor: '#112735e6',
-    marginBottom: 10
+    borderColor: palette.borderHairline,
+    backgroundColor: palette.surfaceOverlay,
+    marginBottom: space.xs
   },
   noteText: {
     flex: 1,
-    color: palette.textSecondary,
-    lineHeight: 19,
-    fontSize: 13
+    ...typography.bodySmall,
+    color: palette.textSecondary
   },
   webItem: {
     flexDirection: 'row',
@@ -120,72 +204,104 @@ const styles = StyleSheet.create({
     backgroundColor: palette.cardElevated,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    borderRadius: 12,
-    padding: 12
+    borderRadius: radius.sm,
+    padding: space.sm
   },
+  webItemCopy: {
+    flex: 1,
+    minWidth: 0
+  },
+  webItemActive: {
+    borderColor: palette.auroraGreen
+  },
+  webItemHover: {
+    backgroundColor: palette.chipSurfaceActive
+  },
+  focusRing: {
+    outlineWidth: 2,
+    outlineColor: palette.auroraGreen,
+    outlineOffset: 2
+  } as any,
   webItemName: {
-    color: palette.textPrimary,
-    fontSize: 16,
-    fontWeight: '700'
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   },
   webItemMeta: {
+    ...typography.caption,
     color: palette.textSecondary,
-    marginTop: 3,
-    fontSize: 12
+    marginTop: 3
+  },
+  detailPaneWide: {
+    borderRadius: radius.xl,
+    padding: space.lg,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    backgroundColor: palette.nightPanel,
+    gap: space.md
   },
   sheet: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 16,
-    backgroundColor: '#101a2fd9',
-    borderRadius: 18,
-    padding: 15,
+    left: space.sm,
+    right: space.sm,
+    bottom: space.md,
+    backgroundColor: palette.nightPanel,
+    borderRadius: radius.lg,
+    padding: space.md,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    shadowColor: palette.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
-    elevation: 6
+    ...elevation.lg
   },
   sheetTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'flex-start',
+    gap: space.sm
+  },
+  sheetCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3
+  },
+  sheetEyebrow: {
+    ...typography.eyebrow,
+    color: palette.auroraMint
   },
   sheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+    ...typography.heading,
     color: palette.textPrimary
   },
   sheetMeta: {
-    marginTop: 4,
-    color: palette.textSecondary,
-    fontSize: 13
+    ...typography.bodySmall,
+    color: palette.textSecondary
   },
   actions: {
     flexDirection: 'row',
-    marginTop: 12,
-    gap: 10
+    marginTop: space.sm,
+    gap: space.xs
   },
   btn: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#3c5275',
-    borderRadius: 12,
-    paddingVertical: 11,
+    borderColor: palette.borderHairlineStrong,
+    borderRadius: radius.sm,
+    paddingVertical: space.xs,
     alignItems: 'center'
+  },
+  btnHover: {
+    backgroundColor: palette.chipSurfaceActive
   },
   btnPrimary: {
     backgroundColor: palette.auroraGreen,
     borderColor: palette.auroraGreen
   },
+  btnPrimaryHover: {
+    backgroundColor: palette.auroraGlow
+  },
   btnText: {
-    color: palette.textPrimary,
-    fontWeight: '700'
+    ...typography.bodyStrong,
+    color: palette.textPrimary
   },
   btnTextPrimary: {
-    color: palette.night
+    color: palette.textOnAurora
   }
 });
