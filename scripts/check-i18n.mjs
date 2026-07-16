@@ -4,8 +4,10 @@ import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES_DIR = path.join(__dirname, '..', 'src', 'i18n', 'locales');
+const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
 const BASE_LOCALE = 'en';
 const LOCALES = ['en', 'de', 'fr', 'es', 'zh'];
+const SPOT_DESCRIPTION_LOCALES = ['de', 'fr', 'es', 'zh'];
 
 function fail(message) {
   console.error(`i18n check failed: ${message}`);
@@ -57,6 +59,70 @@ function setsEqual(a, b) {
   return true;
 }
 
+function loadJson(filePath) {
+  let raw;
+  try {
+    raw = readFileSync(filePath, 'utf8');
+  } catch (error) {
+    fail(`could not read ${filePath}: ${error instanceof Error ? error.message : error}`);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    fail(`${filePath} is not valid JSON: ${error instanceof Error ? error.message : error}`);
+  }
+}
+
+/**
+ * Spot descriptions (src/data/spotDescriptions.json) are a second,
+ * independent translation surface from the UI copy catalogs above -- keyed
+ * by spot id rather than by UI string key. Verifies every spot in
+ * spots.json has a non-empty translation in all four target languages, and
+ * that spotDescriptions.json has no orphaned entries for spot ids that no
+ * longer exist. English is intentionally excluded: it is canonical on
+ * `Spot.description` in spots.json itself and is never duplicated here.
+ */
+function checkSpotDescriptions() {
+  const spots = loadJson(path.join(DATA_DIR, 'spots.json'));
+  const spotDescriptions = loadJson(path.join(DATA_DIR, 'spotDescriptions.json'));
+
+  if (!Array.isArray(spots)) {
+    fail('spots.json is not an array');
+  }
+
+  const spotIds = new Set(spots.map((spot) => spot.id));
+  const descriptionIds = new Set(Object.keys(spotDescriptions));
+  const problems = [];
+
+  for (const id of spotIds) {
+    const translations = spotDescriptions[id];
+    if (!translations || typeof translations !== 'object') {
+      problems.push(`spotDescriptions.json is missing an entry for spot id "${id}"`);
+      continue;
+    }
+    const missingLocales = SPOT_DESCRIPTION_LOCALES.filter(
+      (locale) => typeof translations[locale] !== 'string' || translations[locale].trim().length === 0
+    );
+    if (missingLocales.length > 0) {
+      problems.push(`spotDescriptions.json entry "${id}" is missing translation(s): ${missingLocales.join(', ')}`);
+    }
+  }
+
+  for (const id of descriptionIds) {
+    if (!spotIds.has(id)) {
+      problems.push(`spotDescriptions.json has an entry "${id}" that does not match any spot id in spots.json`);
+    }
+  }
+
+  if (problems.length > 0) {
+    fail(`\n  - ${problems.join('\n  - ')}`);
+  }
+
+  console.log(
+    `Spot description check OK. ${spotIds.size} spots, ${SPOT_DESCRIPTION_LOCALES.length} translated locales each, no missing/orphaned entries.`
+  );
+}
+
 function main() {
   const flattened = {};
   for (const code of LOCALES) {
@@ -103,6 +169,8 @@ function main() {
   console.log(
     `i18n check OK. ${LOCALES.length} locales, ${baseKeys.size} keys each, no missing/extra keys, no interpolation drift.`
   );
+
+  checkSpotDescriptions();
 }
 
 main();

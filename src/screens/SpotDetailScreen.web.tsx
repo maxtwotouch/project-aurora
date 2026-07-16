@@ -7,6 +7,8 @@ import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
+import { getLocalizedSpotDescription } from '../data/spotDescriptions';
+import { getCurrentLanguage } from '../i18n';
 import { useTranslation } from '../i18n/useTranslation';
 import { dressLevelFromColdScore } from '../scoring/score';
 import { palette } from '../theme/palette';
@@ -205,7 +207,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
                 </Pressable>
               </View>
             </View>
-            <Text style={styles.description}>{spot.description}</Text>
+            <Text style={styles.description}>{getLocalizedSpotDescription(spot, getCurrentLanguage())}</Text>
           </CollapsibleSection>
 
           <View onLayout={registerSection('access')}>

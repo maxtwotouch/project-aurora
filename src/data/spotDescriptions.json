@@ -1,0 +1,170 @@
+{
+  "ersfjordbotn": {
+    "de": "Klassischer Aurora-Spot am Fjord mit Bergen und Spiegelungen.",
+    "fr": "Site classique d'observation des aurores en fjord, avec montagnes et reflets.",
+    "es": "Lugar clásico para ver la aurora en un fiordo, con montañas y reflejos.",
+    "zh": "经典的峡湾极光观测点，四周环山，可见水面倒影。"
+  },
+  "kattfjordvatnet": {
+    "de": "Großer See mit freiem Blick auf den Himmel und Aurora-Spiegelungen.",
+    "fr": "Grand lac offrant une vue dégagée sur le ciel et des reflets d'aurores.",
+    "es": "Gran lago con vistas despejadas al cielo y reflejos de la aurora.",
+    "zh": "开阔的大湖，视野无遮挡，可见极光倒影。"
+  },
+  "grotfjord": {
+    "de": "Dunkles Fjordgebiet nördlich von Kvaløya mit weitem Blick nach Norden.",
+    "fr": "Zone de fjord sombre au nord de Kvaløya, avec un large horizon nord.",
+    "es": "Zona oscura de fiordo al norte de Kvaløya, con un amplio horizonte hacia el norte.",
+    "zh": "位于Kvaløya以北的黑暗峡湾地区，北方地平线开阔。"
+  },
+  "sommaroy": {
+    "de": "Kleine Insel mit extrem dunklem Himmel und Blick auf den offenen Ozean.",
+    "fr": "Petite île au ciel extrêmement sombre, avec horizon sur l'océan.",
+    "es": "Isla pequeña con cielos extremadamente oscuros y horizonte oceánico.",
+    "zh": "小岛，天空极暗，可远眺开阔的海平线。"
+  },
+  "sandvika_beach": {
+    "de": "Weiter Strand nahe Sommarøy mit freiem Blick auf den Himmel.",
+    "fr": "Large plage près de Sommarøy avec vue dégagée sur le ciel.",
+    "es": "Playa amplia cerca de Sommarøy con vistas despejadas al cielo.",
+    "zh": "毗邻Sommarøy的宽阔海滩，天空视野开阔。"
+  },
+  "skulsfjord": {
+    "de": "Ruhiges Fjordgebiet, beliebt bei Aurora-Fotografen.",
+    "fr": "Zone de fjord tranquille, appréciée des photographes d'aurores.",
+    "es": "Zona tranquila de fiordo, popular entre los fotógrafos de auroras.",
+    "zh": "宁静的峡湾地区，深受极光摄影爱好者喜爱。"
+  },
+  "tromvik": {
+    "de": "Kleines Fischerdorf mit minimaler Lichtverschmutzung.",
+    "fr": "Petit village de pêcheurs avec une pollution lumineuse minimale.",
+    "es": "Pequeño pueblo pesquero con mínima contaminación lumínica.",
+    "zh": "小渔村，光污染极少。"
+  },
+  "grunnfjord": {
+    "de": "Abgelegener Fjordort mit wenig Verkehr und wenig Beleuchtung.",
+    "fr": "Site de fjord isolé, avec peu de circulation et peu d'éclairage.",
+    "es": "Ubicación remota en un fiordo, con poco tráfico e iluminación.",
+    "zh": "偏远的峡湾地点，车流量和灯光都很少。"
+  },
+  "telegrafbukta": {
+    "de": "Beliebter Aurora-Beobachtungsort nahe der Innenstadt von Tromsø.",
+    "fr": "Site d'observation des aurores très fréquenté, proche du centre-ville de Tromsø.",
+    "es": "Popular lugar de observación de la aurora, cerca del centro de Tromsø.",
+    "zh": "热门极光观测点，靠近Tromsø市中心。"
+  },
+  "prestvannet": {
+    "de": "See in Tromsø mit dunklerem Himmel als in der Innenstadt.",
+    "fr": "Lac à Tromsø, avec un ciel plus sombre que le centre-ville.",
+    "es": "Lago en Tromsø con cielos más oscuros que el centro.",
+    "zh": "位于Tromsø的湖泊，天空比市中心更暗。"
+  },
+  "fjellheisen_storsteinen": {
+    "de": "Aussichtspunkt der Seilbahn mit Blick auf Tromsø und weitem Panoramahimmel.",
+    "fr": "Point de vue du téléphérique surplombant Tromsø, avec un ciel panoramique.",
+    "es": "Mirador del teleférico con vistas a Tromsø y cielo panorámico.",
+    "zh": "缆车观景点，俯瞰Tromsø，天空视野开阔。"
+  },
+  "floya": {
+    "de": "Berg oberhalb von Tromsø mit 360-Grad-Sicht auf den Himmel.",
+    "fr": "Montagne surplombant Tromsø, avec une vue à 360 degrés sur le ciel.",
+    "es": "Montaña sobre Tromsø con visibilidad del cielo a 360 grados.",
+    "zh": "俯瞰Tromsø的山峰，天空视野可达360度。"
+  },
+  "vardentoppen": {
+    "de": "Aussichtspunkt auf einem Hügel mit weitem Blick auf den Nachthimmel.",
+    "fr": "Point de vue au sommet d'une colline, avec une large vue sur le ciel nocturne.",
+    "es": "Mirador en la cima de una colina con amplia visibilidad del cielo nocturno.",
+    "zh": "山顶观景点，夜空视野开阔。"
+  },
+  "breivikeidet_valley": {
+    "de": "Dunkles Tal östlich von Tromsø, häufig von Aurora-Touren genutzt.",
+    "fr": "Vallée sombre à l'est de Tromsø, souvent utilisée par les excursions d'observation des aurores.",
+    "es": "Valle oscuro al este de Tromsø, utilizado a menudo por excursiones de auroras.",
+    "zh": "位于Tromsø以东的黑暗山谷，常被极光旅行团使用。"
+  },
+  "oldervik": {
+    "de": "Ruhiges Küstendorf mit gutem Blick auf den nördlichen Himmel.",
+    "fr": "Village côtier tranquille avec une bonne exposition sur le ciel nord.",
+    "es": "Tranquilo pueblo costero con buena exposición al cielo del norte.",
+    "zh": "宁静的海边村庄，北方天空视野良好。"
+  },
+  "lyngseidet": {
+    "de": "Region der Lyngen-Alpen mit eindrucksvollen Aurora-Ausblicken vor Bergkulisse.",
+    "fr": "Région des Alpes de Lyngen, avec des vues spectaculaires sur les aurores et les montagnes.",
+    "es": "Región de los Alpes de Lyngen, con vistas espectaculares de la aurora entre montañas.",
+    "zh": "Lyngen阿尔卑斯山区，可欣赏壮观的山间极光景色。"
+  },
+  "skibotn": {
+    "de": "Trockenes Binnental, bekannt für klareren Himmel als an der Küste.",
+    "fr": "Vallée intérieure sèche, réputée pour un ciel plus dégagé que sur la côte.",
+    "es": "Valle interior seco, conocido por tener cielos más despejados que la costa.",
+    "zh": "干燥的内陆山谷，以比沿海地区更晴朗的天空著称。"
+  },
+  "signaldalen": {
+    "de": "Dunkles Binnental, das häufig als Ausweichort bei Bewölkung für die Aurora-Beobachtung genutzt wird.",
+    "fr": "Vallée intérieure sombre, souvent utilisée comme site de repli en cas de nuages pour observer les aurores.",
+    "es": "Valle interior oscuro, utilizado a menudo como alternativa para escapar de las nubes al observar la aurora.",
+    "zh": "黑暗的内陆山谷，常被用作躲避云层观测极光的备选地点。"
+  },
+  "kilpisjarvi": {
+    "de": "Hochgelegener Aurora-Hotspot im finnischen Lappland.",
+    "fr": "Site d'observation des aurores très prisé, en altitude, en Laponie finlandaise.",
+    "es": "Lugar de gran altitud en la Laponia finlandesa, muy popular para ver la aurora.",
+    "zh": "位于芬兰拉普兰高海拔地区的热门极光观测地。"
+  },
+  "nordjeteen": {
+    "de": "Aussichtspunkt direkt am Wasser im Zentrum von Tromsø, bequem zu Fuß von der Innenstadt erreichbar, mit Busanbindung am Sentrum.",
+    "fr": "Point de vue en bord de mer en plein centre de Tromsø, facilement accessible à pied depuis le centre-ville, avec accès en bus à Sentrum.",
+    "es": "Mirador junto al agua en pleno centro de Tromsø, a poca distancia a pie del centro, con acceso en autobús en Sentrum.",
+    "zh": "位于Tromsø市中心的海滨观景点，从市中心步行即可到达，可在Sentrum乘坐公交前往。"
+  },
+  "skihytta": {
+    "de": "Skihütte an den Hängen oberhalb der Stadt mit weniger Lichtverschmutzung als in der Innenstadt, erreichbar über die Bushaltestelle Ekrehagen mit Parkplatz.",
+    "fr": "Chalet de ski sur les pentes au-dessus de la ville, avec moins de pollution lumineuse que le centre-ville, desservi par l'arrêt de bus Ekrehagen et son parking.",
+    "es": "Refugio de esquí en las laderas sobre la ciudad, con menos contaminación lumínica que el centro, servido por la parada de autobús Ekrehagen y su aparcamiento.",
+    "zh": "位于城市上方山坡上的滑雪小屋，光污染比市中心少，可乘公交至Ekrehagen站，并设有停车场。"
+  },
+  "nordspissen": {
+    "de": "Nördliche Spitze von Tromsøya mit freiem Blick über das Wasser, erreichbar über die Bushaltestelle Nesland, Parkplatz vor Ort.",
+    "fr": "Pointe nord de Tromsøya, avec une vue dégagée sur l'eau, accessible via l'arrêt de bus Nesland, avec parking sur place.",
+    "es": "Extremo norte de Tromsøya, con vistas abiertas sobre el agua, accesible mediante la parada de autobús Nesland, con aparcamiento en el lugar.",
+    "zh": "Tromsøya北端，视野开阔可远眺海面，可乘公交至Nesland站，现场设有停车场。"
+  },
+  "kattfjordeidet": {
+    "de": "Landenge auf Kvaløya zwischen Kattfjorden und dem offenen Meer, mit Parkplatz vor Ort und dunklem Himmel abseits der Stadt.",
+    "fr": "Isthme sur Kvaløya entre Kattfjorden et la mer ouverte, avec parking sur place et un ciel sombre loin de la ville.",
+    "es": "Istmo en Kvaløya entre Kattfjorden y el mar abierto, con aparcamiento en el lugar y cielos oscuros lejos de la ciudad.",
+    "zh": "地峡位于Kvaløya上，连接Kattfjorden与外海，现场设有停车场，远离城市，天空黑暗。"
+  },
+  "vasstrand": {
+    "de": "Nach Westen ausgerichteter Strand im äußeren Teil von Kvaløya mit offenem Blick auf das Meer und ausgewiesenem Parkplatz.",
+    "fr": "Plage orientée à l'ouest, sur la partie extérieure de Kvaløya, avec un horizon marin dégagé et une aire de stationnement balisée.",
+    "es": "Playa orientada al oeste en la parte exterior de Kvaløya, con horizonte marino abierto y una zona de aparcamiento señalizada.",
+    "zh": "位于Kvaløya外侧的西向海滩，面朝开阔海平线，设有标记停车区。"
+  },
+  "rekvikvegen": {
+    "de": "Ruhiger Rastplatz am Straßenrand auf Kvaløya mit Parkmöglichkeit und minimaler Umgebungsbeleuchtung.",
+    "fr": "Aire d'arrêt tranquille en bord de route sur Kvaløya, avec possibilité de stationnement et un éclairage environnant minimal.",
+    "es": "Tranquilo apartadero junto a la carretera en Kvaløya, con aparcamiento disponible y muy poca luz alrededor.",
+    "zh": "位于Kvaløya路边的安静停靠点，可停车，周边灯光很少。"
+  },
+  "grotfjord_litlevatnet": {
+    "de": "Seeufer-Standort am Litlevatnet nahe Grøtfjord auf Kvaløya mit Spiegelungen auf ruhigem Wasser und einem Parkplatz.",
+    "fr": "Site au bord du lac Litlevatnet, près de Grøtfjord sur Kvaløya, offrant des reflets sur une eau calme et une aire de stationnement.",
+    "es": "Lugar junto al lago Litlevatnet, cerca de Grøtfjord en Kvaløya, con reflejos en aguas tranquilas y una zona de aparcamiento.",
+    "zh": "位于Kvaløya上Grøtfjord附近Litlevatnet湖畔的地点，水面平静可见倒影，并设有停车区。"
+  },
+  "tonsvika": {
+    "de": "Küstendorf östlich von Tromsø mit Parkmöglichkeit und dunklerem Himmel als in der Innenstadt.",
+    "fr": "Village côtier à l'est de Tromsø, avec possibilité de stationnement et un ciel plus sombre que le centre-ville.",
+    "es": "Pueblo costero al este de Tromsø, con aparcamiento disponible y cielos más oscuros que el centro.",
+    "zh": "位于Tromsø以东的海边村庄，可停车，天空比市中心更暗。"
+  },
+  "finnvikdalen_sorskaret": {
+    "de": "Talpass auf Kvaløya nahe Finnvik, auf der anderen Seite des Sandnessundet gegenüber von Tromsøya, weit entfernt vom Stadtlicht, mit Parkplatz.",
+    "fr": "Col de vallée sur Kvaløya près de Finnvik, de l'autre côté du Sandnessundet par rapport à Tromsøya, bien à l'écart des lumières de la ville, avec une aire de stationnement.",
+    "es": "Paso de valle en Kvaløya cerca de Finnvik, al otro lado del Sandnessundet frente a Tromsøya, bien alejado de las luces de la ciudad, con una zona de aparcamiento.",
+    "zh": "位于Kvaløya上Finnvik附近的山谷通道，隔着Sandnessundet与Tromsøya相望，远离城市灯光，并设有停车区。"
+  }
+}

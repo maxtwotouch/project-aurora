@@ -159,3 +159,133 @@ test('increment() drops new keys past the cap and fires the warning handler inst
 
   usageCounterStore.setWarningHandler(() => {});
 });
+
+// --- Retention (USAGE_RETENTION_DAYS, default 180 days) ---
+
+test('load() prunes hour-bucket keys older than the default 180-day retention window, keeps fresh ones', async () => {
+  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+
+  const now = Date.now();
+  const oldBucket = usageStoreModule.toHourBucket(new Date(now - 200 * 24 * 60 * 60 * 1000)); // 200 days ago
+  const freshBucket = usageStoreModule.toHourBucket(new Date(now - 1 * 24 * 60 * 60 * 1000)); // 1 day ago
+
+  await fs.writeFile(
+    dataFilePath,
+    JSON.stringify({
+      updatedAt: new Date(now).toISOString(),
+      counters: {
+        [`spot_view|ersfjordbotn|${oldBucket}`]: 5,
+        [`spot_view|ersfjordbotn|${freshBucket}`]: 3
+      }
+    }),
+    'utf8'
+  );
+
+  const { usageCounterStore } = usageStoreModule;
+  await usageCounterStore.load();
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].hourBucket, freshBucket);
+  assert.equal(records[0].count, 3);
+});
+
+test('load() honors a custom USAGE_RETENTION_DAYS value', async () => {
+  const originalEnv = process.env.USAGE_RETENTION_DAYS;
+  process.env.USAGE_RETENTION_DAYS = '7';
+
+  try {
+    await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+
+    const now = Date.now();
+    const tooOldBucket = usageStoreModule.toHourBucket(new Date(now - 10 * 24 * 60 * 60 * 1000)); // 10 days ago
+    const stillFreshBucket = usageStoreModule.toHourBucket(new Date(now - 3 * 24 * 60 * 60 * 1000)); // 3 days ago
+
+    await fs.writeFile(
+      dataFilePath,
+      JSON.stringify({
+        updatedAt: new Date(now).toISOString(),
+        counters: {
+          [`spot_view|ersfjordbotn|${tooOldBucket}`]: 1,
+          [`spot_view|ersfjordbotn|${stillFreshBucket}`]: 1
+        }
+      }),
+      'utf8'
+    );
+
+    const { usageCounterStore } = usageStoreModule;
+    await usageCounterStore.load();
+
+    const records = usageCounterStore.getAll();
+    assert.equal(records.length, 1);
+    assert.equal(records[0].hourBucket, stillFreshBucket);
+  } finally {
+    if (originalEnv === undefined) delete process.env.USAGE_RETENTION_DAYS;
+    else process.env.USAGE_RETENTION_DAYS = originalEnv;
+  }
+});
+
+test('flush() prunes stale hour-bucket keys too, and the pruning is reflected in the written JSON mirror', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  const now = Date.now();
+  const oldBucket = usageStoreModule.toHourBucket(new Date(now - 365 * 24 * 60 * 60 * 1000)); // 1 year ago
+  const freshBucket = usageStoreModule.toHourBucket(new Date(now));
+
+  usageCounterStore.increment({ type: 'spot_view', spotId: 'ersfjordbotn', hourBucket: oldBucket });
+  usageCounterStore.increment({ type: 'spot_view', spotId: 'ersfjordbotn', hourBucket: freshBucket });
+  assert.equal(usageCounterStore.getDistinctKeyCount(), 2);
+
+  const warnings: string[] = [];
+  usageCounterStore.setWarningHandler((message) => warnings.push(message));
+
+  await usageCounterStore.flush();
+
+  assert.equal(usageCounterStore.getDistinctKeyCount(), 1, 'the stale key should be pruned by flush()');
+  assert.equal(usageCounterStore.getAll()[0]?.hourBucket, freshBucket);
+  assert.ok(warnings.some((message) => /pruned/i.test(message)), 'expected a pruning warning');
+  assert.ok(
+    warnings.every((message) => !message.includes(oldBucket)),
+    'the pruning warning must be count-only, never include the pruned key/bucket itself'
+  );
+
+  const raw = await fs.readFile(dataFilePath, 'utf8');
+  const parsed = JSON.parse(raw) as { counters: Record<string, number> };
+  assert.deepEqual(Object.keys(parsed.counters), [`spot_view|ersfjordbotn|${freshBucket}`]);
+
+  usageCounterStore.setWarningHandler(() => {});
+});
+
+test('load() treats a key whose hour-bucket segment is not a parseable date as prunable, warns with a count only', async () => {
+  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+
+  await fs.writeFile(
+    dataFilePath,
+    JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      counters: {
+        'spot_view|ersfjordbotn|not-a-real-hour-bucket': 4,
+        [`spot_view|ersfjordbotn|${usageStoreModule.toHourBucket()}`]: 2
+      }
+    }),
+    'utf8'
+  );
+
+  const { usageCounterStore } = usageStoreModule;
+  const warnings: string[] = [];
+  usageCounterStore.setWarningHandler((message) => warnings.push(message));
+
+  await usageCounterStore.load();
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].count, 2);
+  assert.ok(warnings.some((message) => /malformed/i.test(message)));
+  assert.ok(
+    warnings.every((message) => !message.includes('not-a-real-hour-bucket')),
+    'the warning must never include the malformed key contents'
+  );
+
+  usageCounterStore.setWarningHandler(() => {});
+});

@@ -85,6 +85,32 @@ For deployed web, make sure the backend allows your production frontend origin:
 CORS_ORIGINS=https://your-web-domain.com
 ```
 
+## Web Deployment (GitHub Pages)
+
+`.github/workflows/pages.yml` builds the Expo web export and deploys it to
+GitHub Pages on every push to `main` that touches the frontend (also
+runnable manually via workflow_dispatch). It runs in **direct-API mode**
+(no `EXPO_PUBLIC_USE_BACKEND` / `EXPO_PUBLIC_API_BASE_URL` set), so the
+deployed site calls MET/NOAA directly from the browser and works standalone
+with no backend deployed.
+
+One-time setup required from a repo owner: **Settings -> Pages -> Source:
+GitHub Actions**. After that, the site is published at:
+
+```
+https://maxtwotouch.github.io/project-aurora/
+```
+
+Since GitHub Pages serves the site under `/project-aurora/` rather than
+`/`, the export is built with `EXPO_WEB_BASE_URL=/project-aurora` (see
+`app.config.js`), which the workflow also uses to derive the `dist/404.html`
+SPA fallback so client-side routes survive a refresh.
+
+Because `EXPO_PUBLIC_USE_BACKEND`/`EXPO_PUBLIC_API_BASE_URL` are unset on
+this deployment, usage-event analytics are inert there: `track()` in
+`src/analytics/events.ts` no-ops immediately (the consent UI still shows,
+but nothing is ever queued or sent since there's no backend to send it to).
+
 ## Ship To TestFlight Beta
 
 This project now has a dedicated EAS `beta` profile for TestFlight builds.

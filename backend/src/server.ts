@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyLoggerOptions, FastifyReply, FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import { pathToFileURL } from 'node:url';
 
@@ -21,6 +21,33 @@ import { usageCounterStore } from './usageStore.js';
 export type BuildAppOptions = {
   adminToken?: string;
   corsOrigins?: string[];
+  /** Test-only hook: redirect log output to a custom stream instead of
+   * stdout, so tests can capture and assert on emitted log lines without
+   * touching the process's real stdout. */
+  loggerStream?: NonNullable<FastifyLoggerOptions['stream']>;
+};
+
+/**
+ * PRIVACY INVARIANT: no route in this backend may ever log a caller's IP
+ * address, port, or headers. Fastify's default request/response access
+ * logging (`logger: true`) would otherwise serialize `remoteAddress` /
+ * `remotePort` (derived from `request.ip` / the raw socket) for every
+ * request via its default `req` serializer -- see
+ * `fastify/lib/logger-pino.js`. We override that serializer repo-wide (for
+ * every route, not just `/v1/events`) to keep only `method` and `url`. The
+ * default `res` serializer already only exposes `statusCode`, but it's kept
+ * explicit here so this stays true even if a future Fastify version changes
+ * its default. Log levels/behavior are otherwise unchanged (still `info`
+ * level access logs for every route except `/v1/events`, which silences its
+ * own access logging separately -- see `events.ts`).
+ */
+export const logSerializers: NonNullable<FastifyLoggerOptions['serializers']> = {
+  req(request) {
+    return { method: request.method, url: request.url };
+  },
+  res(reply) {
+    return { statusCode: reply.statusCode };
+  }
 };
 
 export async function refreshSnapshot(): Promise<void> {
@@ -42,7 +69,12 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   const adminToken = options.adminToken ?? config.adminToken;
   const corsOrigins = options.corsOrigins ?? config.corsOrigins;
 
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: {
+      serializers: logSerializers,
+      ...(options.loggerStream ? { stream: options.loggerStream } : {})
+    }
+  });
 
   app.register(cors, {
     origin: (origin, callback) => {

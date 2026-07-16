@@ -33,6 +33,8 @@ optional env vars, and health-check/persistence notes, see
 - `CORS_ORIGINS` comma-separated allowed frontend origins. Default only allows localhost development origins.
 - `STALE_SNAPSHOT_MS` (default `1800000` = 30 minutes) — how old the on-disk mirrored snapshot can be before it's flagged as stale (`dataQuality.staleSnapshot`) after a restart.
 - `SOURCE_TIMEOUT_MS` (default `10000` = 10 seconds) — timeout applied to every outbound call to MET/NOAA; a hung upstream aborts instead of stalling a refresh cycle.
+- `USAGE_RETENTION_DAYS` (default `180`) — how many days a usage-counter hour bucket is kept before being pruned from memory and the `usage-stats.json` mirror (on `load()` and every `flush()`). See `src/usageStore.ts` and `../docs/privacy-usage-events.md`.
+- `STATS_MIN_CELL` (default `0` = off) — minimum per-cell count for `GET /v1/stats/usage`'s `bySpot`/`byHour`/`byDay` breakdowns; entries below the threshold are omitted (totals stay exact). Small-cell/k-anonymity suppression knob; the owner picks the real threshold. See `src/stats.ts` and `../docs/privacy-usage-events.md`.
 
 ## Restart survival
 
