@@ -66,6 +66,10 @@ export type GeneralForecastScore = {
 export type DataQuality = {
   usingFallbackKp: boolean;
   fallbackWeatherSpotIds: string[];
+  usingFallbackSighting?: boolean;
+  /** Set when the snapshot being served was loaded from the on-disk mirror
+   * (e.g. right after a restart) and is older than the staleness threshold. */
+  staleSnapshot?: boolean;
 };
 
 export type TonightSnapshot = {
@@ -78,4 +82,61 @@ export type TonightSnapshot = {
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;
   dataQuality: DataQuality;
+};
+
+/**
+ * Anonymous usage events (see backend/src/events.ts).
+ *
+ * IMPORTANT: these types intentionally have no room for anything
+ * person-derived. Only an allowlisted event type, a spotId (validated
+ * against the spot catalog), and an hour-granularity time bucket ever
+ * exist for usage data — never raw timestamps, IPs, device/session ids,
+ * or coordinates.
+ */
+export type UsageEventType = 'spot_view' | 'navigate_pressed' | 'spot_shared';
+
+export type UsageEventInput = {
+  type: UsageEventType;
+  spotId: string;
+};
+
+/** Aggregation key granularity: one counter per (type, spot, UTC hour). */
+export type UsageCounterRecord = {
+  type: UsageEventType;
+  spotId: string;
+  /** UTC hour bucket, formatted "YYYY-MM-DDTHH". Never finer than the hour. */
+  hourBucket: string;
+  count: number;
+};
+
+export type UsageTypeTotals = Record<UsageEventType, number>;
+
+export type UsageSpotTotals = {
+  spotId: string;
+  totalsByType: UsageTypeTotals;
+  total: number;
+};
+
+export type UsageHourTotals = {
+  hourBucket: string;
+  totalsByType: UsageTypeTotals;
+  total: number;
+};
+
+export type UsageDayTotals = {
+  day: string;
+  totalsByType: UsageTypeTotals;
+  total: number;
+};
+
+/** Aggregate-only usage response for GET /v1/stats/usage. Never row-level. */
+export type UsageStatsResponse = {
+  generatedAt: string;
+  aggregationLevel: 'spot-hour';
+  totalEvents: number;
+  totalsByType: UsageTypeTotals;
+  bySpot: UsageSpotTotals[];
+  byHour: UsageHourTotals[];
+  byDay: UsageDayTotals[];
+  distinctCounterKeys: number;
 };

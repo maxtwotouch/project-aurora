@@ -12,6 +12,12 @@
 /backend/src/**/events*     @maxtwotouch
 /backend/src/**/stats*      @maxtwotouch
 
+# PROPOSED (feat/usage-events, needs human confirmation before merge):
+/backend/src/usageStore*    @maxtwotouch
+/backend/data/              @maxtwotouch
+/docs/privacy-usage-events.md @maxtwotouch
+/backend/src/server.ts      @maxtwotouch # wires events/stats routes — proposed, owner may narrow
+
 # Database schema / migrations (once they exist).
 /backend/migrations/        @maxtwotouch
 /backend/prisma/            @maxtwotouch

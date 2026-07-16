@@ -52,9 +52,15 @@ function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralFor
 }
 
 export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
-  const kpResponse = await fetchKpTrendWithQuality();
-  const tromsoForecast = await fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
-  const daylightHint = await fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon);
+  // These three each resolve to a deterministic fallback (never reject) on
+  // failure -- see their try/catch bodies in sources.ts -- so it's safe to run
+  // them concurrently rather than sequentially (avoiding up to ~3x
+  // SOURCE_TIMEOUT_MS of added latency if an upstream is hung).
+  const [kpResponse, tromsoForecast, daylightHint] = await Promise.all([
+    fetchKpTrendWithQuality(),
+    fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48),
+    fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon)
+  ]);
 
   const forecastsBySpotId: Record<string, HourlyForecast[]> = {};
   const fallbackWeatherSpotIds: string[] = [];
@@ -97,7 +103,8 @@ export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
       usingFallbackKp: kpResponse.usingFallback,
       fallbackWeatherSpotIds: tromsoForecast.usingFallback
         ? [...fallbackWeatherSpotIds, 'tromso_center']
-        : fallbackWeatherSpotIds
+        : fallbackWeatherSpotIds,
+      usingFallbackSighting: daylightHint.usingFallback
     }
   };
 }
