@@ -150,4 +150,117 @@ test('GET /v1/stats/usage with no recorded events returns a well-formed empty en
   assert.deepEqual(body.byHour, []);
   assert.deepEqual(body.byDay, []);
   assert.equal(body.distinctCounterKeys, 0);
+  assert.deepEqual(body.suppression, { minCell: 0, suppressedCells: 0 });
+});
+
+// --- Small-cell suppression (STATS_MIN_CELL, default 0 = off) ---
+
+function withStatsMinCell<T>(value: string | undefined, run: () => Promise<T>): Promise<T> {
+  const original = process.env.STATS_MIN_CELL;
+  if (value === undefined) delete process.env.STATS_MIN_CELL;
+  else process.env.STATS_MIN_CELL = value;
+
+  return run().finally(() => {
+    if (original === undefined) delete process.env.STATS_MIN_CELL;
+    else process.env.STATS_MIN_CELL = original;
+  });
+}
+
+test('STATS_MIN_CELL unset (default off): every breakdown entry is returned regardless of count', async () => {
+  await withStatsMinCell(undefined, async () => {
+    usageStoreModule.usageCounterStore.increment({
+      type: 'spot_view',
+      spotId: 'ersfjordbotn',
+      hourBucket: '2026-07-16T10'
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/stats/usage',
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+
+    const body = response.json() as Record<string, unknown>;
+    assert.deepEqual(body.suppression, { minCell: 0, suppressedCells: 0 });
+    const bySpot = body.bySpot as Array<{ spotId: string; total: number }>;
+    assert.equal(bySpot.length, 1);
+    assert.equal(bySpot[0].total, 1);
+  });
+});
+
+test('STATS_MIN_CELL > 0: low-count cells are omitted from bySpot/byHour/byDay, totals stay exact', async () => {
+  await withStatsMinCell('3', async () => {
+    // ersfjordbotn: total 5 across two hours/days -> kept in every breakdown.
+    usageStoreModule.usageCounterStore.increment(
+      { type: 'spot_view', spotId: 'ersfjordbotn', hourBucket: '2026-07-16T10' },
+      5
+    );
+    // kattfjordvatnet: total 1 -> below threshold, suppressed from bySpot/byHour/byDay.
+    usageStoreModule.usageCounterStore.increment({
+      type: 'navigate_pressed',
+      spotId: 'kattfjordvatnet',
+      hourBucket: '2026-07-16T11'
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/stats/usage',
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+
+    assert.equal(response.statusCode, 200);
+    const body = response.json() as Record<string, unknown>;
+
+    // Totals remain exact -- suppression never touches totalEvents/totalsByType.
+    assert.equal(body.totalEvents, 6);
+    assert.deepEqual(body.totalsByType, { spot_view: 5, navigate_pressed: 1, spot_shared: 0 });
+    assert.equal(body.distinctCounterKeys, 2);
+
+    const bySpot = body.bySpot as Array<{ spotId: string; total: number }>;
+    assert.equal(bySpot.length, 1);
+    assert.equal(bySpot[0].spotId, 'ersfjordbotn');
+
+    const byHour = body.byHour as Array<{ hourBucket: string; total: number }>;
+    assert.equal(byHour.length, 1);
+    assert.equal(byHour[0].hourBucket, '2026-07-16T10');
+
+    const byDay = body.byDay as Array<{ day: string; total: number }>;
+    // Both records fall on the same day, and their combined day-total (6) is
+    // >= the threshold, so the day entry is kept even though one of the two
+    // contributing spot/hour cells was suppressed on its own breakdown.
+    assert.equal(byDay.length, 1);
+    assert.equal(byDay[0].total, 6);
+
+    // suppressedCells counts entries omitted across bySpot + byHour + byDay:
+    // kattfjordvatnet's row is suppressed from both bySpot and byHour (day is
+    // not suppressed here since the combined day total clears the threshold).
+    assert.deepEqual(body.suppression, { minCell: 3, suppressedCells: 2 });
+  });
+});
+
+test('STATS_MIN_CELL suppresses every breakdown once combined totals also fall below the threshold', async () => {
+  await withStatsMinCell('10', async () => {
+    usageStoreModule.usageCounterStore.increment({
+      type: 'spot_view',
+      spotId: 'ersfjordbotn',
+      hourBucket: '2026-07-16T10'
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/stats/usage',
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+
+    const body = response.json() as Record<string, unknown>;
+
+    // Exact totals survive even when every breakdown row is suppressed.
+    assert.equal(body.totalEvents, 1);
+    assert.deepEqual(body.totalsByType, { spot_view: 1, navigate_pressed: 0, spot_shared: 0 });
+
+    assert.deepEqual(body.bySpot, []);
+    assert.deepEqual(body.byHour, []);
+    assert.deepEqual(body.byDay, []);
+    assert.deepEqual(body.suppression, { minCell: 10, suppressedCells: 3 });
+  });
 });

@@ -40,10 +40,11 @@ contains `{ type, spotId, hourBucket } -> count` entries.
   line via the top-level app logger — containing only the route name, the HTTP status
   code, and a short fixed error-message string (e.g. `"Invalid event payload."`) — and
   nothing derived from the request itself (no body, headers, query string, or IP).
-  - Note for human reviewers: this repo's other routes currently use Fastify's default
-    logger (`logger: true`), whose default request serializer does include the caller's
-    IP. That pre-existing behavior on the other endpoints is out of scope for this change
-    but worth a follow-up review.
+  - Update: the repo-wide follow-up noted here has since been resolved -- see "Logging on
+    other routes" under "Open items for human / GDPR review" below. Every route's
+    `req`/`res` log serializers are now overridden in `buildApp()`
+    (`backend/src/server.ts`), so no route anywhere in this backend logs
+    `remoteAddress`/`remotePort`/headers, not just `/v1/events`.
 - No device/session identifiers, cookies, or any client-generated ID. The API accepts no
   such field and returns none (204 No Content, no headers set beyond the standard ones).
 - No user agent or other request headers are stored or logged.
@@ -66,8 +67,10 @@ in that same hour for that same spot. Practically, retention is bounded by:
   distinct spot/hour/type combinations actually seen — at 3 event types and today's spot
   catalog size, this is a small, slowly growing file, not an unbounded log.
 
-There is currently no scheduled deletion/rotation of old hour buckets from the JSON
-mirror — see open items below.
+Hour-bucket keys older than `USAGE_RETENTION_DAYS` (default 180 days) are pruned from
+memory on `load()` (server boot) and again on every `flush()` (every 30s and on
+shutdown), so the JSON mirror does not grow unbounded with age — see "Retention policy /
+bucket rotation" under "Open items for human / GDPR review" below.
 
 ## Access control
 
@@ -88,21 +91,46 @@ return).
 - **Data-sharing agreement with the municipality.** Formalize what aggregate data is
   shared, how often, and under what terms, before `GET /v1/stats/usage` is used
   operationally by a third party.
-- **Retention policy / bucket rotation.** Decide on and implement an explicit retention
-  duration for hour-bucket counters (e.g. auto-drop buckets older than N days) rather than
-  relying only on the distinct-key cap as an implicit ceiling.
-- **Logging on other routes.** As noted above, other endpoints in this backend use
-  Fastify's default logger, whose default serializers include caller IP. Consider whether
-  that should be scrubbed repo-wide, independent of this feature.
+- ~~**Retention policy / bucket rotation.**~~ **Resolved:** `backend/src/usageStore.ts`
+  now enforces `USAGE_RETENTION_DAYS` (default 180 days, parsed the same fail-soft way as
+  `STALE_SNAPSHOT_MS`/`SOURCE_TIMEOUT_MS` -- missing/invalid falls back to the default
+  rather than failing startup). Hour-bucket keys older than the cutoff (and any key whose
+  hour-bucket segment isn't a parseable date at all) are pruned from memory on `load()`
+  and again on every `flush()`, so the JSON mirror is continuously bounded by age, not
+  just by the distinct-key cap. Pruning logs a single count-only warning (never the
+  pruned keys themselves). See `USAGE_RETENTION_DAYS` in `backend/README.md` /
+  `docs/deploying.md` / `backend/.env.example`.
+- ~~**Logging on other routes.**~~ **Resolved:** `backend/src/server.ts`'s `buildApp()`
+  now configures Fastify's logger with custom `req`/`res` serializers (`logSerializers`,
+  exported from `server.ts`) so **every** route -- not just `/v1/events` -- only ever
+  logs `{ method, url }` for requests and `{ statusCode }` for responses; `remoteAddress`,
+  `remotePort`, host, and headers are never serialized into the log stream for any
+  route. Log levels/behavior are otherwise unchanged. Verified empirically by booting the
+  built server, hitting several routes, and grepping the emitted log lines for
+  `remoteAddress`/`remotePort` (absent) and `method`/`url`/`statusCode` (present); see
+  `backend/test/server-logging.test.ts` for the automated version of the same check.
 - **Public exposure of `/v1/stats/usage`.** Confirm the intended long-term access model
   (shared token vs. a dedicated municipality-facing service/API key) before this endpoint
   is used outside of internal/manual access.
 - **Small-cell / k-anonymity risk.** A count of 1 for a given `(type, spotId, hour)` in a
   low-traffic hour can, in practice, correlate to a single individual's action even though
-  no identifier is stored. Before any data leaves the org (e.g. is shared with the
-  municipality), the owner must pick and implement a minimum-cell-size suppression or
-  rounding policy (e.g. suppress or bucket counts below N, or roll up to coarser time
-  windows in low-traffic periods).
+  no identifier is stored. **Mechanism implemented, threshold decision pending owner:**
+  `GET /v1/stats/usage` now supports `STATS_MIN_CELL` (`backend/src/stats.ts`, default `0`
+  = off). When set > 0, any `bySpot`/`byHour`/`byDay` breakdown entry whose `total` falls
+  below the threshold is omitted entirely from that breakdown (never zeroed-in-place);
+  `totalEvents`/`totalsByType` remain exact regardless (computed over every record, never
+  suppressed). The response envelope always includes `suppression: { minCell,
+  suppressedCells }` so a consumer can tell suppression is active and how many cells were
+  hidden. The owner still needs to decide and set the actual threshold (and confirm
+  whether it should apply before any data is shared with the municipality) --  this item
+  makes it a configurable knob, it does not choose a value.
+  - **Caveat: this suppression is partial, not a k-anonymity guarantee.** Omitting only
+    the small cells is defeatable by subtraction -- if exactly one cell in a breakdown is
+    suppressed, its value can be recovered exactly as (exact total) minus (sum of the
+    visible cells). The standard fix is complementary suppression (hiding a second,
+    otherwise-visible cell per breakdown whenever exactly one cell was suppressed by the
+    threshold), which is not implemented here. This is left as a documented follow-up for
+    the owner to request before any data leaves the org.
 - **Data integrity / spoofing.** `POST /v1/events` is intentionally unauthenticated (by
   design, to keep it simple and anonymous for an MVP), which means the counters can be
   inflated by bots or replayed requests with no way to distinguish real usage from noise.

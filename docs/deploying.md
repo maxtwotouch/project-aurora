@@ -61,6 +61,8 @@ a clear error instead of silently falling back -- see `backend/src/config.ts`.
 | `CORS_ORIGINS` | localhost Expo web origins | Comma-separated list of frontend origins allowed to call the API. Set this explicitly for any deployed frontend. |
 | `STALE_SNAPSHOT_MS` | `1800000` (30 min) | How old the on-disk mirrored snapshot can be before `/v1/health` flags it stale after a restart. |
 | `SOURCE_TIMEOUT_MS` | `10000` (10 s) | Timeout for outbound MET/NOAA calls before falling back to deterministic sample data. |
+| `USAGE_RETENTION_DAYS` | `180` (days) | How long a usage-counter hour bucket (`type\|spotId\|hourBucket`) is kept before being pruned from memory and `backend/data/usage-stats.json`, on both server boot and every periodic flush. |
+| `STATS_MIN_CELL` | `0` (off) | Small-cell/k-anonymity suppression threshold for `GET /v1/stats/usage`. When > 0, breakdown entries (`bySpot`/`byHour`/`byDay`) with a count below this value are omitted; totals remain exact. The owner must choose the real threshold before this endpoint's output is shared externally -- see `docs/privacy-usage-events.md`. |
 
 None of these have real values checked into the repo; `backend/.env.example`
 holds placeholders only (`ADMIN_TOKEN=change-me`, clearly fake).
