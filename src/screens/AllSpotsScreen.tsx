@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 
 import { DataQualityBanner } from '../components/DataQualityBanner';
 import { SpotCard } from '../components/SpotCard';
+import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { palette } from '../theme/palette';
 import type { AppDataQuality, Spot, SpotScoreResult } from '../types';
 
@@ -115,6 +116,7 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
       })}
 
       <Text style={styles.attribution}>Some spot details verified with Tromsø kommune</Text>
+      <UsageConsentToggle />
     </ScrollView>
   );
 }

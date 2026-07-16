@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
+import { track } from '../analytics/events';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
@@ -66,7 +67,14 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
     visuals: 0
   });
 
+  useEffect(() => {
+    // Only re-fires if the viewed spot itself changes (e.g. navigating from
+    // one spot's detail screen to another without unmounting).
+    track('spot_view', spot.id);
+  }, [spot.id]);
+
   const navigateToSpot = () => {
+    track('navigate_pressed', spot.id);
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
