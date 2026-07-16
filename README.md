@@ -187,9 +187,20 @@ Each spot entry must include:
   "distanceKm": 22,
   "lightPollution": 1,
   "horizon": "north",
-  "description": "Optional short location description"
+  "description": "Optional short location description",
+  "busStop": "Optional nearest bus stop name",
+  "parking": "Optional nearest parking area name",
+  "source": "Optional attribution, e.g. Tromsø kommune"
 }
 ```
+
+`busStop`, `parking`, and `source` are optional and currently populated for spots sourced from Tromsø kommune's open data.
+
+## Data Sources
+
+- Spot data: curated in-house, verified and enriched (bus stop/parking access) against [Tromsø kommune](https://www.tromso.kommune.no/) open data (ArcGIS FeatureServer).
+- Weather forecast: [MET Norway](https://api.met.no/).
+- Planetary K-index (aurora activity): [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/).
 
 ## Scoring Heuristic
 

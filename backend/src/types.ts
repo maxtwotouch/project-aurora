@@ -7,6 +7,9 @@ export type Spot = {
   lightPollution: number;
   horizon: string;
   description: string;
+  busStop?: string;
+  parking?: string;
+  source?: string;
 };
 
 export type HourlyForecast = {

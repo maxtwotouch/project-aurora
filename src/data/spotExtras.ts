@@ -36,6 +36,23 @@ export function getSpotParking(spot: Spot): string {
   return `Beta note: parking details are not yet verified. ${details}`;
 }
 
+/**
+ * Prefers municipally verified access details (busStop/parking from spots.json)
+ * over the unverified spotExtras beta copy, falling back to getSpotParking()
+ * for spots that don't carry those fields yet.
+ */
+export function getSpotAccessInfo(spot: Spot): string {
+  const parts: string[] = [];
+  if (spot.parking) parts.push(`Parking: ${spot.parking}`);
+  if (spot.busStop) parts.push(`Bus: ${spot.busStop}`);
+
+  if (parts.length > 0) {
+    return `${parts.join(' · ')} — verified with Tromsø kommune`;
+  }
+
+  return getSpotParking(spot);
+}
+
 export function getSpotImageUrls(spot: Spot): string[] {
   const custom = extras[spot.id]?.imageUrls;
   if (custom && custom.length > 0) {

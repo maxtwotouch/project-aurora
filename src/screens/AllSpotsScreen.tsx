@@ -113,6 +113,8 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
 
         return <SpotCard key={spot.id} spot={spot} result={result} onPress={() => onOpenSpot(spot.id)} />;
       })}
+
+      <Text style={styles.attribution}>Some spot details verified with Tromsø kommune</Text>
     </ScrollView>
   );
 }
@@ -238,5 +240,11 @@ const styles = StyleSheet.create({
     color: palette.textSecondary,
     fontSize: 14,
     lineHeight: 21
+  },
+  attribution: {
+    color: palette.textMuted,
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 10
   }
 });
