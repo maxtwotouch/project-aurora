@@ -9,13 +9,45 @@ const FALLBACK_CLOUD_SEQUENCE = [72, 68, 63, 58, 55, 52, 50, 54, 59, 64, 69, 74]
 const FALLBACK_CURRENT_KP = 2;
 const FALLBACK_PEAK_KP = 5;
 const OSLO_TIME_ZONE = 'Europe/Oslo';
+const DEFAULT_SOURCE_TIMEOUT_MS = 10_000;
 
-function clampKp(value: number): number {
+/** A fetch-compatible function; defaults to `globalThis.fetch` but can be
+ * swapped out in tests without touching runtime call sites. */
+export type FetchLike = typeof fetch;
+
+/** A clock function returning epoch millis; defaults to `Date.now` but can be
+ * swapped out in tests for deterministic time-dependent logic. */
+export type Clock = () => number;
+
+export function getSourceTimeoutMs(): number {
+  const raw = Number(process.env.SOURCE_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_SOURCE_TIMEOUT_MS;
+}
+
+/** Wraps `fetchImpl` with an AbortController-based timeout so a hung upstream
+ * can never hang a refresh cycle. */
+export async function fetchWithTimeout(
+  fetchImpl: FetchLike,
+  url: string,
+  init: RequestInit = {},
+  timeoutMs: number = getSourceTimeoutMs()
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export function clampKp(value: number): number {
   return Math.max(0, Math.min(9, value));
 }
 
-function buildFallbackForecast(): HourlyForecast[] {
-  const start = new Date();
+export function buildFallbackForecast(now: Clock = Date.now): HourlyForecast[] {
+  const start = new Date(now());
   start.setMinutes(0, 0, 0);
 
   return FALLBACK_CLOUD_SEQUENCE.map((cloudCover, offset) => {
@@ -31,7 +63,7 @@ function buildFallbackForecast(): HourlyForecast[] {
   });
 }
 
-function buildHourlyKpTrend(current: number, peak: number, hours: number): number[] {
+export function buildHourlyKpTrend(current: number, peak: number, hours: number): number[] {
   if (hours <= 1) return [clampKp(current)];
 
   return Array.from({ length: hours }, (_, index) => {
@@ -40,7 +72,7 @@ function buildHourlyKpTrend(current: number, peak: number, hours: number): numbe
   });
 }
 
-function getOsloParts(input: Date | string): { dayKey: string; hour: number } | null {
+export function getOsloParts(input: Date | string): { dayKey: string; hour: number } | null {
   const date = input instanceof Date ? input : new Date(input);
   if (Number.isNaN(date.getTime())) return null;
 
@@ -67,18 +99,18 @@ function getOsloParts(input: Date | string): { dayKey: string; hour: number } | 
   };
 }
 
-function addDaysToDayKey(dayKey: string, days: number): string {
+export function addDaysToDayKey(dayKey: string, days: number): string {
   const date = new Date(`${dayKey}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
 
-function getOsloDayKey(date = new Date()): string {
+export function getOsloDayKey(date = new Date()): string {
   const parts = getOsloParts(date);
   return parts?.dayKey ?? date.toISOString().slice(0, 10);
 }
 
-function getOsloOffset(date = new Date()): string {
+export function getOsloOffset(date = new Date()): string {
   const offsetToken = new Intl.DateTimeFormat('en-US', {
     timeZone: OSLO_TIME_ZONE,
     timeZoneName: 'shortOffset'
@@ -98,7 +130,7 @@ function getOsloOffset(date = new Date()): string {
   return `${sign}${absHours}:${minutes}`;
 }
 
-function roundUpToHalfHour(date: Date): Date {
+export function roundUpToHalfHour(date: Date): Date {
   const rounded = new Date(date);
   rounded.setSeconds(0, 0);
   const minutes = rounded.getMinutes();
@@ -111,7 +143,7 @@ function roundUpToHalfHour(date: Date): Date {
   return rounded;
 }
 
-function estimateSightingPossibleFrom(sunsetIso: string | null): string | null {
+export function estimateSightingPossibleFrom(sunsetIso: string | null): string | null {
   if (!sunsetIso) {
     return null;
   }
@@ -132,7 +164,7 @@ function estimateSightingPossibleFrom(sunsetIso: string | null): string | null {
   });
 }
 
-function extractSunsetIso(payload: any): string | null {
+export function extractSunsetIso(payload: any): string | null {
   const candidates = [
     payload?.properties?.sunset?.time,
     payload?.properties?.sunset?.value,
@@ -149,7 +181,7 @@ function extractSunsetIso(payload: any): string | null {
   return null;
 }
 
-function parseKpEntry(entry: unknown): number | null {
+export function parseKpEntry(entry: unknown): number | null {
   if (!entry || typeof entry !== 'object') return null;
 
   const candidateKeys = ['kp_index', 'kp', 'kP'] as const;
@@ -160,7 +192,7 @@ function parseKpEntry(entry: unknown): number | null {
   return null;
 }
 
-function findLatestValidKp(payload: unknown[]): number | null {
+export function findLatestValidKp(payload: unknown[]): number | null {
   for (let i = payload.length - 1; i >= 0; i -= 1) {
     const parsed = parseKpEntry(payload[i]);
     if (parsed !== null) return parsed;
@@ -168,7 +200,7 @@ function findLatestValidKp(payload: unknown[]): number | null {
   return null;
 }
 
-function parseForecastPeak(payload: unknown, current: number): number {
+export function parseForecastPeak(payload: unknown, current: number): number {
   if (!Array.isArray(payload) || payload.length < 2) {
     return Math.max(current, FALLBACK_PEAK_KP);
   }
@@ -186,12 +218,12 @@ function parseForecastPeak(payload: unknown, current: number): number {
   return clampKp(Math.max(current, ...values));
 }
 
-function parseTonightPeak(payload: unknown, current: number): number {
+export function parseTonightPeak(payload: unknown, current: number, nowDate: Date = new Date()): number {
   if (!Array.isArray(payload) || payload.length < 2) {
     return Math.max(current, FALLBACK_PEAK_KP);
   }
 
-  const nowParts = getOsloParts(new Date());
+  const nowParts = getOsloParts(nowDate);
   if (!nowParts) {
     return Math.max(current, FALLBACK_PEAK_KP);
   }
@@ -221,7 +253,7 @@ function parseTonightPeak(payload: unknown, current: number): number {
   return clampKp(Math.max(current, ...values));
 }
 
-function parseDailyOutlook(payload: unknown): KpTrend['dailyOutlook'] {
+export function parseDailyOutlook(payload: unknown, nowDate: Date = new Date()): KpTrend['dailyOutlook'] {
   if (!Array.isArray(payload) || payload.length < 2) {
     return [
       { label: 'Today', peak: FALLBACK_PEAK_KP },
@@ -231,7 +263,7 @@ function parseDailyOutlook(payload: unknown): KpTrend['dailyOutlook'] {
     ];
   }
 
-  const todayParts = getOsloParts(new Date());
+  const todayParts = getOsloParts(nowDate);
   if (!todayParts) {
     return [
       { label: 'Today', peak: FALLBACK_PEAK_KP },
@@ -277,9 +309,15 @@ function parseDailyOutlook(payload: unknown): KpTrend['dailyOutlook'] {
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 }
 
-export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFallback: boolean }> {
+export async function fetchKpTrendWithQuality(
+  fetchImpl: FetchLike = globalThis.fetch,
+  now: Clock = Date.now
+): Promise<{ kp: KpTrend; usingFallback: boolean }> {
   try {
-    const [nowResponse, forecastResponse] = await Promise.allSettled([fetch(KP_NOW_URL), fetch(KP_FORECAST_URL)]);
+    const [nowResponse, forecastResponse] = await Promise.allSettled([
+      fetchWithTimeout(fetchImpl, KP_NOW_URL),
+      fetchWithTimeout(fetchImpl, KP_FORECAST_URL)
+    ]);
 
     if (nowResponse.status !== 'fulfilled' || !nowResponse.value.ok) {
       throw new Error('KP now API failed');
@@ -293,6 +331,7 @@ export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFal
     const latest = findLatestValidKp(nowPayload);
     const current = clampKp(latest ?? FALLBACK_CURRENT_KP);
     let peak = Math.max(current, FALLBACK_PEAK_KP);
+    const nowDate = new Date(now());
 
     if (forecastResponse.status === 'fulfilled' && forecastResponse.value.ok) {
       const forecastPayload = await forecastResponse.value.json();
@@ -301,9 +340,9 @@ export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFal
         kp: {
           current,
           peakNext12h: peak,
-          tonightPeak: parseTonightPeak(forecastPayload, current),
+          tonightPeak: parseTonightPeak(forecastPayload, current, nowDate),
           hourly: buildHourlyKpTrend(current, peak, 12),
-          dailyOutlook: parseDailyOutlook(forecastPayload)
+          dailyOutlook: parseDailyOutlook(forecastPayload, nowDate)
         },
         usingFallback: false
       };
@@ -343,9 +382,13 @@ export async function fetchKpTrendWithQuality(): Promise<{ kp: KpTrend; usingFal
   }
 }
 
-export async function fetchSpotForecastWithQuality(spot: Spot): Promise<{ hourly: HourlyForecast[]; usingFallback: boolean }> {
+export async function fetchSpotForecastWithQuality(
+  spot: Spot,
+  fetchImpl: FetchLike = globalThis.fetch,
+  now: Clock = Date.now
+): Promise<{ hourly: HourlyForecast[]; usingFallback: boolean }> {
   try {
-    const response = await fetch(`${MET_BASE_URL}?lat=${spot.lat}&lon=${spot.lon}`, {
+    const response = await fetchWithTimeout(fetchImpl, `${MET_BASE_URL}?lat=${spot.lat}&lon=${spot.lon}`, {
       headers: {
         'User-Agent': 'aurora-backend/1.0'
       }
@@ -370,17 +413,19 @@ export async function fetchSpotForecastWithQuality(spot: Spot): Promise<{ hourly
 
     return { hourly, usingFallback: false };
   } catch {
-    return { hourly: buildFallbackForecast(), usingFallback: true };
+    return { hourly: buildFallbackForecast(now), usingFallback: true };
   }
 }
 
 export async function fetchPointForecastWithQuality(
   lat: number,
   lon: number,
-  hours = 48
+  hours = 48,
+  fetchImpl: FetchLike = globalThis.fetch,
+  now: Clock = Date.now
 ): Promise<{ hourly: HourlyForecast[]; usingFallback: boolean }> {
   try {
-    const response = await fetch(`${MET_BASE_URL}?lat=${lat}&lon=${lon}`, {
+    const response = await fetchWithTimeout(fetchImpl, `${MET_BASE_URL}?lat=${lat}&lon=${lon}`, {
       headers: {
         'User-Agent': 'aurora-backend/1.0'
       }
@@ -405,23 +450,30 @@ export async function fetchPointForecastWithQuality(
 
     return { hourly, usingFallback: false };
   } catch {
-    return { hourly: buildFallbackForecast(), usingFallback: true };
+    return { hourly: buildFallbackForecast(now), usingFallback: true };
   }
 }
 
 export async function fetchSightingPossibleFromWithQuality(
   lat: number,
-  lon: number
+  lon: number,
+  fetchImpl: FetchLike = globalThis.fetch,
+  now: Clock = Date.now
 ): Promise<{ sightingPossibleFrom: string | null; usingFallback: boolean }> {
-  const dayKey = getOsloDayKey();
-  const offset = getOsloOffset();
+  const nowDate = new Date(now());
+  const dayKey = getOsloDayKey(nowDate);
+  const offset = getOsloOffset(nowDate);
 
   try {
-    const response = await fetch(`${MET_SUN_BASE_URL}?lat=${lat}&lon=${lon}&date=${dayKey}&offset=${encodeURIComponent(offset)}`, {
-      headers: {
-        'User-Agent': 'aurora-backend/1.0'
+    const response = await fetchWithTimeout(
+      fetchImpl,
+      `${MET_SUN_BASE_URL}?lat=${lat}&lon=${lon}&date=${dayKey}&offset=${encodeURIComponent(offset)}`,
+      {
+        headers: {
+          'User-Agent': 'aurora-backend/1.0'
+        }
       }
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`MET sunrise failed (${response.status})`);

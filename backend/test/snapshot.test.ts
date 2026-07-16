@@ -47,8 +47,9 @@ test('buildTonightSnapshot assembles a full snapshot from fallback data when eve
     );
   }
 
-  // sunset/sighting source also failed -> null, not reflected in dataQuality (documented gap, see report)
+  // sunset/sighting source also failed -> null, and now reflected in dataQuality via usingFallbackSighting
   assert.equal(snapshot.sightingPossibleFrom, null);
+  assert.equal(snapshot.dataQuality.usingFallbackSighting, true);
 
   // --- rankings are sorted descending by score ---
   for (let i = 1; i < snapshot.rankings.length; i += 1) {
