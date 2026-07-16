@@ -3,7 +3,7 @@ import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type Lay
 
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { ScoreBadge } from '../components/ScoreBadge';
-import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
+import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
 import { palette } from '../theme/palette';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
 
@@ -38,7 +38,7 @@ function chanceLabel(score: number | undefined): string {
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
-  const parking = getSpotParking(spot);
+  const parking = getSpotAccessInfo(spot);
   const forecastRows = (forecast ?? []).slice(0, 6);
   const scrollRef = useRef<ScrollView | null>(null);
   const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({

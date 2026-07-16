@@ -7,7 +7,10 @@
     "distanceKm": 25,
     "lightPollution": 1,
     "horizon": "north",
-    "description": "Classic fjord aurora spot with mountains and reflections."
+    "description": "Classic fjord aurora spot with mountains and reflections.",
+    "busStop": "Ersfjordbotn skole",
+    "parking": "Ersfjordbotn",
+    "source": "Tromsø kommune"
   },
   {
     "id": "kattfjordvatnet",
@@ -87,7 +90,10 @@
     "distanceKm": 3,
     "lightPollution": 2,
     "horizon": "north",
-    "description": "Popular aurora viewing spot close to Tromsø city center."
+    "description": "Popular aurora viewing spot close to Tromsø city center.",
+    "busStop": "Telegrafbukta, Sydspissen",
+    "parking": "Folkeparken",
+    "source": "Tromsø kommune"
   },
   {
     "id": "prestvannet",
@@ -97,7 +103,10 @@
     "distanceKm": 2,
     "lightPollution": 2,
     "horizon": "north",
-    "description": "Lake in Tromsø with darker skies than downtown."
+    "description": "Lake in Tromsø with darker skies than downtown.",
+    "busStop": "Stalheim, Myreng",
+    "parking": "Prestvannet, Samisk barnehage, Dyrebeskyttelsen",
+    "source": "Tromsø kommune"
   },
   {
     "id": "fjellheisen_storsteinen",
@@ -107,7 +116,10 @@
     "distanceKm": 2,
     "lightPollution": 2,
     "horizon": "north",
-    "description": "Cable car viewpoint overlooking Tromsø with panoramic sky."
+    "description": "Cable car viewpoint overlooking Tromsø with panoramic sky.",
+    "busStop": "Fjellheisen",
+    "parking": "Fjellheisen",
+    "source": "Tromsø kommune"
   },
   {
     "id": "floya",
@@ -137,7 +149,9 @@
     "distanceKm": 45,
     "lightPollution": 1,
     "horizon": "northeast",
-    "description": "Dark valley east of Tromsø often used by aurora tours."
+    "description": "Dark valley east of Tromsø often used by aurora tours.",
+    "parking": "Breivikeidet",
+    "source": "Tromsø kommune"
   },
   {
     "id": "oldervik",
@@ -188,5 +202,115 @@
     "lightPollution": 1,
     "horizon": "north",
     "description": "High elevation Finnish Lapland aurora hotspot."
+  },
+  {
+    "id": "nordjeteen",
+    "name": "Nordjeteen",
+    "lat": 69.6503,
+    "lon": 18.9699,
+    "distanceKm": 1,
+    "lightPollution": 3,
+    "horizon": "north",
+    "description": "Waterfront viewpoint right in central Tromsø, an easy walk from downtown with bus access at Sentrum.",
+    "busStop": "Sentrum",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "skihytta",
+    "name": "Skihytta",
+    "lat": 69.6888,
+    "lon": 18.9532,
+    "distanceKm": 5,
+    "lightPollution": 2,
+    "horizon": "north",
+    "description": "Ski lodge on the slopes above the city with less light spill than downtown, served by the Ekrehagen bus stop and parking.",
+    "busStop": "Ekrehagen",
+    "parking": "Ekrehagen",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "nordspissen",
+    "name": "Nordspissen",
+    "lat": 69.7142,
+    "lon": 19.0084,
+    "distanceKm": 10,
+    "lightPollution": 2,
+    "horizon": "north",
+    "description": "Northern tip of Tromsøya with an open view over the water, reachable via the Nesland bus stop with parking on site.",
+    "busStop": "Nesland",
+    "parking": "Nordspissen",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "kattfjordeidet",
+    "name": "Kattfjordeidet",
+    "lat": 69.6649,
+    "lon": 18.5811,
+    "distanceKm": 15,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Isthmus on Kvaløya between Kattfjorden and the open sea, with parking on site and dark skies away from the city.",
+    "parking": "Kattfjordeidet",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "vasstrand",
+    "name": "Vasstrand",
+    "lat": 69.6583,
+    "lon": 18.2284,
+    "distanceKm": 30,
+    "lightPollution": 1,
+    "horizon": "northwest",
+    "description": "West-facing beach on outer Kvaløya with an open sea horizon and a marked parking area.",
+    "parking": "Vasstrand",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "rekvikvegen",
+    "name": "Rekvikvegen",
+    "lat": 69.7454,
+    "lon": 18.3483,
+    "distanceKm": 25,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Quiet roadside pull-in on Kvaløya, parking available, with minimal surrounding light.",
+    "parking": "Rekvikvegen",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "grotfjord_litlevatnet",
+    "name": "Grøtfjord – Litlevatnet (Kvaløya)",
+    "lat": 69.7765,
+    "lon": 18.564,
+    "distanceKm": 20,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Lakeside spot at Litlevatnet near Grøtfjord on Kvaløya, offering still-water reflections and a parking area.",
+    "parking": "Grøtfjord - Litlevatnet",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "tonsvika",
+    "name": "Tønsvika",
+    "lat": 69.7408,
+    "lon": 19.1717,
+    "distanceKm": 15,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Coastal village east of Tromsø with parking available and darker skies than the city centre.",
+    "parking": "Tønsvika",
+    "source": "Tromsø kommune"
+  },
+  {
+    "id": "finnvikdalen_sorskaret",
+    "name": "Finnvikdalen - Sørskaret",
+    "lat": 69.759,
+    "lon": 18.8532,
+    "distanceKm": 15,
+    "lightPollution": 1,
+    "horizon": "north",
+    "description": "Valley pass on Kvaløya near Finnvik, across Sandnessundet from Tromsøya, well away from city lights, with a parking area.",
+    "parking": "Finnvikdalen - Sørskaret",
+    "source": "Tromsø kommune"
   }
 ]

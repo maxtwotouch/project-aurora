@@ -4,7 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { ScoreBadge } from '../components/ScoreBadge';
-import { getSpotImageUrls, getSpotParking } from '../data/spotExtras';
+import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
@@ -45,7 +45,7 @@ function timeSummary(result: SpotScoreResult | undefined) {
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const imageUrls = getSpotImageUrls(spot);
-  const parking = getSpotParking(spot);
+  const parking = getSpotAccessInfo(spot);
   const forecastRows = (forecast ?? []).slice(0, 6);
   const scrollRef = useRef<ScrollView | null>(null);
   const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({
