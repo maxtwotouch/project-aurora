@@ -1,13 +1,12 @@
-# Save as: .github/workflows/ci.yml
 name: CI
 
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [dev, main]
 
 jobs:
-  checks:
+  app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,8 +15,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      # --- App (root) ---
       - name: Install app deps
         run: npm ci
 
@@ -27,15 +26,28 @@ jobs:
       - name: KP fetch/parse test
         run: npm run test:kp
 
-      # --- Backend ---
-      - name: Install backend deps
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend deps
         run: npm ci
 
       - name: Typecheck backend
-        working-directory: backend
         run: npm run typecheck
 
       - name: Build backend
-        working-directory: backend
         run: npm run build
+
+      - name: Test backend
+        run: npm test
