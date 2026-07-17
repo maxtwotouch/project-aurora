@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useConsent } from '../analytics/consent';
+import { PRIVACY_POLICY_URL } from '../constants/legal';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space, type WebPressableState } from '../theme/tokens';
@@ -25,6 +26,14 @@ export function UsageConsentToggle() {
       <View style={styles.copy}>
         <Text style={styles.label}>{t('consent.toggleLabel')}</Text>
         <Text style={styles.helper}>{isOn ? t('consent.toggleOnHelper') : t('consent.toggleOffHelper')}</Text>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={t('consent.privacyPolicyLink')}
+          style={({ focused }: WebPressableState) => [styles.privacyLink, focused ? styles.focusRing : null]}
+          onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+        >
+          <Text style={styles.privacyLinkText}>{t('consent.privacyPolicyLink')}</Text>
+        </Pressable>
       </View>
       <Pressable
         accessibilityRole="switch"
@@ -99,5 +108,15 @@ const styles = StyleSheet.create({
     outlineWidth: 2,
     outlineColor: palette.auroraGreen,
     outlineOffset: 2
-  } as any
+  } as any,
+  privacyLink: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    paddingVertical: 2
+  },
+  privacyLinkText: {
+    ...typography.caption,
+    color: palette.auroraBlue,
+    textDecorationLine: 'underline'
+  }
 });

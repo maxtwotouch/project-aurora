@@ -270,7 +270,8 @@
     "footnote": "You can change this later from the All Spots tab.",
     "toggleLabel": "Anonymous usage sharing",
     "toggleOnHelper": "Sharing anonymous spot views and navigation taps.",
-    "toggleOffHelper": "Not sharing any usage data."
+    "toggleOffHelper": "Not sharing any usage data.",
+    "privacyPolicyLink": "Privacy policy"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
