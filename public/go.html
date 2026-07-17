@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tromsø Northern Lights</title>
+<meta name="description" content="Where and when to see the northern lights in Tromsø — tonight." />
+<meta name="robots" content="noindex, follow" />
+<style>
+  /*
+    Palette tokens copied from src/theme/palette.ts (single source of truth
+    for the app's dark aurora theme). Cited per-variable below so this file
+    stays in sync if the app palette changes. This page is fully
+    self-contained: no external stylesheets, fonts, or scripts.
+  */
+  :root {
+    --night: #061017;          /* palette.night — page background */
+    --nightSoft: #0d1923;      /* palette.nightSoft — gradient stop */
+    --card: #14212d;           /* palette.card — panel background */
+    --cardElevated: #192b39;   /* palette.cardElevated — CTA/footer panel */
+    --cardBorder: #335163;     /* palette.cardBorder — hairline borders */
+    --cardBorderStrong: #4d7588; /* palette.cardBorderStrong — CTA border */
+    --textPrimary: #eef7f4;    /* palette.textPrimary — headline/body text */
+    --textSecondary: #bdd0cf; /* palette.textSecondary — bullet text */
+    --textMuted: #7f9899;     /* palette.textMuted — footer text */
+    --auroraGreen: #67efc1;   /* palette.auroraGreen — accent / bullet marks */
+    --auroraMint: #b5ffd9;    /* palette.auroraMint — CTA gradient stop */
+    --auroraBlue: #89bfff;    /* palette.auroraBlue — headline glow accent */
+    --textOnAurora: #04110d;  /* palette.textOnAurora — text on the CTA button */
+    --glowMint: #82f3c41f;    /* palette.glowMint — soft background glow */
+    --glowBlue: #91beff14;    /* palette.glowBlue — soft background glow */
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  body {
+    background: radial-gradient(circle at 20% 0%, var(--glowMint), transparent 55%),
+                radial-gradient(circle at 80% 10%, var(--glowBlue), transparent 50%),
+                linear-gradient(180deg, var(--night) 0%, var(--nightSoft) 100%);
+    color: var(--textPrimary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px 24px;
+  }
+
+  main {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--auroraGreen);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(26px, 6vw, 34px);
+    line-height: 1.25;
+    margin: 0;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--textPrimary), var(--auroraBlue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .app-name {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: var(--textSecondary);
+    margin: 0;
+  }
+
+  ul.benefits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  ul.benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--cardBorder);
+    border-radius: 14px;
+    padding: 12px 16px;
+    text-align: left;
+    color: var(--textSecondary);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  ul.benefits li .mark {
+    color: var(--auroraGreen);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .cta {
+    display: inline-block;
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 24px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--auroraGreen), var(--auroraMint));
+    color: var(--textOnAurora);
+    font-size: 17px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--cardBorderStrong);
+    box-shadow: 0 8px 24px var(--glowMint);
+  }
+
+  .cta:active {
+    transform: translateY(1px);
+  }
+
+  footer {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--textMuted);
+    font-size: 12px;
+  }
+
+  footer a {
+    color: var(--textMuted);
+    text-decoration: underline;
+  }
+
+  footer a:hover {
+    color: var(--textSecondary);
+  }
+
+  noscript p {
+    color: var(--textSecondary);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow" data-i18n="eyebrow">Tonight</p>
+  <h1 data-i18n="headline">Where and when to see the northern lights in Tromsø — tonight</h1>
+  <p class="app-name">Tromsø Northern Lights</p>
+
+  <ul class="benefits">
+    <li><span class="mark">&#9670;</span><span data-i18n="bullet1">Spot guidance with bus stops and parking</span></li>
+    <li><span class="mark">&#9670;</span><span data-i18n="bullet2">Live aurora forecast score, updated through the night</span></li>
+    <li><span class="mark">&#9670;</span><span data-i18n="bullet3">Available in five languages</span></li>
+  </ul>
+
+  <a id="cta" class="cta" href="../" data-i18n="cta">Open the app</a>
+
+  <footer>
+    <p>
+      <a href="/project-aurora/privacy.html" data-i18n="privacy">Privacy policy</a>
+    </p>
+    <p>Data: MET Norway &middot; NOAA &middot; Tromsø kommune</p>
+  </footer>
+</main>
+
+<!--
+  ANALYTICS PLACEHOLDER (v1: intentionally empty)
+  ------------------------------------------------
+  This page makes NO network calls beyond loading itself: no analytics
+  script, no cookies, no localStorage/sessionStorage writes. The ?src=
+  channel parameter below is only read in-memory to forward onto the CTA
+  link for future measurement -- it is never stored or transmitted from
+  this page.
+
+  If/when a measurement provider is added here (e.g. a cookieless,
+  aggregate-only, no-PII tool in the spirit of Plausible/Fathom), it would
+  go in a <script> tag in this spot, loaded from a privacy-respecting
+  endpoint, recording only an aggregate pageview + the `src` channel label
+  -- never IP addresses, device IDs, or any cross-site identifier.
+  Choosing the actual provider is an open owner decision (see
+  docs/marketing-channels.md). Adding any such snippet REQUIRES a
+  docs/privacy-usage-events.md update and the same human-review gate as
+  the rest of this repo's analytics code (see CLAUDE.md "Privacy
+  guardrails") before it ships -- do not add one agentically.
+-->
+
+<script>
+  (function () {
+    // Hand-translated headline/CTA/bullets, reusing exact phrasing from
+    // src/i18n/locales/*.json where a matching key exists (see the
+    // per-string mapping in docs/marketing-channels.md history / PR
+    // description). No external i18n library; this is a static lookup
+    // used once at load time.
+    var strings = {
+      en: {
+        eyebrow: "Tonight",
+        headline: "Where and when to see the northern lights in Tromsø — tonight",
+        bullet1: "Spot guidance with bus stops and parking",
+        bullet2: "Live aurora forecast score, updated through the night",
+        bullet3: "Available in five languages",
+        cta: "Open the app",
+        privacy: "Privacy policy"
+      },
+      de: {
+        eyebrow: "Heute Nacht",
+        headline: "Wo und wann Sie das Nordlicht in Tromsø sehen — heute Nacht",
+        bullet1: "Ortsempfehlungen mit Bushaltestellen und Parkmöglichkeiten",
+        bullet2: "Live-Vorhersagewert für die Aurora, die ganze Nacht aktuell",
+        bullet3: "Verfügbar in fünf Sprachen",
+        cta: "App öffnen",
+        privacy: "Datenschutzerklärung"
+      },
+      fr: {
+        eyebrow: "Ce soir",
+        headline: "Où et quand voir l'aurore boréale à Tromsø — ce soir",
+        bullet1: "Sites recommandés avec arrêts de bus et stationnement",
+        bullet2: "Score de prévision d'aurore en direct, mis à jour toute la nuit",
+        bullet3: "Disponible en cinq langues",
+        cta: "Ouvrir l'application",
+        privacy: "Politique de confidentialité"
+      },
+      es: {
+        eyebrow: "Esta noche",
+        headline: "Dónde y cuándo ver la aurora boreal en Tromsø — esta noche",
+        bullet1: "Recomendaciones de lugares con paradas de autobús y aparcamiento",
+        bullet2: "Puntuación de previsión de aurora en vivo, actualizada toda la noche",
+        bullet3: "Disponible en cinco idiomas",
+        cta: "Abrir la aplicación",
+        privacy: "Política de privacidad"
+      },
+      zh: {
+        eyebrow: "今晚",
+        headline: "今晚，在特罗姆瑟何时何地观赏极光",
+        bullet1: "地点指南，包含公交站和停车信息",
+        bullet2: "实时极光预报分数，整夜更新",
+        bullet3: "支持五种语言",
+        cta: "打开应用",
+        privacy: "隐私政策"
+      }
+    };
+
+    function pickLocale() {
+      var lang = (navigator.language || "en").toLowerCase();
+      var supported = ["en", "de", "fr", "es", "zh"];
+      for (var i = 0; i < supported.length; i++) {
+        if (lang.indexOf(supported[i]) === 0) return supported[i];
+      }
+      return "en";
+    }
+
+    var locale = pickLocale();
+    var dict = strings[locale] || strings.en;
+
+    document.documentElement.setAttribute("lang", locale);
+
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var j = 0; j < nodes.length; j++) {
+      var key = nodes[j].getAttribute("data-i18n");
+      if (dict[key]) {
+        nodes[j].textContent = dict[key];
+      }
+    }
+
+    // Carry the ?src=CHANNEL query param through to the app link so a
+    // future measurement pass can attribute installs/opens by channel.
+    // Read-only: not stored, not sent anywhere from this page.
+    var params = new URLSearchParams(window.location.search);
+    var src = params.get("src");
+    if (src) {
+      var cta = document.getElementById("cta");
+      cta.href = "../?src=" + encodeURIComponent(src);
+    }
+  })();
+</script>
+</body>
+</html>
