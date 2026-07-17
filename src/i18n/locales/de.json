@@ -270,7 +270,8 @@
     "footnote": "Sie können dies später jederzeit im Tab „Alle Orte“ ändern.",
     "toggleLabel": "Anonyme Nutzungsfreigabe",
     "toggleOnHelper": "Anonyme Ortsansichten und Navigations-Taps werden geteilt.",
-    "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt."
+    "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt.",
+    "privacyPolicyLink": "Datenschutzerklärung"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

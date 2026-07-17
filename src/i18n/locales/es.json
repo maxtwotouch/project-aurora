@@ -270,7 +270,8 @@
     "footnote": "Puede cambiar esto más tarde desde la pestaña Todos los lugares.",
     "toggleLabel": "Compartir uso de forma anónima",
     "toggleOnHelper": "Se están compartiendo vistas de lugares y toques de navegación anónimos.",
-    "toggleOffHelper": "No se está compartiendo ningún dato de uso."
+    "toggleOffHelper": "No se está compartiendo ningún dato de uso.",
+    "privacyPolicyLink": "Política de privacidad"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
