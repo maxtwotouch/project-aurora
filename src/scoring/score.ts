@@ -3,14 +3,17 @@ import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from '../
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
+// Every constant below is explained (including which are heuristics tuned by
+// feel vs. derived from something concrete) in ../../docs/scoring-model.md.
 export function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
   const cloudFactor = 100 - cloudCover;
-  const kpFactor = kp * 15;
-  const estimatedDriveMinutes = distanceKm * 1.15;
+  const kpFactor = kp * 15; // KP weighting -- see docs/scoring-model.md ("KP weighting: kp * 15")
+  const estimatedDriveMinutes = distanceKm * 1.15; // drive-time proxy -- see docs/scoring-model.md ("Distance penalty")
   // No distance penalty unless drive time is longer than 2 hours.
   const distancePenalty = estimatedDriveMinutes > 120 ? (estimatedDriveMinutes - 120) * 0.35 : 0;
-  const lightPenalty = lightPollution * 5;
+  const lightPenalty = lightPollution * 5; // light-pollution penalty -- see docs/scoring-model.md ("Light pollution penalty")
 
+  // 0.7/0.3 cloud/KP blend -- see docs/scoring-model.md ("Cloud/KP blend").
   return clamp(0.7 * cloudFactor + 0.3 * kpFactor - distancePenalty - lightPenalty, 0, 100);
 }
 
@@ -32,6 +35,8 @@ export type DressLevel = 'arctic' | 'veryCold' | 'cold' | 'cool';
  * its own dressAdviceFromColdScore(). That file is intentionally left
  * untouched in this change (backend is out of scope) -- keep both in sync
  * by hand if these thresholds ever move.
+ *
+ * Dress thresholds (80/60/40) -- see ../../docs/scoring-model.md ("Cold-score dress thresholds").
  */
 export function dressLevelFromColdScore(coldScore: number): DressLevel {
   if (coldScore >= 80) return 'arctic';
@@ -51,7 +56,9 @@ function dressAdviceFromColdScore(coldScore: number): string {
   return DRESS_ADVICE_TEXT[dressLevelFromColdScore(coldScore)];
 }
 
-function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] {
+// Threshold rationale documented in ../../docs/scoring-model.md ("Trend thresholds").
+// Mirrors backend/src/scoring.ts's deriveTrend exactly -- keep both in sync by hand.
+export function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] {
   const current = hourlyScores[0]?.score ?? 0;
   let bestIndex = 0;
   let bestScore = current;
@@ -63,12 +70,22 @@ function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] 
     }
   }
 
+  // The headline `score` reported for a spot (see scoreSpot below) is always
+  // the BEST hour's score, not hourlyScores[0]'s in isolation -- so trend
+  // must be judged against that same best hour, not "now" alone. Otherwise
+  // the UI could show e.g. "80 - good now" when the 80 is actually five
+  // hours away.
+  const GOOD_SCORE = 55; // "good" bar -- the headline score itself is worth heading out for
+  const DECENT_SCORE = 40; // "decent" bar -- below this, a later hour isn't worth flagging as an upgrade
+  const MEANINGFUL_IMPROVEMENT = 8; // points of gain needed to call a later hour "meaningfully better" than now
+  const IMMINENT_INDEX = 1; // "now-or-imminent" = the best hour is index 0 (now) or 1 (next hour)
+
+  const isImminent = bestIndex <= IMMINENT_INDEX;
   const improvement = bestScore - current;
-  if (improvement >= 8 && bestIndex >= 2) return 'improving';
-  if (current >= 55) return 'good_now';
-  if (bestIndex <= 2 && current >= 40) return 'good_now';
-  if (bestScore < 40) return 'worse';
-  return bestIndex >= 2 ? 'improving' : 'worse';
+
+  if (isImminent && bestScore >= GOOD_SCORE) return 'good_now';
+  if (!isImminent && bestScore >= DECENT_SCORE && improvement >= MEANINGFUL_IMPROVEMENT) return 'improving';
+  return 'worse';
 }
 
 function findBestWindow(hourlyScores: SpotHourlyScore[]) {
@@ -167,6 +184,7 @@ export function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: numb
   };
 }
 
+// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate").
 function applyCloudGate(result: SpotScoreResult): SpotScoreResult {
   if (result.cloudCoverAtBestHour <= 80) {
     return result;
