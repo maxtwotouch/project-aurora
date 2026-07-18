@@ -6,6 +6,7 @@ import { track } from '../analytics/events';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { DataBand } from '../components/tonight/DataBand';
 import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
 import { getLocalizedSpotDescription } from '../data/spotDescriptions';
 import { getCurrentLanguage } from '../i18n';
@@ -130,24 +131,19 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
           </View>
         </View>
 
-        <View style={styles.dataBand}>
-          <View style={styles.bandItem}>
-            <Text style={styles.bandLabel}>{t('common.cloud')}</Text>
-            <Text style={styles.bandValue}>{result?.cloudCoverAtBestHour ?? '-'}%</Text>
-          </View>
-          <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>{t('spotDetail.band.temp')}</Text>
-            <Text style={styles.bandValue}>{result?.temperatureAtBestHour ?? '-'}°C</Text>
-          </View>
-          <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>{t('spotDetail.band.wind')}</Text>
-            <Text style={styles.bandValue}>{result?.windSpeedAtBestHour ?? '-'} m/s</Text>
-          </View>
-          <View style={[styles.bandItem, styles.bandItemDivided]}>
-            <Text style={styles.bandLabel}>{t('common.distance')}</Text>
-            <Text style={styles.bandValue}>{t('common.kmValue', { km: spot.distanceKm })}</Text>
-          </View>
-        </View>
+        <DataBand
+          items={[
+            { label: t('common.cloud'), value: `${result?.cloudCoverAtBestHour ?? '-'}%` },
+            { label: t('spotDetail.band.temp'), value: `${result?.temperatureAtBestHour ?? '-'}°C` },
+            { label: t('spotDetail.band.wind'), value: `${result?.windSpeedAtBestHour ?? '-'} m/s` },
+            { label: t('common.distance'), value: t('common.kmValue', { km: spot.distanceKm }) }
+          ]}
+          style={styles.dataBandOverride}
+          itemStyle={styles.bandItemOverride}
+          dividerStyle={styles.bandDividerOverride}
+          labelStyle={styles.bandLabelOverride}
+          valueStyle={styles.bandValueOverride}
+        />
 
         {hasVerifiedAccess ? (
           <View style={styles.accessRow}>
@@ -366,32 +362,30 @@ const styles = StyleSheet.create({
     color: palette.auroraMint,
     fontWeight: '700'
   },
-  dataBand: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // DataBand override styles: DataBand's own defaults match TonightScreen's
+  // hero band (gap: space.lg, minWidth: 76, paddingLeft: space.lg, a tighter
+  // eyebrow letterSpacing, and subheading-sized values). These overrides
+  // reproduce this screen's own historical dataBand/bandItem values exactly
+  // (previously duplicated verbatim in SpotDetailScreen.native.tsx) so
+  // adopting the shared component here is pixel-equivalent to the markup it
+  // replaces.
+  dataBandOverride: {
     gap: space.md,
     paddingTop: space.sm,
     borderTopWidth: 1,
     borderTopColor: palette.borderHairline
   },
-  bandItem: {
-    minWidth: 80,
-    gap: 3
+  bandItemOverride: {
+    minWidth: 80
   },
-  bandItemDivided: {
-    borderLeftWidth: 1,
-    borderLeftColor: palette.borderHairline,
+  bandDividerOverride: {
     paddingLeft: space.md
   },
-  bandLabel: {
-    ...typography.eyebrow,
-    fontSize: 10,
-    color: palette.textMuted
+  bandLabelOverride: {
+    letterSpacing: typography.eyebrow.letterSpacing
   },
-  bandValue: {
-    ...typography.bodyStrong,
-    fontSize: 17,
-    color: palette.textPrimary
+  bandValueOverride: {
+    lineHeight: typography.bodyStrong.lineHeight
   },
   accessRow: {
     flexDirection: 'row',
