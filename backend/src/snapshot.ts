@@ -1,6 +1,8 @@
 import spots from '../../src/data/spots.json' with { type: 'json' };
 
+import { computeDarknessSeasonState } from './season.js';
 import { computeScore, rankSpots } from './scoring.js';
+import type { Clock } from './sources.js';
 import {
   fetchKpTrendWithQuality,
   fetchPointForecastWithQuality,
@@ -51,15 +53,15 @@ function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralFor
   };
 }
 
-export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
+export async function buildTonightSnapshot(now: Clock = Date.now): Promise<TonightSnapshot> {
   // These three each resolve to a deterministic fallback (never reject) on
   // failure -- see their try/catch bodies in sources.ts -- so it's safe to run
   // them concurrently rather than sequentially (avoiding up to ~3x
   // SOURCE_TIMEOUT_MS of added latency if an upstream is hung).
   const [kpResponse, tromsoForecast, daylightHint] = await Promise.all([
-    fetchKpTrendWithQuality(),
-    fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48),
-    fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon)
+    fetchKpTrendWithQuality(globalThis.fetch, now),
+    fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48, globalThis.fetch, now),
+    fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, globalThis.fetch, now)
   ]);
 
   const forecastsBySpotId: Record<string, HourlyForecast[]> = {};
@@ -67,7 +69,7 @@ export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
 
   const forecastResults = await Promise.all(
     typedSpots.map(async (spot) => {
-      const result = await fetchSpotForecastWithQuality(spot);
+      const result = await fetchSpotForecastWithQuality(spot, globalThis.fetch, now);
       if (result.usingFallback) {
         fallbackWeatherSpotIds.push(spot.id);
       }
@@ -79,6 +81,7 @@ export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
   const rankings = rankSpots(typedSpots, forecastsBySpotId, kpResponse.kp.hourly);
   const topSpots = rankings.slice(0, 5);
   const bestSpot = rankings[0];
+  const darkness = computeDarknessSeasonState(now(), TROMSO_CENTER.lat, TROMSO_CENTER.lon);
 
   return {
     updatedAt: new Date().toISOString(),
@@ -105,7 +108,8 @@ export async function buildTonightSnapshot(): Promise<TonightSnapshot> {
         ? [...fallbackWeatherSpotIds, 'tromso_center']
         : fallbackWeatherSpotIds,
       usingFallbackSighting: daylightHint.usingFallback
-    }
+    },
+    darkness
   };
 }
 

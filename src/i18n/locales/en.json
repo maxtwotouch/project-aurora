@@ -45,6 +45,12 @@
     },
     "scoreSuffix": "out of 100",
     "daytimeHint": "Daylight is still up. First realistic viewing window starts around {{time}}.",
+    "polarDay": {
+      "statusLabel": "Aurora season is closed for now",
+      "headline": "Too bright for aurora right now",
+      "body": "The midnight sun keeps the sky bright all night — aurora season returns around {{date}}.",
+      "unknownDate": "later this year"
+    },
     "decision": {
       "goNow": "Go Now",
       "wait": "Wait",

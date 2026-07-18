@@ -5,7 +5,17 @@ import { fetchKpTrendDetailed } from '../api/kp';
 import { fetchPointForecastDetailed, fetchSightingPossibleFrom, fetchSpotForecastDetailed } from '../api/yr';
 import spots from '../data/spots.json';
 import { rankSpots } from '../scoring/score';
-import type { AppDataQuality, AuroraLevel, GeneralForecastScore, HourlyForecast, KpTrend, Spot, SpotScoreResult } from '../types';
+import { computeDarknessSeasonState } from '../scoring/season';
+import type {
+  AppDataQuality,
+  AuroraLevel,
+  DarknessSeasonState,
+  GeneralForecastScore,
+  HourlyForecast,
+  KpTrend,
+  Spot,
+  SpotScoreResult
+} from '../types';
 
 type UseForecastResult = {
   loading: boolean;
@@ -21,6 +31,7 @@ type UseForecastResult = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
+  darkness: DarknessSeasonState | null;
   recommendation: string;
   level: AuroraLevel;
   refresh: () => Promise<void>;
@@ -102,6 +113,7 @@ export function useForecast(): UseForecastResult {
   const [tonightScore, setTonightScore] = useState<GeneralForecastScore | null>(null);
   const [tomorrowScore, setTomorrowScore] = useState<GeneralForecastScore | null>(null);
   const [sightingPossibleFrom, setSightingPossibleFrom] = useState<string | null>(null);
+  const [darkness, setDarkness] = useState<DarknessSeasonState | null>(null);
 
   const spotsById = useMemo(
     () => typedSpots.reduce<Record<string, Spot>>((acc, spot) => ({ ...acc, [spot.id]: spot }), {}),
@@ -131,6 +143,7 @@ export function useForecast(): UseForecastResult {
           setTonightScore(snapshot.tonightScore);
           setTomorrowScore(snapshot.tomorrowScore);
           setSightingPossibleFrom(snapshot.sightingPossibleFrom);
+          setDarkness(snapshot.darkness);
           return;
         } catch {
           // Graceful fallback for beta reliability if backend is temporarily unavailable.
@@ -143,6 +156,7 @@ export function useForecast(): UseForecastResult {
       const tromsoForecastResult = await fetchPointForecastDetailed(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
       setTomorrowScore(buildTomorrowScore(tromsoForecastResult.hourly, kpTrend));
       setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
+      setDarkness(computeDarknessSeasonState(Date.now(), TROMSO_CENTER.lat, TROMSO_CENTER.lon));
 
       const forecastPairs = await Promise.allSettled(
         typedSpots.map(async (spot) => ({
@@ -222,6 +236,7 @@ export function useForecast(): UseForecastResult {
     tonightScore,
     tomorrowScore,
     sightingPossibleFrom,
+    darkness,
     recommendation,
     level,
     refresh

@@ -23,7 +23,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { elevation, motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
-import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
+import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
@@ -38,6 +38,7 @@ type Props = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
+  darkness: DarknessSeasonState | null;
   level: AuroraLevel;
   refresh: () => Promise<void>;
 };
@@ -74,6 +75,13 @@ const formatLocalTime = (iso: string) =>
   });
 
 const formatUpdatedAt = formatLocalTime;
+
+// darkness.seasonReturns is an ISO YYYY-MM-DD date (no time-of-day, no
+// timezone conversion needed -- it's a calendar date, not an instant).
+// Anchoring to local noon avoids any risk of the date shifting a day
+// backward/forward under toLocaleDateString in edge-case timezones.
+const formatSeasonReturnsDate = (isoDate: string, locale: string) =>
+  new Date(`${isoDate}T12:00:00Z`).toLocaleDateString(locale, { month: 'long', day: 'numeric' });
 
 type DecisionKey = 'goNow' | 'wait' | 'bestLater' | 'laterTonight';
 
@@ -140,10 +148,11 @@ export function TonightScreen({
   tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
+  darkness,
   level,
   refresh
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<any>();
   const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
@@ -159,7 +168,17 @@ export function TonightScreen({
   const decision = decisionKey(tonightScoreValue, isDaytimeNow, bestSpot?.cloudCoverAtBestHour);
   const decisionColors = decisionStyle(decision);
   const bestSpotData = bestSpot ? spotsById[bestSpot.spotId] : undefined;
-  const daytimeHint = isDaytimeNow && sightingPossibleFrom ? t('tonight.daytimeHint', { time: sightingPossibleFrom }) : null;
+  const seasonClosed = darkness?.seasonClosed ?? false;
+  // sightingPossibleFrom is derived from MET's sunset API and is always null
+  // during polar day anyway (there's no sunset), so this would naturally
+  // resolve to null when seasonClosed -- but that's accidental, not
+  // intentional. Gate on seasonClosed explicitly so the polar-day state
+  // (below) is the one honest source of truth here, not a side effect of an
+  // unrelated upstream API returning null.
+  const daytimeHint =
+    !seasonClosed && isDaytimeNow && sightingPossibleFrom ? t('tonight.daytimeHint', { time: sightingPossibleFrom }) : null;
+  const seasonReturnsDate =
+    seasonClosed && darkness?.seasonReturns ? formatSeasonReturnsDate(darkness.seasonReturns, i18n.language) : null;
 
   const bandItems: { label: string; value: string; tone?: string }[] = [
     { label: t('tonight.band.chance'), value: t(chanceKeyFromScore(tonightScoreValue)) },
@@ -249,68 +268,92 @@ export function TonightScreen({
           <View style={styles.heroCopy}>
             <Text style={styles.eyebrow}>{t('tonight.heroEyebrow')}</Text>
             <Text style={styles.heroTitle}>{t('tonight.heroTitle')}</Text>
-            <Text style={styles.statusLabel}>{t(recommendationKeyFromLevel(level))}</Text>
+            <Text style={styles.statusLabel}>
+              {seasonClosed ? t('tonight.polarDay.statusLabel') : t(recommendationKeyFromLevel(level))}
+            </Text>
           </View>
 
-          <View style={styles.decisionCluster}>
-            <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
-              <Text style={[styles.decisionText, { color: decisionColors.text }]}>{t(`tonight.decision.${decision}`)}</Text>
-            </View>
-            <Text style={styles.score}>{tonightScoreValue}</Text>
-            <Text style={styles.scoreSuffix}>{t('tonight.scoreSuffix')}</Text>
-          </View>
-        </View>
-
-        {daytimeHint ? (
-          <View style={styles.daylightNotice}>
-            <Ionicons name="sunny" size={18} color={palette.textOnWarningSurface} />
-            <Text style={styles.daylightNoticeText}>{daytimeHint}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.reasonBlock}>
-          <Text style={styles.sectionKicker}>{t(whyTitleKeyFromScore(tonightScoreValue))}</Text>
-          <View style={styles.dataBand}>
-            {bandItems.map((item, index) => (
-              <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
-                <Text style={styles.bandLabel}>{item.label}</Text>
-                <Text style={[styles.bandValue, item.tone ? { color: item.tone } : null]}>{item.value}</Text>
+          {seasonClosed ? null : (
+            <View style={styles.decisionCluster}>
+              <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
+                <Text style={[styles.decisionText, { color: decisionColors.text }]}>{t(`tonight.decision.${decision}`)}</Text>
               </View>
-            ))}
-          </View>
+              <Text style={styles.score}>{tonightScoreValue}</Text>
+              <Text style={styles.scoreSuffix}>{t('tonight.scoreSuffix')}</Text>
+            </View>
+          )}
         </View>
+
+        {seasonClosed ? (
+          // Polar day (midnight sun): the sky never gets dark enough for
+          // aurora tonight. This is seasonal truth, not an error -- calm
+          // informational styling (same tone as the "later tonight" decision
+          // state), not the warning/danger palette.
+          <View style={styles.polarDayNotice}>
+            <Ionicons name="partly-sunny" size={20} color={palette.textOnInfoSurface} />
+            <View style={styles.polarDayCopy}>
+              <Text style={styles.polarDayHeadline}>{t('tonight.polarDay.headline')}</Text>
+              <Text style={styles.polarDayBody}>
+                {t('tonight.polarDay.body', { date: seasonReturnsDate ?? t('tonight.polarDay.unknownDate') })}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <>
+            {daytimeHint ? (
+              <View style={styles.daylightNotice}>
+                <Ionicons name="sunny" size={18} color={palette.textOnWarningSurface} />
+                <Text style={styles.daylightNoticeText}>{daytimeHint}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.reasonBlock}>
+              <Text style={styles.sectionKicker}>{t(whyTitleKeyFromScore(tonightScoreValue))}</Text>
+              <View style={styles.dataBand}>
+                {bandItems.map((item, index) => (
+                  <View key={item.label} style={[styles.bandItem, index > 0 ? styles.bandItemDivided : null]}>
+                    <Text style={styles.bandLabel}>{item.label}</Text>
+                    <Text style={[styles.bandValue, item.tone ? { color: item.tone } : null]}>{item.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
 
         <DataQualityBanner dataQuality={dataQuality} />
 
         <View style={styles.divider} />
 
         <View style={[styles.heroColumns, isWideWeb ? styles.heroColumnsWide : null]}>
-          <View style={[styles.heroPrimary, isWideWeb ? styles.heroPrimaryWide : null]}>
-            <Text style={styles.sectionKicker}>{t('common.bestWindow')}</Text>
-            <Text style={styles.windowLine}>
-              {bestSpot
-                ? t('tonight.windowRange', {
-                    start: formatLocalTime(bestSpot.bestWindowStart),
-                    end: formatLocalTime(bestSpot.bestWindowEnd)
-                  })
-                : t('tonight.waitingForecast')}
-            </Text>
-            <Text style={styles.helper}>
-              {bestSpot
-                ? t('tonight.bestWindowSummary', { cloud: bestSpot.cloudCoverAtBestHour, spot: bestSpot.spotName })
-                : t('tonight.pullToRefresh')}
-            </Text>
+          {seasonClosed ? null : (
+            <View style={[styles.heroPrimary, isWideWeb ? styles.heroPrimaryWide : null]}>
+              <Text style={styles.sectionKicker}>{t('common.bestWindow')}</Text>
+              <Text style={styles.windowLine}>
+                {bestSpot
+                  ? t('tonight.windowRange', {
+                      start: formatLocalTime(bestSpot.bestWindowStart),
+                      end: formatLocalTime(bestSpot.bestWindowEnd)
+                    })
+                  : t('tonight.waitingForecast')}
+              </Text>
+              <Text style={styles.helper}>
+                {bestSpot
+                  ? t('tonight.bestWindowSummary', { cloud: bestSpot.cloudCoverAtBestHour, spot: bestSpot.spotName })
+                  : t('tonight.pullToRefresh')}
+              </Text>
 
-            {bestSpot && bestSpot.hourlyScores.length > 0 ? (
-              <HourlyTimeline
-                points={bestSpot.hourlyScores.map((hour) => ({ time: hour.time, value: hour.score }))}
-                highlightStart={bestSpot.bestWindowStart}
-                highlightEnd={bestSpot.bestWindowEnd}
-                toneFor={scoreTone}
-                accessibilityLabel={t('tonight.hourlyScoreA11y')}
-              />
-            ) : null}
-          </View>
+              {bestSpot && bestSpot.hourlyScores.length > 0 ? (
+                <HourlyTimeline
+                  points={bestSpot.hourlyScores.map((hour) => ({ time: hour.time, value: hour.score }))}
+                  highlightStart={bestSpot.bestWindowStart}
+                  highlightEnd={bestSpot.bestWindowEnd}
+                  toneFor={scoreTone}
+                  accessibilityLabel={t('tonight.hourlyScoreA11y')}
+                />
+              ) : null}
+            </View>
+          )}
 
           <View style={[styles.heroSecondary, isWideWeb ? styles.heroSecondaryWide : null]}>
             <Text style={styles.sectionKicker}>{t('tonight.bestSpotNow')}</Text>
@@ -674,6 +717,29 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     color: palette.textOnWarningSurface
+  },
+  polarDayNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.xs,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.auroraBlue,
+    backgroundColor: palette.infoSurface
+  },
+  polarDayCopy: {
+    flex: 1,
+    gap: space.xxs
+  },
+  polarDayHeadline: {
+    ...typography.bodyStrong,
+    color: palette.textOnInfoSurface
+  },
+  polarDayBody: {
+    ...typography.body,
+    color: palette.textOnInfoSurface
   },
   reasonBlock: {
     gap: space.xs

@@ -1,4 +1,4 @@
-import { test, afterEach } from 'node:test';
+import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildTonightSnapshot, getSpots } from '../src/snapshot.js';
@@ -99,4 +99,46 @@ test('getSpots returns the full, unfiltered spot catalog', () => {
   assert.equal(spots.length, 28);
   const ids = new Set(spots.map((s) => s.id));
   assert.equal(ids.size, 28, 'expected all spot ids to be unique');
+});
+
+describe('buildTonightSnapshot: darkness.seasonClosed / seasonReturns', () => {
+  test('a July clock closes the season (midnight sun) and points seasonReturns at a plausible August date', async () => {
+    globalThis.fetch = (async () => {
+      throw new Error('simulated network failure');
+    }) as typeof fetch;
+
+    const july = () => new Date('2026-07-18T12:00:00Z').getTime();
+    const snapshot = await buildTonightSnapshot(july);
+
+    assert.equal(snapshot.darkness.seasonClosed, true);
+    assert.ok(snapshot.darkness.seasonReturns, 'expected a seasonReturns date while the season is closed');
+    assert.match(snapshot.darkness.seasonReturns!, /^\d{4}-\d{2}-\d{2}$/);
+    // Sanity: Tromso's aurora season should reopen in August, not some
+    // wildly implausible date.
+    assert.ok(
+      snapshot.darkness.seasonReturns!.startsWith('2026-08'),
+      `expected seasonReturns in August 2026, got ${snapshot.darkness.seasonReturns}`
+    );
+
+    // Every hourly score across every spot must be exactly 0 tonight -- the
+    // whole point of the darkness gate.
+    for (const ranking of snapshot.rankings) {
+      assert.ok(
+        ranking.hourlyScores.every((hour) => hour.score === 0),
+        `expected spot ${ranking.spotId} to have every hourly score at 0 during midnight sun`
+      );
+    }
+  });
+
+  test('a December clock leaves the season open (long polar night, plenty of dark hours)', async () => {
+    globalThis.fetch = (async () => {
+      throw new Error('simulated network failure');
+    }) as typeof fetch;
+
+    const december = () => new Date('2026-12-10T12:00:00Z').getTime();
+    const snapshot = await buildTonightSnapshot(december);
+
+    assert.equal(snapshot.darkness.seasonClosed, false);
+    assert.equal(snapshot.darkness.seasonReturns, null);
+  });
 });
