@@ -355,50 +355,57 @@ export function TonightScreen({
             </View>
           )}
 
-          <View style={[styles.heroSecondary, isWideWeb ? styles.heroSecondaryWide : null]}>
-            <Text style={styles.sectionKicker}>{t('tonight.bestSpotNow')}</Text>
-            {bestSpot && bestSpotData ? (
-              <View style={styles.bestSpotBox}>
-                <Text style={styles.bestSpotName} numberOfLines={2}>
-                  {bestSpot.spotName}
-                </Text>
-                <Text style={styles.bestSpotMeta}>{t('tonight.distanceCityCenter', { km: bestSpotData.distanceKm })}</Text>
+          {seasonClosed ? null : (
+            // Gated the same way as heroPrimary above: during polar day every
+            // spot ties at score 0, so "best spot" would be an arbitrary
+            // tie-break -- showing it here (right next to an actionable
+            // Navigate button) beside a headline saying it's too bright to
+            // see anything would be actively misleading, not just unhelpful.
+            <View style={[styles.heroSecondary, isWideWeb ? styles.heroSecondaryWide : null]}>
+              <Text style={styles.sectionKicker}>{t('tonight.bestSpotNow')}</Text>
+              {bestSpot && bestSpotData ? (
+                <View style={styles.bestSpotBox}>
+                  <Text style={styles.bestSpotName} numberOfLines={2}>
+                    {bestSpot.spotName}
+                  </Text>
+                  <Text style={styles.bestSpotMeta}>{t('tonight.distanceCityCenter', { km: bestSpotData.distanceKm })}</Text>
 
-                <View style={styles.bestSpotActions}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('tonight.viewDetailsFor', { name: bestSpot.spotName })}
-                    style={({ pressed, focused }: WebPressableState) => [
-                      styles.secondaryButton,
-                      Platform.OS === 'web' ? styles.secondaryButtonHover : null,
-                      focused ? styles.focusRing : null,
-                      pressed ? styles.buttonPressed : null
-                    ]}
-                    onPress={() => onOpenSpot(bestSpot.spotId)}
-                  >
-                    <Text style={styles.secondaryButtonText}>{t('tonight.viewDetails')}</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('common.openNavigationTo', { name: bestSpot.spotName })}
-                    style={({ pressed, focused }: WebPressableState) => [
-                      styles.primaryButton,
-                      Platform.OS === 'web' ? styles.primaryButtonHover : null,
-                      focused ? styles.focusRing : null,
-                      pressed ? styles.buttonPressed : null
-                    ]}
-                    onPress={navigateToBestSpot}
-                  >
-                    <Text style={styles.primaryButtonText}>{t('common.navigate')}</Text>
-                  </Pressable>
+                  <View style={styles.bestSpotActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('tonight.viewDetailsFor', { name: bestSpot.spotName })}
+                      style={({ pressed, focused }: WebPressableState) => [
+                        styles.secondaryButton,
+                        Platform.OS === 'web' ? styles.secondaryButtonHover : null,
+                        focused ? styles.focusRing : null,
+                        pressed ? styles.buttonPressed : null
+                      ]}
+                      onPress={() => onOpenSpot(bestSpot.spotId)}
+                    >
+                      <Text style={styles.secondaryButtonText}>{t('tonight.viewDetails')}</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('common.openNavigationTo', { name: bestSpot.spotName })}
+                      style={({ pressed, focused }: WebPressableState) => [
+                        styles.primaryButton,
+                        Platform.OS === 'web' ? styles.primaryButtonHover : null,
+                        focused ? styles.focusRing : null,
+                        pressed ? styles.buttonPressed : null
+                      ]}
+                      onPress={navigateToBestSpot}
+                    >
+                      <Text style={styles.primaryButtonText}>{t('common.navigate')}</Text>
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-            ) : (
-              <View style={styles.bestSpotBox}>
-                <Text style={styles.helper}>{t('tonight.noRecommendation')}</Text>
-              </View>
-            )}
-          </View>
+              ) : (
+                <View style={styles.bestSpotBox}>
+                  <Text style={styles.helper}>{t('tonight.noRecommendation')}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
       </Animated.View>
 

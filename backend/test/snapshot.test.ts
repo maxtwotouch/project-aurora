@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 
 import { buildTonightSnapshot, getSpots } from '../src/snapshot.js';
 import { rankSpots } from '../src/scoring.js';
+import { computeDarknessSeasonState } from '../src/season.js';
+
+const TROMSO = { lat: 69.6492, lon: 18.9553 };
 
 // buildTonightSnapshot() has no dependency-injection seam: it calls the
 // sources.ts functions directly, which in turn call the global `fetch`.
@@ -111,14 +114,10 @@ describe('buildTonightSnapshot: darkness.seasonClosed / seasonReturns', () => {
     const snapshot = await buildTonightSnapshot(july);
 
     assert.equal(snapshot.darkness.seasonClosed, true);
-    assert.ok(snapshot.darkness.seasonReturns, 'expected a seasonReturns date while the season is closed');
-    assert.match(snapshot.darkness.seasonReturns!, /^\d{4}-\d{2}-\d{2}$/);
-    // Sanity: Tromso's aurora season should reopen in August, not some
-    // wildly implausible date.
-    assert.ok(
-      snapshot.darkness.seasonReturns!.startsWith('2026-08'),
-      `expected seasonReturns in August 2026, got ${snapshot.darkness.seasonReturns}`
-    );
+    // seasonClosed and seasonReturns now share the same factor > 0
+    // criterion (see season.ts), so this is the exact date the flag would
+    // flip to false -- not just "sometime in August".
+    assert.equal(snapshot.darkness.seasonReturns, '2026-08-14');
 
     // Every hourly score across every spot must be exactly 0 tonight -- the
     // whole point of the darkness gate.
@@ -140,5 +139,27 @@ describe('buildTonightSnapshot: darkness.seasonClosed / seasonReturns', () => {
 
     assert.equal(snapshot.darkness.seasonClosed, false);
     assert.equal(snapshot.darkness.seasonReturns, null);
+  });
+});
+
+describe('computeDarknessSeasonState: early-morning rollback (< 06:00 local is still "tonight")', () => {
+  test('02:00 local on 2026-04-28, still inside the genuinely-dark night of April 27, is NOT season-closed', () => {
+    // 2026-04-28T02:00 local (CEST, UTC+2) = 2026-04-28T00:00:00Z. Before the
+    // fix, this unconditionally evaluated the calendar-date night of
+    // "April 28" (18:00 Apr 28 -> 08:00 Apr 29), which is already too bright
+    // this close to the midnight-sun season, wrongly reporting
+    // seasonClosed:true while still standing in a genuinely dark night.
+    const state = computeDarknessSeasonState(new Date('2026-04-28T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, false);
+    assert.equal(state.seasonReturns, null);
+  });
+
+  test('02:00 local deep in July (2026-07-16) is still inside a genuinely bright night -- season closed', () => {
+    // 2026-07-16T02:00 local (CEST, UTC+2) = 2026-07-16T00:00:00Z. Unlike
+    // the April case above, rolling back to the night of July 15 doesn't
+    // change the outcome -- midsummer nights in Tromso never get dark.
+    const state = computeDarknessSeasonState(new Date('2026-07-16T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, true);
+    assert.equal(state.seasonReturns, '2026-08-14');
   });
 });

@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { computeScore, dressLevelFromColdScore, rankSpots } from '../src/scoring/score.js';
+import { computeDarknessSeasonState } from '../src/scoring/season.js';
 import { darknessFactor, solarElevationDeg } from '../src/scoring/solar.js';
 import type { HourlyForecast, Spot } from '../src/types/index.js';
 
@@ -175,6 +176,32 @@ describe('rankSpots: ordering', () => {
     assert.equal(rankings[0].spotId, 'no-data');
     assert.equal(rankings[0].hourlyScores.length, 0);
   });
+
+  test('with fewer than 3 hours of data (1 hour), the single hour is used as both window bounds', () => {
+    const spot = makeSpot();
+    const forecast = hoursFrom([40]);
+
+    const [result] = rankSpots([spot], { [spot.id]: forecast }, [4]);
+
+    assert.equal(result.bestWindowStart, forecast[0].time);
+    assert.equal(result.bestWindowEnd, forecast[0].time);
+  });
+
+  test('with fewer than 3 hours of data (2 hours), the actual best-scoring hour is reported' +
+    ' (fixed: previously always reported hour 0 even when a later hour scored higher). ' +
+    'Mirrors backend/test/scoring.test.ts\'s identical case.', () => {
+    const spot = makeSpot();
+    // hour0 is heavily overcast (low score), hour1 is clear (higher score)
+    const forecast = hoursFrom([90, 10]);
+
+    const [result] = rankSpots([spot], { [spot.id]: forecast }, [3, 3]);
+
+    // window bounds still span all available hours (there's no full 3-hour window to slide)
+    assert.equal(result.bestWindowStart, forecast[0].time);
+    assert.equal(result.bestWindowEnd, forecast[1].time);
+    // cloudCoverAtBestHour now reflects the actually-higher-scoring hour[1] (10), not hour[0] (90)
+    assert.equal(result.cloudCoverAtBestHour, 10);
+  });
 });
 
 describe('solarElevationDeg: sanity checks against known Tromso solar behavior', () => {
@@ -192,12 +219,12 @@ describe('solarElevationDeg: sanity checks against known Tromso solar behavior',
     assert.ok(elevation < 0, `expected the sun below the horizon even at midday, got elevation ${elevation}`);
   });
 
-  // Cross-check constants: these are the exact values backend/test/scoring.test.ts
-  // asserts (with looser bounds) against backend/src/solar.ts's identical
-  // implementation for the same two instants/coordinates. Pinning the precise
-  // numbers here (with a tight tolerance) guards against the two
-  // independently-maintained copies (this file's src/scoring/solar.ts and
-  // backend/src/solar.ts) drifting apart silently.
+  // Cross-check constants: the exact same two float constants (to the same
+  // 1e-9 tolerance) are pinned in the backend twin's backend/test/scoring.test.ts
+  // against backend/src/solar.ts's independently-maintained copy of this
+  // exact math, for the same two instants/coordinates. Editing either
+  // solar.ts twin without updating the other now breaks *that twin's own*
+  // test suite, not just the other one's.
   test('matches the backend copy\'s solarElevationDeg output to within 1e-9 degrees for two fixed instants', () => {
     const july = solarElevationDeg(new Date('2026-07-15T23:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
     const december = solarElevationDeg(new Date('2026-12-21T12:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
@@ -225,6 +252,9 @@ describe('darknessFactor: boundary behavior', () => {
     assert.equal(darknessFactor(-45), 1);
   });
 
+  // Cross-check constant: the same -8.5 -> 0.5 midpoint is pinned in the
+  // backend twin's backend/test/scoring.test.ts against
+  // backend/src/solar.ts's darknessFactor.
   test('the midpoint -8.5 ramps linearly to exactly 0.5 (cross-check constant, matches backend)', () => {
     assert.equal(darknessFactor(-8.5), 0.5);
   });
@@ -301,5 +331,31 @@ describe('rankSpots: darkness gating (real Tromso coordinates)', () => {
     assert.equal(result.bestWindowStart, times[6]);
     assert.equal(result.bestWindowEnd, times[8]);
     assert.ok(result.score > 0, `expected a non-zero score within the dark window, got ${result.score}`);
+  });
+});
+
+describe('computeDarknessSeasonState: early-morning rollback (< 06:00 local is still "tonight")', () => {
+  test('02:00 local on 2026-04-28, still inside the genuinely-dark night of April 27, is NOT season-closed', () => {
+    // 2026-04-28T02:00 local (CEST, UTC+2) = 2026-04-28T00:00:00Z. Before the
+    // fix, this unconditionally evaluated the calendar-date night of
+    // "April 28" (18:00 Apr 28 -> 08:00 Apr 29), which is already too bright
+    // this close to the midnight-sun season, wrongly reporting
+    // seasonClosed:true while still standing in a genuinely dark night.
+    // Mirrors backend/test/snapshot.test.ts's identical scenario.
+    const state = computeDarknessSeasonState(new Date('2026-04-28T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, false);
+    assert.equal(state.seasonReturns, null);
+  });
+
+  test('02:00 local deep in July (2026-07-16) is still inside a genuinely bright night -- season closed', () => {
+    // 2026-07-16T02:00 local (CEST, UTC+2) = 2026-07-16T00:00:00Z. Unlike
+    // the April case above, rolling back to the night of July 15 doesn't
+    // change the outcome -- midsummer nights in Tromso never get dark.
+    const state = computeDarknessSeasonState(new Date('2026-07-16T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, true);
+    // seasonClosed and seasonReturns now share the same factor > 0
+    // criterion (see season.ts), so this is the exact date the flag would
+    // flip to false.
+    assert.equal(state.seasonReturns, '2026-08-14');
   });
 });

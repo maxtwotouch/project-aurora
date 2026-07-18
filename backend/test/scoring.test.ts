@@ -224,6 +224,20 @@ describe('solarElevationDeg: sanity checks against known Tromso solar behavior',
     const elevation = solarElevationDeg(new Date('2026-12-21T12:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
     assert.ok(elevation < 0, `expected the sun below the horizon even at midday, got elevation ${elevation}`);
   });
+
+  // Cross-check constants: the exact same two float constants (to the same
+  // 1e-9 tolerance) are pinned in the frontend twin's root test/scoring.test.ts
+  // against src/scoring/solar.ts's independently-maintained copy of this
+  // exact math, for the same two instants/coordinates. Editing either
+  // solar.ts twin without updating the other now breaks *that twin's own*
+  // test suite, not just the other one's.
+  test('matches the frontend copy\'s solarElevationDeg output to within 1e-9 degrees for two fixed instants', () => {
+    const july = solarElevationDeg(new Date('2026-07-15T23:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    const december = solarElevationDeg(new Date('2026-12-21T12:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+
+    assert.ok(Math.abs(july - 1.0644436508697908) < 1e-9, `expected ~1.0644436508697908, got ${july}`);
+    assert.ok(Math.abs(december - -4.130399248019373) < 1e-9, `expected ~-4.130399248019373, got ${december}`);
+  });
 });
 
 describe('darknessFactor: boundary behavior', () => {
@@ -244,7 +258,10 @@ describe('darknessFactor: boundary behavior', () => {
     assert.equal(darknessFactor(-45), 1);
   });
 
-  test('the midpoint -8.5 ramps linearly to exactly 0.5', () => {
+  // Cross-check constant: the same -8.5 -> 0.5 midpoint is pinned in the
+  // frontend twin's root test/scoring.test.ts against
+  // src/scoring/solar.ts's darknessFactor.
+  test('the midpoint -8.5 ramps linearly to exactly 0.5 (cross-check constant, matches frontend)', () => {
     assert.equal(darknessFactor(-8.5), 0.5);
   });
 });

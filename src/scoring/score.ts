@@ -77,7 +77,13 @@ function findBestWindow(hourlyScores: SpotHourlyScore[]) {
   let bestWindowScore = -1;
 
   if (hourlyScores.length < 3) {
-    const bestHour = hourlyScores[0];
+    // Fewer than 3 hours of data means there's no full window to slide, but we
+    // still must report the actual best-scoring hour (not always hour[0]).
+    // Mirrors backend/src/scoring.ts's findBestWindow.
+    const bestHour = hourlyScores.reduce<SpotHourlyScore | undefined>(
+      (top, current) => (top === undefined || current.score > top.score ? current : top),
+      undefined
+    );
     return {
       start: 0,
       end: Math.max(0, hourlyScores.length - 1),

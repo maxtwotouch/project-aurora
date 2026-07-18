@@ -1,4 +1,4 @@
-import { addDaysToDayKey, getOsloDayKey, getOsloOffset } from './sources.js';
+import { addDaysToDayKey, getOsloDayKey, getOsloOffset, getOsloParts } from './sources.js';
 import { darknessFactor, solarElevationDeg } from './solar.js';
 import type { DarknessSeasonState } from './types.js';
 
@@ -13,9 +13,6 @@ const NIGHT_START_HOUR = 18;
 const NIGHT_END_HOUR = 8;
 // How far forward to search for the season reopening before giving up.
 const SEASON_RETURN_SEARCH_CAP_DAYS = 120;
-// A night "counts" as having aurora-viable darkness once some hour reaches
-// at least this much of the way from twilight (0) to fully dark (1).
-const SEASON_RETURN_FACTOR_THRESHOLD = 0.5;
 
 /** Converts a local (Europe/Oslo) wall-clock hour on `dayKey` (YYYY-MM-DD)
  * into the corresponding UTC epoch millis, using the real Oslo UTC offset
@@ -53,28 +50,43 @@ function nightHourlyFactors(dayKey: string, lat: number, lon: number): number[] 
 }
 
 /**
- * Determines whether "tonight" (the local 18:00 -> 08:00 window starting
- * today) never gets dark enough anywhere for aurora to be visible
- * (`seasonClosed`), and if so, searches forward day by day (capped at
- * `SEASON_RETURN_SEARCH_CAP_DAYS`) for the first night with at least one
- * hour reaching `SEASON_RETURN_FACTOR_THRESHOLD` darkness, returning that
- * night's local date (`seasonReturns`, ISO YYYY-MM-DD). `seasonReturns` is
- * `null` when the season is currently open, or (in the essentially
- * impossible case) the search cap is exhausted without finding a dark-enough
- * night.
+ * Determines whether "tonight" -- the local 18:00 -> 08:00 window for the
+ * night the caller is currently *in*, not necessarily the one starting on
+ * today's calendar date -- never gets dark enough anywhere for aurora to be
+ * visible (`seasonClosed`), and if so, searches forward day by day (capped
+ * at `SEASON_RETURN_SEARCH_CAP_DAYS`) for the first night with at least one
+ * hour of non-zero darkness, returning that night's local date
+ * (`seasonReturns`, ISO YYYY-MM-DD). `seasonReturns` is `null` when the
+ * season is currently open, or (in the essentially impossible case) the
+ * search cap is exhausted without finding a dark-enough night.
+ *
+ * Both `seasonClosed` and `seasonReturns` use the same `factor > 0`
+ * criterion, so the advisory date always matches the instant the flag
+ * itself would flip.
+ *
+ * Before 06:00 local, "tonight" is still the night that started *yesterday*
+ * evening, not the one about to start -- same early-morning rollback used
+ * for the KP "tonight" window (see this file's sibling sources.ts's
+ * parseTonightPeak, and the frontend twin's src/api/kp.ts, both keyed off
+ * `hour < 6`). Without this, a 02:00 check during a genuinely dark April
+ * night would wrongly evaluate the *next* (already-bright) night instead.
  */
 export function computeDarknessSeasonState(nowMs: number, lat: number, lon: number): DarknessSeasonState {
-  const todayKey = getOsloDayKey(new Date(nowMs));
-  const seasonClosed = !nightHourlyFactors(todayKey, lat, lon).some((factor) => factor > 0);
+  const now = new Date(nowMs);
+  const todayKey = getOsloDayKey(now);
+  const nowParts = getOsloParts(now);
+  const tonightStartDay = nowParts && nowParts.hour < 6 ? addDaysToDayKey(todayKey, -1) : todayKey;
+
+  const seasonClosed = !nightHourlyFactors(tonightStartDay, lat, lon).some((factor) => factor > 0);
 
   if (!seasonClosed) {
     return { seasonClosed: false, seasonReturns: null };
   }
 
   for (let offset = 1; offset <= SEASON_RETURN_SEARCH_CAP_DAYS; offset += 1) {
-    const candidateKey = addDaysToDayKey(todayKey, offset);
+    const candidateKey = addDaysToDayKey(tonightStartDay, offset);
     const factors = nightHourlyFactors(candidateKey, lat, lon);
-    if (factors.some((factor) => factor >= SEASON_RETURN_FACTOR_THRESHOLD)) {
+    if (factors.some((factor) => factor > 0)) {
       return { seasonClosed: true, seasonReturns: candidateKey };
     }
   }
