@@ -1,9 +1,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { computeScore, rankSpots } from '../src/scoring.js';
+import { computeScore, deriveTrend, rankSpots } from '../src/scoring.js';
 import { darknessFactor, solarElevationDeg } from '../src/solar.js';
-import type { HourlyForecast, Spot } from '../src/types.js';
+import type { HourlyForecast, Spot, SpotHourlyScore } from '../src/types.js';
 
 // Real Tromso coordinates, reused across the darkness-aware tests below
 // (as opposed to makeSpot()'s default lat/lon 0,0, which is used for the
@@ -152,6 +152,57 @@ describe('rankSpots: best-3-hour-window selection', () => {
     assert.equal(result.bestWindowEnd, forecast[1].time);
     // cloudCoverAtBestHour now reflects the actually-higher-scoring hour[1] (10), not hour[0] (90)
     assert.equal(result.cloudCoverAtBestHour, 10);
+  });
+});
+
+// Minimal SpotHourlyScore fixtures for deriveTrend -- only `.score` is read
+// by deriveTrend, so the other fields are dummy/unused placeholders.
+function trendHours(scores: number[]): SpotHourlyScore[] {
+  return scores.map((score, index) => ({
+    time: `2026-07-16T${String(index).padStart(2, '0')}:00:00.000Z`,
+    score,
+    cloudCover: 0,
+    temperature: 0,
+    windSpeed: 0
+  }));
+}
+
+describe('deriveTrend: trend semantics (headline score = best hour, not hourlyScores[0])', () => {
+  test('good_now: the best hour is now (index 0) and clears the 55 "good" bar', () => {
+    assert.equal(deriveTrend(trendHours([60, 40, 30])), 'good_now');
+  });
+
+  test('good_now: the best hour is imminent (index 1) and clears the 55 "good" bar', () => {
+    assert.equal(deriveTrend(trendHours([50, 60, 30, 20])), 'good_now');
+  });
+
+  test(
+    'regression: current=55 (index 0) but the true best hour is 80 at index 5 -- must NOT be ' +
+      "'good_now' (the headline score of 80 is five hours away, not now), must be 'improving'",
+    () => {
+      const scores = [55, 50, 45, 60, 70, 80];
+      assert.equal(deriveTrend(trendHours(scores)), 'improving');
+    }
+  );
+
+  test('improving: the best hour is later (index >= 2) and at least 8 points better than now', () => {
+    // current=40 (index 0), best=48 (index 2) -> improvement of exactly 8, and >= DECENT_SCORE(40)
+    assert.equal(deriveTrend(trendHours([40, 30, 48])), 'improving');
+  });
+
+  test('worse: nothing decent is coming (best score stays under the 40 "decent" bar)', () => {
+    assert.equal(deriveTrend(trendHours([20, 25, 30, 35])), 'worse');
+  });
+
+  test('worse: best hour is imminent (index 1) but does not clear the 55 "good" bar', () => {
+    // Imminent alone isn't enough -- a mediocre "now" score still isn't good_now.
+    assert.equal(deriveTrend(trendHours([40, 50, 20])), 'worse');
+  });
+
+  test('worse: best hour is later but the gain over now is below the +8 improvement bar', () => {
+    // current=45 (index 0), best=50 (index 3): only +5, and later than index 1 -- not a
+    // meaningful-enough improvement to call out, even though 50 clears the decent bar.
+    assert.equal(deriveTrend(trendHours([45, 44, 46, 50])), 'worse');
   });
 });
 
@@ -339,5 +390,61 @@ describe('rankSpots: darkness gating (real Tromso coordinates)', () => {
     assert.equal(result.bestWindowStart, times[6]);
     assert.equal(result.bestWindowEnd, times[8]);
     assert.ok(result.score > 0, `expected a non-zero score within the dark window, got ${result.score}`);
+  });
+});
+
+// Cross-check: the same fixture inputs and pinned expected outputs (to the
+// same tight tolerance) are asserted against the frontend twin's
+// src/scoring/score.ts in the root test/scoring.test.ts. Editing either
+// twin's computeScore/rankSpots without updating the other now breaks
+// *that twin's own* test suite, not just the other one's -- extends the
+// same cross-check pattern already used for solar.ts above.
+describe('Cross-check: computeScore/rankSpots pinned values (matches frontend twin)', () => {
+  test('computeScore: 3 fixed fixtures match the frontend twin to within 1e-9', () => {
+    // fixture A: mid cloud, mid-low KP, short drive, light pollution 2
+    // cloudFactor=70, kpFactor=90, driveMin=57.5 (<120, no penalty), lightPenalty=10
+    // raw = 0.7*70 + 0.3*90 - 0 - 10 = 49 + 27 - 10 = 66
+    const a = computeScore(30, 6, 50, 2);
+    assert.ok(Math.abs(a - 66) < 1e-9, `fixture A: expected ~66, got ${a}`);
+
+    // fixture B: heavy cloud, low-mid KP, long drive (over threshold), light pollution 1
+    // cloudFactor=35, kpFactor=60, driveMin=207, penalty=(207-120)*0.35=30.45, lightPenalty=5
+    // raw = 0.7*35 + 0.3*60 - 30.45 - 5 = 24.5 + 18 - 30.45 - 5 = 7.05
+    const b = computeScore(65, 4, 180, 1);
+    assert.ok(Math.abs(b - 7.05) < 1e-9, `fixture B: expected ~7.05, got ${b}`);
+
+    // fixture C: near-clear sky, max-ish KP, no drive/light penalty -> clamps to 100
+    // cloudFactor=90, kpFactor=135, raw = 0.7*90 + 0.3*135 = 63 + 40.5 = 103.5 -> clamp 100
+    const c = computeScore(10, 9, 0, 0);
+    assert.ok(Math.abs(c - 100) < 1e-9, `fixture C: expected ~100, got ${c}`);
+  });
+
+  test('rankSpots: one small fixture matches the frontend twin\'s pinned result exactly', () => {
+    // Equator coordinates (makeSpot() default lat=0, lon=0) at 00:00-02:00 UTC
+    // in mid-July are deep solar night (darknessFactor 1 throughout -- see the
+    // note above hoursFrom()), so this fixture isolates cloud/KP/distance/light
+    // scoring from the darkness gate entirely.
+    const spot = makeSpot({ distanceKm: 20, lightPollution: 1 });
+    const forecast = hoursFrom([50, 20, 70]);
+    const kpByHour = [4, 4, 4];
+
+    const [result] = rankSpots([spot], { [spot.id]: forecast }, kpByHour);
+
+    // Per-hour raw scores (kp=4 -> kpFactor=60, driveMin=23 -> no penalty, lightPenalty=5):
+    // hour0 (cloud=50): 0.7*50 + 0.3*60 - 5 = 35 + 18 - 5 = 48
+    // hour1 (cloud=20): 0.7*80 + 0.3*60 - 5 = 56 + 18 - 5 = 69 <- best hour
+    // hour2 (cloud=70): 0.7*30 + 0.3*60 - 5 = 21 + 18 - 5 = 34
+    assert.deepEqual(
+      result.hourlyScores.map((h) => h.score),
+      [48, 69, 34]
+    );
+    assert.equal(result.score, 69);
+    assert.equal(result.cloudCoverAtBestHour, 20);
+    assert.equal(result.bestWindowStart, forecast[0].time);
+    assert.equal(result.bestWindowEnd, forecast[2].time);
+    // best hour (index 1) is imminent (<= IMMINENT_INDEX) and clears the 55 good bar -> good_now
+    assert.equal(result.trend, 'good_now');
+    // coldScore from temperature=0, windSpeed=0 (makeHour defaults): (2-0)*6.5=13
+    assert.equal(result.coldScore, 13);
   });
 });
