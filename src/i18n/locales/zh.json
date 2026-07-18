@@ -45,6 +45,12 @@
     },
     "scoreSuffix": "满分100",
     "daytimeHint": "现在天还亮着。最早可行的观测时段大约从{{time}}开始。",
+    "polarDay": {
+      "statusLabel": "极光季暂未开始",
+      "headline": "现在天空太亮，无法看到极光",
+      "body": "极昼期间天空整夜明亮——极光季预计将于{{date}}左右回归。",
+      "unknownDate": "今年晚些时候"
+    },
     "decision": {
       "goNow": "现在出发",
       "wait": "稍等",

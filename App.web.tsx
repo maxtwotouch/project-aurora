@@ -19,7 +19,7 @@ import { SpotDetailScreen } from './src/screens/SpotDetailScreen.web';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
 import { radius, space, type WebPressableState } from './src/theme/tokens';
-import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 // Desktop web should not read as a phone screen inside a browser: full-bleed
 // scroll surfaces are capped and centered so line lengths and layout stay
@@ -76,6 +76,7 @@ type TabsRootProps = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
+  darkness: DarknessSeasonState | null;
   level: AuroraLevel;
   refresh: () => Promise<void>;
 };
@@ -94,6 +95,7 @@ function TabsRoot({
   tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
+  darkness,
   level,
   refresh
 }: TabsRootProps) {
@@ -163,6 +165,7 @@ function TabsRoot({
               tonightScore={tonightScore}
               tomorrowScore={tomorrowScore}
               sightingPossibleFrom={sightingPossibleFrom}
+              darkness={darkness}
               level={level}
               refresh={refresh}
             />
@@ -242,6 +245,7 @@ export default function App() {
                 tonightScore={forecast.tonightScore}
                 tomorrowScore={forecast.tomorrowScore}
                 sightingPossibleFrom={forecast.sightingPossibleFrom}
+                darkness={forecast.darkness}
                 level={forecast.level}
                 refresh={forecast.refresh}
               />
