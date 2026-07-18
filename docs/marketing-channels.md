@@ -12,13 +12,13 @@ separate hosting, build step, or deploy workflow change.
 ## Full landing URL pattern
 
 ```
-https://<owner>.github.io/project-aurora/go.html?src=<channel>
+https://aurora.hovding.dev/go.html?src=<channel>
 ```
 
 Today that resolves to (owner/repo taken from the existing Pages deploy):
 
 ```
-https://maxtwotouch.github.io/project-aurora/go.html?src=<channel>
+https://aurora.hovding.dev/go.html?src=<channel>
 ```
 
 The page reads `?src=` and appends it unchanged to the "Open the app" link
@@ -51,10 +51,10 @@ with what's actually printed/published.
 No QR-generation tooling is checked into this repo (there's nothing to build — a QR
 code is just an encoding of the URL string above). To produce one for a channel:
 
-1. Build the URL: `https://maxtwotouch.github.io/project-aurora/go.html?src=hotel-qr`
+1. Build the URL: `https://aurora.hovding.dev/go.html?src=hotel-qr`
    (substitute the channel's slug from the table above).
 2. Generate the QR image with any standard QR tool, e.g.:
-   - `qrencode -o hotel-qr.png "https://maxtwotouch.github.io/project-aurora/go.html?src=hotel-qr"`
+   - `qrencode -o hotel-qr.png "https://aurora.hovding.dev/go.html?src=hotel-qr"`
      (the `qrencode` CLI, or any equivalent generator/website).
    - Prefer a generator that supports error-correction level M or higher and lets you
      export SVG/PNG at print resolution (physical QR placements, e.g. hotel table
