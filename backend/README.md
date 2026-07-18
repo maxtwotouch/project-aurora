@@ -62,3 +62,31 @@ On boot, the server loads the last mirrored snapshot from `data/latest-snapshot.
 ```
 
 `lastRefreshSucceeded` / `lastRefreshAttemptAt` / `lastRefreshError` reflect the most recent *live* refresh attempt (independent of whether the currently-served snapshot came from the disk mirror), so an uptime check can alert on silent degradation (e.g. `stale: true` or repeated `lastRefreshSucceeded: false`).
+
+## Known architecture ceilings
+
+Two known limitations of the current design, called out here so they aren't
+mistaken for oversights:
+
+- **Single-instance in-memory snapshot + JSON mirror.** The latest snapshot
+  lives in a single process's memory (`src/store.ts`) and is mirrored to
+  `data/latest-snapshot.json` on disk. This does not horizontally scale --
+  running multiple backend instances would each refresh and mirror
+  independently, with no shared source of truth, so today's deployment model
+  assumes exactly one running instance. A restart (deploy, crash-restart,
+  etc.) has a brief staleness window: the process reloads the on-disk mirror
+  immediately (see "Restart survival" above) so it doesn't 503, but that
+  reloaded snapshot is only as fresh as the last successful refresh before
+  the restart, until the next live refresh completes.
+- **Duplicated frontend/backend scoring.** The scoring model
+  (`backend/src/scoring.ts` + `backend/src/solar.ts`) has an
+  independently-maintained twin in the frontend
+  (`src/scoring/score.ts` + `src/scoring/solar.ts`), used when the app talks
+  to MET/NOAA directly instead of this backend. The two must be kept in sync
+  by hand -- there's drift risk any time one is edited without the other.
+  This is mitigated today by cross-check tests in both test suites that pin
+  identical fixture inputs to identical expected outputs (see
+  `backend/test/scoring.test.ts` and `test/scoring.test.ts`), so an
+  un-mirrored edit fails at least one twin's own test suite. A longer-term
+  option is unifying the two into one shared package, deferred for now to
+  keep the frontend's direct-source fallback path dependency-free.

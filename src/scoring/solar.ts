@@ -90,6 +90,8 @@ export function solarElevationDeg(dateUtcMs: number, lat: number, lon: number): 
  * (elevation at or below -11deg -- between nautical and astronomical
  * twilight, a practical "dark enough for aurora" threshold), and a linear
  * ramp in between.
+ *
+ * -6/-11 ramp -- see ../../docs/scoring-model.md ("Darkness ramp") for rationale.
  */
 export function darknessFactor(elevationDeg: number): number {
   if (elevationDeg >= -6) return 0;
