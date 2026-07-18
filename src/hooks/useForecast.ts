@@ -6,6 +6,7 @@ import { fetchPointForecastDetailed, fetchSightingPossibleFrom, fetchSpotForecas
 import spots from '../data/spots.json';
 import { rankSpots } from '../scoring/score';
 import { computeDarknessSeasonState } from '../scoring/season';
+import { darknessFactor, solarElevationDeg } from '../scoring/solar';
 import type {
   AppDataQuality,
   AuroraLevel,
@@ -58,8 +59,19 @@ function chanceFromScore(score: number): GeneralForecastScore['chance'] {
   return 'Low';
 }
 
-function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralForecastScore | null {
-  const tomorrow = new Date();
+/**
+ * MIRROR: this function has an identical, independently-maintained twin in
+ * backend/src/snapshot.ts's buildTomorrowScore -- see that file's header
+ * comment for the reverse pointer.
+ */
+export function buildTomorrowScore(
+  forecast: HourlyForecast[],
+  kp: KpTrend,
+  lat: number,
+  lon: number,
+  now: () => number = Date.now
+): GeneralForecastScore | null {
+  const tomorrow = new Date(now());
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowKey = tomorrow.toISOString().slice(0, 10);
 
@@ -76,7 +88,21 @@ function buildTomorrowScore(forecast: HourlyForecast[], kp: KpTrend): GeneralFor
 
   const avgCloud = eveningHours.reduce((sum, hour) => sum + hour.cloudCover, 0) / eveningHours.length;
   const tomorrowPeak = kp.dailyOutlook?.find((item) => item.label === 'Tomorrow')?.peak ?? kp.peakNext12h;
-  const score = Math.round((100 - avgCloud) * 0.7 + tomorrowPeak * 15 * 0.3 - 10);
+
+  // Same darkness gate tonight's hourly scores get (see scoring/score.ts's
+  // scoreSpot) -- aurora is invisible in a bright sky regardless of
+  // cloud/KP, so each evening hour's contribution is scaled by how dark the
+  // sky actually is at that instant (Tromso center coordinates) before
+  // averaging into the headline "tomorrow" score.
+  const darknessAdjustedHourScores = eveningHours.map((hour) => {
+    const rawHourScore = (100 - hour.cloudCover) * 0.7 + tomorrowPeak * 15 * 0.3 - 10;
+    const elevation = solarElevationDeg(new Date(hour.time).getTime(), lat, lon);
+    return rawHourScore * darknessFactor(elevation);
+  });
+  const score = Math.round(
+    darknessAdjustedHourScores.reduce((sum, value) => sum + value, 0) / darknessAdjustedHourScores.length
+  );
+
   const bestWindowStart = eveningHours[0]?.time;
   const bestWindowEnd = eveningHours[Math.min(2, eveningHours.length - 1)]?.time;
 
@@ -154,7 +180,7 @@ export function useForecast(): UseForecastResult {
       const kpTrend = kpResult.trend;
       setKp(kpTrend);
       const tromsoForecastResult = await fetchPointForecastDetailed(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48);
-      setTomorrowScore(buildTomorrowScore(tromsoForecastResult.hourly, kpTrend));
+      setTomorrowScore(buildTomorrowScore(tromsoForecastResult.hourly, kpTrend, TROMSO_CENTER.lat, TROMSO_CENTER.lon));
       setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
       setDarkness(computeDarknessSeasonState(Date.now(), TROMSO_CENTER.lat, TROMSO_CENTER.lon));
 

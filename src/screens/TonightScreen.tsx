@@ -179,6 +179,13 @@ export function TonightScreen({
     !seasonClosed && isDaytimeNow && sightingPossibleFrom ? t('tonight.daytimeHint', { time: sightingPossibleFrom }) : null;
   const seasonReturnsDate =
     seasonClosed && darkness?.seasonReturns ? formatSeasonReturnsDate(darkness.seasonReturns, i18n.language) : null;
+  // Suppress the "Looking ahead / Tomorrow evening" band when it would just
+  // say the same thing twice as the hero's polar-day notice (tonight closed
+  // AND tomorrow evening also scores 0). If tomorrow genuinely clears the
+  // darkness threshold while tonight doesn't (the season-opening night),
+  // tomorrowScore.score is non-zero and this stays true -- the card is
+  // meant to show that "tomorrow it begins" case.
+  const showTomorrowEvening = Boolean(tomorrowScore) && !(seasonClosed && tomorrowScore?.score === 0);
 
   const bandItems: { label: string; value: string; tone?: string }[] = [
     { label: t('tonight.band.chance'), value: t(chanceKeyFromScore(tonightScoreValue)) },
@@ -447,7 +454,7 @@ export function TonightScreen({
         </Pressable>
       </Animated.View>
 
-      {tomorrowScore || (kp.dailyOutlook && kp.dailyOutlook.length > 1) ? (
+      {showTomorrowEvening || (kp.dailyOutlook && kp.dailyOutlook.length > 1) ? (
         <Animated.View
           style={[
             styles.outlookCard,
@@ -466,7 +473,7 @@ export function TonightScreen({
         >
           <Text style={styles.outlookEyebrow}>{t('tonight.outlook.eyebrow')}</Text>
 
-          {tomorrowScore ? (
+          {showTomorrowEvening && tomorrowScore ? (
             <View style={styles.outlookRow}>
               <Text style={styles.outlookTitle}>{t('tonight.outlook.tomorrowEvening')}</Text>
               <View style={styles.dataBand}>
@@ -491,7 +498,7 @@ export function TonightScreen({
           ) : null}
 
           {kp.dailyOutlook && kp.dailyOutlook.length > 1 ? (
-            <View style={[styles.outlookRow, tomorrowScore ? styles.outlookRowDivided : null]}>
+            <View style={[styles.outlookRow, showTomorrowEvening ? styles.outlookRowDivided : null]}>
               <Text style={styles.outlookTitle}>{t('tonight.outlook.geomagnetic')}</Text>
               <View style={styles.dataBand}>
                 {kp.dailyOutlook.slice(1, 4).map((item, index) => (
