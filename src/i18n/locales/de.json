@@ -45,6 +45,12 @@
     },
     "scoreSuffix": "von 100",
     "daytimeHint": "Es ist noch hell. Das erste realistische Zeitfenster beginnt gegen {{time}} Uhr.",
+    "polarDay": {
+      "statusLabel": "Polarlicht-Saison derzeit geschlossen",
+      "headline": "Gerade zu hell für Polarlichter",
+      "body": "Die Mitternachtssonne hält den Himmel die ganze Nacht hell — die Polarlicht-Saison beginnt wieder um den {{date}}.",
+      "unknownDate": "später dieses Jahr"
+    },
     "decision": {
       "goNow": "Jetzt losfahren",
       "wait": "Warten",
@@ -270,7 +276,8 @@
     "footnote": "Sie können dies später jederzeit im Tab „Alle Orte“ ändern.",
     "toggleLabel": "Anonyme Nutzungsfreigabe",
     "toggleOnHelper": "Anonyme Ortsansichten und Navigations-Taps werden geteilt.",
-    "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt."
+    "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt.",
+    "privacyPolicyLink": "Datenschutzerklärung"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

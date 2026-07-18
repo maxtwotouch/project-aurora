@@ -45,6 +45,12 @@
     },
     "scoreSuffix": "sur 100",
     "daytimeHint": "Il fait encore jour. Le premier créneau d'observation réaliste commence vers {{time}}.",
+    "polarDay": {
+      "statusLabel": "Saison des aurores actuellement fermée",
+      "headline": "Trop clair pour les aurores en ce moment",
+      "body": "Le soleil de minuit garde le ciel clair toute la nuit — la saison des aurores reprend vers le {{date}}.",
+      "unknownDate": "plus tard cette année"
+    },
     "decision": {
       "goNow": "Partez maintenant",
       "wait": "Patientez",
@@ -270,7 +276,8 @@
     "footnote": "Vous pouvez modifier ce choix plus tard depuis l'onglet Tous les sites.",
     "toggleLabel": "Partage anonyme de l'utilisation",
     "toggleOnHelper": "Les consultations de sites et les appuis de navigation anonymes sont partagés.",
-    "toggleOffHelper": "Aucune donnée d'utilisation n'est partagée."
+    "toggleOffHelper": "Aucune donnée d'utilisation n'est partagée.",
+    "privacyPolicyLink": "Politique de confidentialité"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

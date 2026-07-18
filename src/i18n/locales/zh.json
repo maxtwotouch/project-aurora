@@ -45,6 +45,12 @@
     },
     "scoreSuffix": "满分100",
     "daytimeHint": "现在天还亮着。最早可行的观测时段大约从{{time}}开始。",
+    "polarDay": {
+      "statusLabel": "极光季暂未开始",
+      "headline": "现在天空太亮，无法看到极光",
+      "body": "极昼期间天空整夜明亮——极光季预计将于{{date}}左右回归。",
+      "unknownDate": "今年晚些时候"
+    },
     "decision": {
       "goNow": "现在出发",
       "wait": "稍等",
@@ -270,7 +276,8 @@
     "footnote": "您可以稍后在“全部地点”标签中更改此设置。",
     "toggleLabel": "匿名使用数据共享",
     "toggleOnHelper": "正在共享匿名的地点浏览和导航点击数据。",
-    "toggleOffHelper": "未共享任何使用数据。"
+    "toggleOffHelper": "未共享任何使用数据。",
+    "privacyPolicyLink": "隐私政策"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

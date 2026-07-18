@@ -1,3 +1,4 @@
+import { darknessFactor, solarElevationDeg } from './solar.js';
 import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from './types.js';
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
@@ -99,13 +100,30 @@ function findBestWindow(hourlyScores: SpotHourlyScore[]) {
 }
 
 function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): SpotScoreResult {
-  const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => ({
-    time: hour.time,
-    cloudCover: hour.cloudCover,
-    temperature: Number(hour.temperature ?? 0),
-    windSpeed: Number(hour.windSpeed ?? 0),
-    score: computeScore(hour.cloudCover, kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0, spot.distanceKm, spot.lightPollution)
-  }));
+  const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => {
+    const rawScore = computeScore(
+      hour.cloudCover,
+      kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0,
+      spot.distanceKm,
+      spot.lightPollution
+    );
+    // Aurora is physically invisible in a bright sky (e.g. Tromso's
+    // midnight sun in summer) regardless of how clear/active the forecast
+    // looks -- gate every hourly score by how dark the sky actually is at
+    // that spot's own coordinates before window selection ever runs, so
+    // "best window" naturally lands in genuinely dark hours (or collapses
+    // to 0 when there are none tonight).
+    const elevation = solarElevationDeg(new Date(hour.time).getTime(), spot.lat, spot.lon);
+    const score = rawScore * darknessFactor(elevation);
+
+    return {
+      time: hour.time,
+      cloudCover: hour.cloudCover,
+      temperature: Number(hour.temperature ?? 0),
+      windSpeed: Number(hour.windSpeed ?? 0),
+      score
+    };
+  });
 
   const { start, end, bestHour } = findBestWindow(hourlyScores);
   const coldScore = computeColdScore(bestHour.temperature, bestHour.windSpeed);

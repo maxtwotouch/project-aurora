@@ -1,8 +1,37 @@
-import { test, afterEach } from 'node:test';
+import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildTonightSnapshot, getSpots } from '../src/snapshot.js';
+import { buildTonightSnapshot, buildTomorrowScore, getSpots } from '../src/snapshot.js';
 import { rankSpots } from '../src/scoring.js';
+import { computeDarknessSeasonState } from '../src/season.js';
+import type { HourlyForecast, KpTrend } from '../src/types.js';
+
+const TROMSO = { lat: 69.6492, lon: 18.9553 };
+
+function makeKp(overrides: Partial<KpTrend> = {}): KpTrend {
+  return {
+    current: 3,
+    peakNext12h: 4,
+    tonightPeak: 4,
+    hourly: [3, 3, 4],
+    dailyOutlook: [
+      { label: 'Today', peak: 3 },
+      { label: 'Tomorrow', peak: 4 }
+    ],
+    ...overrides
+  };
+}
+
+function eveningHoursFor(dayIso: string, startUtcHour: number, cloudCover = 20): HourlyForecast[] {
+  // 6 consecutive UTC hours starting at startUtcHour, one entry per hour,
+  // used to synthesize a "tomorrow evening" (18:00-23:00 local) forecast.
+  return Array.from({ length: 6 }, (_, index) => ({
+    time: `${dayIso}T${String(startUtcHour + index).padStart(2, '0')}:00:00.000Z`,
+    cloudCover,
+    temperature: 0,
+    windSpeed: 0
+  }));
+}
 
 // buildTonightSnapshot() has no dependency-injection seam: it calls the
 // sources.ts functions directly, which in turn call the global `fetch`.
@@ -99,4 +128,125 @@ test('getSpots returns the full, unfiltered spot catalog', () => {
   assert.equal(spots.length, 28);
   const ids = new Set(spots.map((s) => s.id));
   assert.equal(ids.size, 28, 'expected all spot ids to be unique');
+});
+
+describe('buildTonightSnapshot: darkness.seasonClosed / seasonReturns', () => {
+  test('a July clock closes the season (midnight sun) and points seasonReturns at a plausible August date', async () => {
+    globalThis.fetch = (async () => {
+      throw new Error('simulated network failure');
+    }) as typeof fetch;
+
+    const july = () => new Date('2026-07-18T12:00:00Z').getTime();
+    const snapshot = await buildTonightSnapshot(july);
+
+    assert.equal(snapshot.darkness.seasonClosed, true);
+    // seasonClosed and seasonReturns now share the same factor > 0
+    // criterion (see season.ts), so this is the exact date the flag would
+    // flip to false -- not just "sometime in August".
+    assert.equal(snapshot.darkness.seasonReturns, '2026-08-14');
+
+    // Every hourly score across every spot must be exactly 0 tonight -- the
+    // whole point of the darkness gate.
+    for (const ranking of snapshot.rankings) {
+      assert.ok(
+        ranking.hourlyScores.every((hour) => hour.score === 0),
+        `expected spot ${ranking.spotId} to have every hourly score at 0 during midnight sun`
+      );
+    }
+  });
+
+  test('a December clock leaves the season open (long polar night, plenty of dark hours)', async () => {
+    globalThis.fetch = (async () => {
+      throw new Error('simulated network failure');
+    }) as typeof fetch;
+
+    const december = () => new Date('2026-12-10T12:00:00Z').getTime();
+    const snapshot = await buildTonightSnapshot(december);
+
+    assert.equal(snapshot.darkness.seasonClosed, false);
+    assert.equal(snapshot.darkness.seasonReturns, null);
+  });
+});
+
+describe('buildTomorrowScore: darkness gating', () => {
+  test('a July fixed clock (midnight sun) collapses tomorrow-evening score to 0, not a plausible-looking nonzero number', () => {
+    // "now" = 2026-07-15T12:00Z -> "tomorrow" is 2026-07-16. Evening hours
+    // (18:00-23:00 local, CEST UTC+2) = 2026-07-16T16:00Z..21:00Z. Every
+    // one of those instants is deep inside the midnight-sun season, so
+    // every darkness factor is 0 regardless of cloud cover or KP.
+    const now = () => new Date('2026-07-15T12:00:00Z').getTime();
+    const forecast = eveningHoursFor('2026-07-16', 16, 10); // clear skies, would score high without the gate
+    const kp = makeKp({ dailyOutlook: [{ label: 'Today', peak: 3 }, { label: 'Tomorrow', peak: 8 }] });
+
+    const result = buildTomorrowScore(forecast, kp, TROMSO.lat, TROMSO.lon, now);
+
+    assert.ok(result, 'expected a result (evening hours were present), just gated to 0');
+    assert.equal(result?.score, 0);
+    assert.equal(result?.chance, 'Low');
+  });
+
+  test('a December fixed clock (deep polar night) leaves tomorrow-evening score fully darkness-gated to nonzero', () => {
+    // "now" = 2026-12-09T12:00Z -> "tomorrow" is 2026-12-10. Evening hours
+    // (18:00-23:00 local, CET UTC+1) = 2026-12-10T17:00Z..22:00Z, all deep
+    // in the polar night -- darkness factor 1 throughout, so the score
+    // reduces to the plain (ungated) formula.
+    const now = () => new Date('2026-12-09T12:00:00Z').getTime();
+    const forecast = eveningHoursFor('2026-12-10', 17, 20);
+    const kp = makeKp({ dailyOutlook: [{ label: 'Today', peak: 3 }, { label: 'Tomorrow', peak: 5 }] });
+
+    const result = buildTomorrowScore(forecast, kp, TROMSO.lat, TROMSO.lon, now);
+
+    assert.ok(result);
+    // (100-20)*0.7 + 5*15*0.3 - 10 = 56 + 22.5 - 10 = 68.5 -> rounds to 69,
+    // unaffected by the darkness gate since every hour's factor is 1.
+    assert.equal(result?.score, 69);
+  });
+
+  test('no evening hours in the forecast for "tomorrow" still returns null (unrelated to darkness)', () => {
+    const now = () => new Date('2026-07-15T12:00:00Z').getTime();
+    const result = buildTomorrowScore([], makeKp(), TROMSO.lat, TROMSO.lon, now);
+    assert.equal(result, null);
+  });
+
+  test('tonight closed but tomorrow evening genuinely crosses into darkness ("tomorrow it begins") yields a non-zero score', () => {
+    // Tonight (a separate, deep-midsummer clock) is unambiguously season-closed.
+    const tonightState = computeDarknessSeasonState(new Date('2026-07-16T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(tonightState.seasonClosed, true);
+
+    // "Tomorrow" here is a synthetic evening forecast for Sept 1 -- well
+    // past the season-reopening threshold, so its late-evening hours
+    // (22:00-23:00 local) already have a strongly non-zero darkness factor,
+    // unlike tonight's. This is the "tomorrow it begins" case: the logic
+    // must permit tomorrowScore to be non-zero even while tonight is closed.
+    const now = () => new Date('2026-08-31T12:00:00Z').getTime();
+    const forecast = eveningHoursFor('2026-09-01', 16, 20);
+    const kp = makeKp({ dailyOutlook: [{ label: 'Today', peak: 3 }, { label: 'Tomorrow', peak: 4 }] });
+
+    const result = buildTomorrowScore(forecast, kp, TROMSO.lat, TROMSO.lon, now);
+
+    assert.ok(result);
+    assert.ok(result!.score > 0, `expected a non-zero tomorrow score, got ${result?.score}`);
+  });
+});
+
+describe('computeDarknessSeasonState: early-morning rollback (< 06:00 local is still "tonight")', () => {
+  test('02:00 local on 2026-04-28, still inside the genuinely-dark night of April 27, is NOT season-closed', () => {
+    // 2026-04-28T02:00 local (CEST, UTC+2) = 2026-04-28T00:00:00Z. Before the
+    // fix, this unconditionally evaluated the calendar-date night of
+    // "April 28" (18:00 Apr 28 -> 08:00 Apr 29), which is already too bright
+    // this close to the midnight-sun season, wrongly reporting
+    // seasonClosed:true while still standing in a genuinely dark night.
+    const state = computeDarknessSeasonState(new Date('2026-04-28T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, false);
+    assert.equal(state.seasonReturns, null);
+  });
+
+  test('02:00 local deep in July (2026-07-16) is still inside a genuinely bright night -- season closed', () => {
+    // 2026-07-16T02:00 local (CEST, UTC+2) = 2026-07-16T00:00:00Z. Unlike
+    // the April case above, rolling back to the night of July 15 doesn't
+    // change the outcome -- midsummer nights in Tromso never get dark.
+    const state = computeDarknessSeasonState(new Date('2026-07-16T00:00:00Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.equal(state.seasonClosed, true);
+    assert.equal(state.seasonReturns, '2026-08-14');
+  });
 });
