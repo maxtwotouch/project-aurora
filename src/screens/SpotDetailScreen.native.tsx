@@ -7,8 +7,9 @@ import { track } from '../analytics/events';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { SpotHeroImage } from '../components/SpotHeroImage';
 import { DataBand } from '../components/tonight/DataBand';
-import { getSpotAccessInfo, getSpotImageUrls } from '../data/spotExtras';
+import { getSpotAccessInfo, getSpotImages } from '../data/spotExtras';
 import { getLocalizedSpotDescription } from '../data/spotDescriptions';
 import { getCurrentLanguage } from '../i18n';
 import { useTranslation } from '../i18n/useTranslation';
@@ -63,10 +64,15 @@ function dressAdviceKeyFromColdScore(coldScore: number): string {
 
 export function SpotDetailScreen({ spot, result, forecast }: Props) {
   const { t } = useTranslation();
-  const imageUrls = getSpotImageUrls(spot);
+  const images = getSpotImages(spot);
   const access = getSpotAccessInfo(spot);
   const forecastRows = (forecast ?? []).slice(0, 10);
   const scrollRef = useRef<ScrollView | null>(null);
+  // First image only -- the gallery further down (the "visuals" section)
+  // still shows all of them. Falls back to the plain (non-photo) header
+  // below on any load failure; never blocks first render on the fetch.
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const showPhotoHero = images.length > 0 && !heroImageFailed;
   const [sectionOffsets, setSectionOffsets] = useState<Record<SectionKey, number>>({
     overview: 0,
     location: 0,
@@ -108,82 +114,100 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
       <View style={styles.atmosphere} />
 
       {/* Hero: status summary first -- the reader should know the score,
-          window and conditions before anything else on the page. */}
+          window and conditions before anything else on the page. When the
+          spot has a photo, it leads instead of the plain eyebrow/title text
+          (editorial hero, name + score overlaid on the image's own scrim);
+          everything below is unchanged either way. */}
       <View style={styles.heroCard} onLayout={registerSection('overview')}>
-        <Text style={styles.eyebrow}>{t('spotDetail.eyebrow')}</Text>
-        <Text style={styles.title}>{spot.name}</Text>
-        <Text style={styles.subtitle}>{t('common.distanceTromsoCenter', { km: spot.distanceKm })}</Text>
-
-        <View style={styles.heroTop}>
-          <View style={styles.heroPrimary}>
-            <Text style={styles.kicker}>{t('common.bestWindow')}</Text>
-            <Text style={styles.windowValue}>
-              {result
-                ? t('tonight.windowRange', { start: formatLocalTime(result.bestWindowStart), end: formatLocalTime(result.bestWindowEnd) })
-                : t('spotDetail.waitingNextRunNative')}
-            </Text>
-            <Text style={styles.helper}>
-              {result
-                ? t('spotDetail.trendCloudSummary', { trend: t(trendLabelKey(result.trend)), cloud: result.cloudCoverAtBestHour })
-                : t('spotDetail.forecastSettlingNative')}
-            </Text>
-          </View>
-          <View style={styles.scoreWrap}>
-            <ScoreBadge score={result?.score ?? 0} size="lg" />
-            <Text style={styles.scoreLabel}>{t('spotDetail.chanceSuffix', { chance: t(chanceLabelKey(result?.score)) })}</Text>
-          </View>
-        </View>
-
-        <DataBand
-          items={[
-            { label: t('common.cloud'), value: `${result?.cloudCoverAtBestHour ?? '-'}%` },
-            { label: t('spotDetail.band.temp'), value: `${result?.temperatureAtBestHour ?? '-'}°C` },
-            { label: t('spotDetail.band.wind'), value: `${result?.windSpeedAtBestHour ?? '-'} m/s` },
-            { label: t('spotDetail.band.coldScore'), value: `${result?.coldScore ?? '-'}/100` }
-          ]}
-          style={styles.dataBandOverride}
-          itemStyle={styles.bandItemOverride}
-          dividerStyle={styles.bandDividerOverride}
-          labelStyle={styles.bandLabelOverride}
-          valueStyle={styles.bandValueOverride}
-        />
-
-        {hasVerifiedAccess ? (
-          <View style={styles.accessRow}>
-            {spot.busStop ? (
-              <View style={styles.accessChip}>
-                <Ionicons name="bus-outline" size={13} color={palette.auroraIce} />
-                <Text style={styles.accessChipText}>{spot.busStop}</Text>
-              </View>
-            ) : null}
-            {spot.parking ? (
-              <View style={styles.accessChip}>
-                <Text style={styles.accessChipGlyph}>P</Text>
-                <Text style={styles.accessChipText}>{spot.parking}</Text>
-              </View>
-            ) : null}
-          </View>
+        {showPhotoHero ? (
+          <SpotHeroImage
+            image={images[0]}
+            name={spot.name}
+            score={result?.score}
+            onError={() => setHeroImageFailed(true)}
+          />
         ) : null}
 
-        <View style={styles.jumpRow}>
-          <JumpButton label={t('spotDetail.jump.location')} onPress={() => jumpTo('location')} />
-          <JumpButton label={t('spotDetail.jump.access')} onPress={() => jumpTo('access')} />
-          <JumpButton label={t('spotDetail.jump.forecast')} onPress={() => jumpTo('forecast')} />
-          <JumpButton label={t('spotDetail.jump.visuals')} onPress={() => jumpTo('visuals')} />
-        </View>
+        <View style={styles.heroCardBody}>
+          {!showPhotoHero ? (
+            <>
+              <Text style={styles.eyebrow}>{t('spotDetail.eyebrow')}</Text>
+              <Text style={styles.title}>{spot.name}</Text>
+              <Text style={styles.subtitle}>{t('common.distanceTromsoCenter', { km: spot.distanceKm })}</Text>
+            </>
+          ) : null}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('common.openNavigationTo', { name: spot.name })}
-          style={({ pressed, focused }: WebPressableState) => [
-            styles.primaryButton,
-            focused ? styles.focusRing : null,
-            pressed ? styles.buttonPressed : null
-          ]}
-          onPress={navigateToSpot}
-        >
-          <Text style={styles.primaryButtonText}>{t('spotDetail.openNavigation')}</Text>
-        </Pressable>
+          <View style={styles.heroTop}>
+            <View style={styles.heroPrimary}>
+              <Text style={styles.kicker}>{t('common.bestWindow')}</Text>
+              <Text style={styles.windowValue}>
+                {result
+                  ? t('tonight.windowRange', { start: formatLocalTime(result.bestWindowStart), end: formatLocalTime(result.bestWindowEnd) })
+                  : t('spotDetail.waitingNextRunNative')}
+              </Text>
+              <Text style={styles.helper}>
+                {result
+                  ? t('spotDetail.trendCloudSummary', { trend: t(trendLabelKey(result.trend)), cloud: result.cloudCoverAtBestHour })
+                  : t('spotDetail.forecastSettlingNative')}
+              </Text>
+            </View>
+            <View style={styles.scoreWrap}>
+              <ScoreBadge score={result?.score ?? 0} size="lg" />
+              <Text style={styles.scoreLabel}>{t('spotDetail.chanceSuffix', { chance: t(chanceLabelKey(result?.score)) })}</Text>
+            </View>
+          </View>
+
+          <DataBand
+            items={[
+              { label: t('common.cloud'), value: `${result?.cloudCoverAtBestHour ?? '-'}%` },
+              { label: t('spotDetail.band.temp'), value: `${result?.temperatureAtBestHour ?? '-'}°C` },
+              { label: t('spotDetail.band.wind'), value: `${result?.windSpeedAtBestHour ?? '-'} m/s` },
+              { label: t('spotDetail.band.coldScore'), value: `${result?.coldScore ?? '-'}/100` }
+            ]}
+            style={styles.dataBandOverride}
+            itemStyle={styles.bandItemOverride}
+            dividerStyle={styles.bandDividerOverride}
+            labelStyle={styles.bandLabelOverride}
+            valueStyle={styles.bandValueOverride}
+          />
+
+          {hasVerifiedAccess ? (
+            <View style={styles.accessRow}>
+              {spot.busStop ? (
+                <View style={styles.accessChip}>
+                  <Ionicons name="bus-outline" size={13} color={palette.auroraIce} />
+                  <Text style={styles.accessChipText}>{spot.busStop}</Text>
+                </View>
+              ) : null}
+              {spot.parking ? (
+                <View style={styles.accessChip}>
+                  <Text style={styles.accessChipGlyph}>P</Text>
+                  <Text style={styles.accessChipText}>{spot.parking}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          <View style={styles.jumpRow}>
+            <JumpButton label={t('spotDetail.jump.location')} onPress={() => jumpTo('location')} />
+            <JumpButton label={t('spotDetail.jump.access')} onPress={() => jumpTo('access')} />
+            <JumpButton label={t('spotDetail.jump.forecast')} onPress={() => jumpTo('forecast')} />
+            <JumpButton label={t('spotDetail.jump.visuals')} onPress={() => jumpTo('visuals')} />
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.openNavigationTo', { name: spot.name })}
+            style={({ pressed, focused }: WebPressableState) => [
+              styles.primaryButton,
+              focused ? styles.focusRing : null,
+              pressed ? styles.buttonPressed : null
+            ]}
+            onPress={navigateToSpot}
+          >
+            <Text style={styles.primaryButtonText}>{t('spotDetail.openNavigation')}</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View onLayout={registerSection('location')}>
@@ -257,13 +281,18 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
         <CollapsibleSection
           eyebrow={t('spotDetail.visuals.eyebrow')}
           title={t('spotDetail.visuals.title')}
-          meta={imageUrls.length > 0 ? t('spotDetail.photosCount', { count: imageUrls.length }) : t('spotDetail.noPhotosYet')}
+          meta={images.length > 0 ? t('spotDetail.photosCount', { count: images.length }) : t('spotDetail.noPhotosYet')}
           defaultOpen={false}
         >
-          {imageUrls.length > 0 ? (
+          {images.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesRow}>
-              {imageUrls.map((url) => (
-                <Image key={url} source={{ uri: url }} style={styles.image} resizeMode="cover" />
+              {images.map((image) => (
+                <View key={image.url} style={styles.imageTile}>
+                  <Image source={{ uri: image.url }} style={styles.image} resizeMode="cover" />
+                  <Text style={styles.imageCredit} numberOfLines={1}>
+                    {t('spotDetail.photoCredit', { author: image.author, license: image.license })}
+                  </Text>
+                </View>
               ))}
             </ScrollView>
           ) : (
@@ -309,11 +338,18 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: palette.nightPanel,
     borderRadius: radius.xl,
-    padding: space.lg,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: palette.cardBorder,
     marginBottom: space.sm,
-    ...elevation.lg,
+    ...elevation.lg
+  },
+  // Holds everything that isn't the full-bleed photo -- when there's no
+  // photo this is the only child and looks identical to the old single
+  // padded card; when there is one, the photo bleeds to the card's own
+  // edges above it instead of sitting inside this padding.
+  heroCardBody: {
+    padding: space.lg,
     gap: space.md
   },
   eyebrow: {
@@ -483,12 +519,20 @@ const styles = StyleSheet.create({
   imagesRow: {
     marginTop: 4
   },
+  imageTile: {
+    width: 220,
+    marginRight: space.xs
+  },
   image: {
     width: 220,
     height: 150,
     borderRadius: radius.md,
-    marginRight: space.xs,
     borderWidth: 1,
     borderColor: palette.cardBorder
+  },
+  imageCredit: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: 3
   }
 });

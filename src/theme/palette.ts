@@ -65,12 +65,20 @@ export const palette = {
   // see board rationale) and NOT substituted into the existing semantic
   // warning/danger tokens above -- those already mean something ("data is
   // stale", "cloud cover") and repainting them copper would blur that
-  // meaning for a purely decorative brand accent. Right now it is used in
-  // exactly one place: a single "town light" dot on the app icon/splash
-  // mark (assets/icon.svg), which is the one spot the brand direction
-  // explicitly called out for a warm secondary emphasis. Not yet reached
-  // for in-app UI -- flagged here so a future PR (photo-editorial pass) has
-  // an obvious, pre-named place to reach for it rather than picking a new
-  // one-off hex.
-  accentWarm: '#d97b52'
+  // meaning for a purely decorative brand accent. Originally used in
+  // exactly one place: the "town light" dot on the app icon/splash mark
+  // (assets/icon.svg). The photo-editorial pass (brand PR 2/2) picked up
+  // the flag left here and reached for it in three places where "warm"
+  // reads as timing/patience rather than status -- see that PR's notes for
+  // the shortlist. Still deliberately NOT used for the `wait`/`goNow`
+  // decision states (those keep the existing green/amber semantics) or for
+  // anything that could be mistaken for a data-quality warning.
+  accentWarm: '#d97b52',
+  // Text-on-copper pair, same pattern as the warning/danger *Surface +
+  // textOn*Surface pairs above: a dark copper-tinted surface with a light
+  // copper-tinted text color, both derived from accentWarm's own hue so a
+  // "warm" surface reads as a family with the accent dot/stroke rather than
+  // a one-off. Contrast-checked at ~9.7:1 (WCAG AA/AAA for body text).
+  accentWarmSurface: '#3a2418',
+  textOnAccentWarmSurface: '#f6cbb0'
 } as const;

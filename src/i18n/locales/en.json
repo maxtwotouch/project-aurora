@@ -246,7 +246,9 @@
     "noPhotosText": "Verified photos for this spot are coming soon.",
     "mapPreviewSimplified": "Map preview is simplified on web beta.",
     "openInGoogleMaps": "Open in Google Maps",
-    "hourlyClearnessA11y": "Hourly sky clearness for this spot"
+    "hourlyClearnessA11y": "Hourly sky clearness for this spot",
+    "heroImageA11y": "Photo of {{name}}. Credit: {{author}}, {{license}}.",
+    "photoCredit": "Photo: {{author}} · {{license}}"
   },
   "spotCard": {
     "a11yLabel": "{{name}}, score {{score}} of 100, {{trend}}",
