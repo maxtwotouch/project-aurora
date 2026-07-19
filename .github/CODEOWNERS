@@ -20,6 +20,13 @@
 /docs/privacy-usage-events.md @maxtwotouch
 /backend/src/server.ts      @maxtwotouch # wires events/stats routes — proposed, owner may narrow
 
+# PROPOSED (feat/alerts-backend, needs human confirmation before merge) --
+# per docs/design-aurora-alerts.md section 2's "New CODEOWNERS entries
+# required if this ships":
+/backend/src/alerts*         @maxtwotouch
+/src/notifications/          @maxtwotouch
+/docs/privacy-push-alerts.md @maxtwotouch
+
 # Database schema / migrations (once they exist).
 /backend/migrations/        @maxtwotouch
 /backend/prisma/            @maxtwotouch

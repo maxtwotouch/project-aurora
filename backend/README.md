@@ -9,6 +9,17 @@
 - `POST /v1/events`: anonymous, aggregate-only usage collection (event types: `spot_view`, `navigate_pressed`, `spot_shared`). Body is `{ type, spotId }` or an array of up to 20 such events. Immediately folded into in-memory (type, spotId, UTC-hour) counters — no raw events, timestamps, IPs, or identifiers are ever stored. See `src/events.ts`, `src/usageStore.ts`, and `../docs/privacy-usage-events.md`.
 - `GET /v1/stats/usage` (requires `x-admin-token`): aggregate-only usage counts by spot, hour, and day, for the municipality dataset. See `src/stats.ts`.
 
+## Aurora push alerts
+
+`src/alerts.ts` evaluates "tonight looks good" push-alert triggers after every successful snapshot refresh (see `refreshSnapshot()` in `src/server.ts`), and `src/fcm.ts` publishes to Firebase Cloud Messaging topics. See `../docs/design-aurora-alerts.md` for the full design (Option B: topic-based FCM -- this backend never requests, sees, or stores an individual device/registration token; devices subscribe client-side to a threshold-tier topic, and Google's FCM servers hold the device↔topic mapping, not us) and `../docs/setup-firebase-alerts.md` for the owner's one-time Firebase setup steps.
+
+- Two tiers, matching `chanceFromScore` in `src/snapshot.ts`: `alerts-ge70` ("Only great nights", score ≥ 70) and `alerts-ge45` ("Any decent chance", score ≥ 45).
+- Hysteresis (a tier only fires again after dipping 10 points below its own threshold), quiet hours (01:00–16:00 Europe/Oslo, suppressed pushes are remembered and fire once quiet hours end if still above threshold), a hard cap of 1 push per night total across both tiers, and staleness guards (never fires on fallback KP/weather data or when `darkness.seasonClosed`) are all implemented in `src/alerts.ts` — see that file's doc comments for the exact rules.
+- State (`{ nightKey, firedTiers, totalFired }` — no user data, ever) is mirrored to `data/alerts-state.json` the same way `src/usageStore.ts` mirrors usage counters (atomic write, corrupt/missing mirror → clean state, no crash).
+- The FCM publisher is configured via `FCM_PROJECT_ID` / `FCM_SERVICE_ACCOUNT` (see `.env.example`). **Both are owner-held secrets, never committed.** Leaving either unset is a fully supported "inert" mode: the engine still evaluates and persists state, it just skips the actual publish (logs one info line instead).
+
+**Process note for reviewers:** `../docs/design-aurora-alerts.md` is titled "Status: draft, awaiting owner sign-off" and lists provider choice / thresholds / CODEOWNERS additions under "Decisions for the owner" (§5), not marked confirmed in the doc itself. The doc's own rough implementation plan (§6) calls the provider-wiring step "OWNER REVIEW REQUIRED" / "the hard human-review gate," independent of which provider is chosen. This PR implements that wiring (per its task brief), but nothing here is merged automatically, and the publisher stays inert until the owner deliberately sets the two secrets above — see the PR description for the fuller flag.
+
 ## Run
 
 ```bash
@@ -35,6 +46,7 @@ optional env vars, and health-check/persistence notes, see
 - `SOURCE_TIMEOUT_MS` (default `10000` = 10 seconds) — timeout applied to every outbound call to MET/NOAA; a hung upstream aborts instead of stalling a refresh cycle.
 - `USAGE_RETENTION_DAYS` (default `180`) — how many days a usage-counter hour bucket is kept before being pruned from memory and the `usage-stats.json` mirror (on `load()` and every `flush()`). See `src/usageStore.ts` and `../docs/privacy-usage-events.md`.
 - `STATS_MIN_CELL` (default `0` = off) — minimum per-cell count for `GET /v1/stats/usage`'s `bySpot`/`byHour`/`byDay` breakdowns; entries below the threshold are omitted (totals stay exact). Small-cell/k-anonymity suppression knob; the owner picks the real threshold. See `src/stats.ts` and `../docs/privacy-usage-events.md`.
+- `FCM_PROJECT_ID` / `FCM_SERVICE_ACCOUNT` (both unset by default) — Firebase project id and service-account key (inline JSON, not a file path) for the aurora push-alerts publisher. Owner-held secrets, never committed; unset = the publisher stays inert. See "Aurora push alerts" above and `../docs/setup-firebase-alerts.md`.
 
 ## Restart survival
 

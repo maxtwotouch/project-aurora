@@ -17,6 +17,7 @@ import { config } from './config.js';
 import { registerEventRoutes } from './events.js';
 import { registerStatsRoutes } from './stats.js';
 import { usageCounterStore } from './usageStore.js';
+import { checkAlertTriggers, loadAlertStateFromDisk } from './alerts.js';
 
 export type BuildAppOptions = {
   adminToken?: string;
@@ -55,6 +56,20 @@ export async function refreshSnapshot(): Promise<void> {
     const snapshot = await buildTonightSnapshot();
     await setLatestSnapshot(snapshot);
     recordRefreshOutcome(true);
+
+    // Alerts engine (docs/design-aurora-alerts.md): evaluated on every
+    // successful refresh, after the snapshot is committed. Failures here
+    // must never fail the refresh itself -- caught and swallowed (with a
+    // console warning) the same way store.ts's loadSnapshotFromDisk degrades
+    // on a corrupt mirror rather than crashing.
+    try {
+      await checkAlertTriggers(snapshot);
+    } catch (alertError) {
+      console.warn(
+        '[alerts] checkAlertTriggers failed; snapshot refresh still succeeded.',
+        alertError instanceof Error ? alertError.message : alertError
+      );
+    }
   } catch (error) {
     recordRefreshOutcome(false, error);
     throw error;
@@ -184,6 +199,11 @@ async function bootstrap() {
   // do NOT block `listen()` on the first live refresh (below), since a slow or
   // hung upstream must not delay (or, pre-timeout-fix, block) server startup.
   await loadSnapshotFromDisk();
+
+  // Alerts state (night key / fired tiers / total-fired cap): load before
+  // listening too, so a restart mid-evening doesn't lose the per-night
+  // hysteresis/cap state (docs/design-aurora-alerts.md section 3).
+  await loadAlertStateFromDisk();
 
   await app.listen({ host: config.host, port: config.port });
   app.log.info(`Backend listening on ${config.host}:${config.port}`);

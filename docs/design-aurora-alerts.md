@@ -1,10 +1,14 @@
 # Design: "Tonight looks good" aurora push alerts
 
-Status: **draft, awaiting owner sign-off**. No code in this PR — see
+Status: **provider choice reported approved (Option B, topic-based FCM)** —
+see the sourcing note on §5 item 1 below before treating this as final.
+`backend/src/alerts.ts` / `backend/src/fcm.ts` now exist (a separate PR,
+kept unmerged pending review) implementing Option B and the §1/§3 defaults
+below; see `docs/privacy-push-alerts.md` for what that implementation
+actually stores/sends. §5 items 2 and 5 are marked "implemented per
+defaults" accordingly. Items 3, 4, and 6 remain open. See
 `docs/roadmap-2026-27.md` Phase 2 ("Aurora alerts... the flagship Phase-2
-build") and the privacy guardrails in `CLAUDE.md`. This exists so the
-provider choice and privacy architecture are decided before anyone writes
-`backend/src/alerts.ts`.
+build") and the privacy guardrails in `CLAUDE.md`.
 
 Grounding: `backend/src/scoring.ts`, `snapshot.ts`, `store.ts`, `server.ts`,
 `sources.ts`, `src/analytics/*`, `docs/privacy-usage-events.md`.
@@ -198,22 +202,35 @@ Hooks into the existing refresh cycle, no new cron/poller:
 
 ## 5. Decisions for the owner
 
-1. **Provider choice.** Recommend Option B. Confirm, or accept Option A's
-   lower cost in exchange for an explicit, documented guardrail exception
-   (a device-linked token store) — a bigger call than a routine
-   privacy-sensitive PR, made explicitly rather than by default.
-2. **Threshold defaults.** Confirm ≥70/≥45 (aligned to `chanceFromScore`)
-   versus the brief's illustrative ≥70/≥40, and "Only great nights" as the
-   first-time default.
-3. **Consent styling.** Confirm a settings-row toggle (no dedicated modal)
+1. **Provider choice — DECIDED: Option B.** Recorded here as reported by the
+   coordinating agent session, 2026-07-19: "the owner explicitly approved
+   Option B in-session ('Go with topic-based push for #26, start building
+   it')." Per this repo's agent-operating rules, an agent's relay of a
+   verbal/session decision is not itself the owner's consent — the backend
+   engine (`backend/src/alerts.ts`, `backend/src/fcm.ts`) has been built on
+   this basis and is ready for review, but the owner should independently
+   confirm this decision directly in-repo (e.g. edit this line yourself, a
+   PR comment, or a commit) before/when merging the alerts-backend PR, since
+   this is exactly the kind of privacy-relevant call `CLAUDE.md` says
+   "requires human review." Option A remains unimplemented and would still
+   need the explicit guardrail-exception treatment described below if
+   reconsidered later.
+2. **Threshold defaults — implemented per defaults, owner may adjust.**
+   `backend/src/alerts.ts` implements ≥70/≥45 (aligned to `chanceFromScore`,
+   not the brief's illustrative ≥70/≥40) with "Only great nights" (≥70) as
+   the higher-tier default. Client-side first-time-default selection (which
+   tier a first-time opt-in defaults to) is still PR β (client), unimplemented.
+3. **Consent styling.** Still open — unimplemented in this backend PR
+   (client-side, PR β). Confirm a settings-row toggle (no dedicated modal)
    is acceptable, given the OS push-permission prompt is the second gate.
-4. **GDPR note if Option A instead:** hosting region for the token table,
-   retention window (proposed 90 days), whether `docs/privacy-push-alerts.md`
-   needs review before any token is stored.
-5. **Quiet hours / cap finality.** Confirm 01:00–16:00 and 1/night as
-   shipped defaults, or flag a later user-configurable override.
-6. **CODEOWNERS additions** in §2 — confirm before the first alerts PR
-   opens.
+4. **GDPR note if Option A instead:** moot given the Option B decision above
+   unless revisited later; left unanswered here on purpose.
+5. **Quiet hours / cap finality — implemented per defaults, owner may
+   adjust.** `backend/src/alerts.ts` implements exactly 01:00–16:00 Europe/
+   Oslo quiet hours and a hard cap of 1 push per night, total (not
+   per-tier). No user-configurable override exists yet.
+6. **CODEOWNERS additions** in §2 — still open; not yet added to
+   `.github/CODEOWNERS`. Confirm/add before the alerts-backend PR merges.
 
 ## 6. Rough implementation plan
 
