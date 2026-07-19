@@ -11,7 +11,10 @@
     "beta": {
       "distribution": "store",
       "channel": "beta",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "image": "macos-tahoe-26.4-xcode-26.4"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -23,7 +26,11 @@
     }
   },
   "submit": {
-    "beta": {},
+    "beta": {
+      "ios": {
+        "ascAppId": "6760355675"
+      }
+    },
     "production": {}
   }
 }
