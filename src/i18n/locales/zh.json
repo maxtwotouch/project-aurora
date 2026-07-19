@@ -293,6 +293,12 @@
     "privacySection": "隐私",
     "aboutSection": "关于",
     "aboutAppName": "Tromsø Northern Lights",
-    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune"
+    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
+    "designPreviewSection": "预览",
+    "designPreviewLabel": "设计预览（示例数据）",
+    "designPreviewHelper": "显示极光季节的示例预报，而非实时数据。开启期间将停用使用情况跟踪。"
+  },
+  "preview": {
+    "banner": "示例数据 — 非真实预报"
   }
 }
