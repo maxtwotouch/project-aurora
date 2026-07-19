@@ -3,7 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchTonightSnapshotFromBackend, shouldUseBackend } from '../api/backend';
 import { fetchKpTrendDetailed } from '../api/kp';
 import { fetchPointForecastDetailed, fetchSightingPossibleFrom, fetchSpotForecastDetailed } from '../api/yr';
+import { getSampleForecastSnapshot } from '../data/sampleForecast';
 import spots from '../data/spots.json';
+// Deliberately importing the framework-free core (no React, no RN) rather
+// than ../preview/previewMode.ts: this hook's module graph must stay free
+// of any 'react-native' import (test/scoring.test.ts imports
+// buildTomorrowScore from this file directly under plain Node/tsx, where
+// 'react-native's own entry point cannot be parsed). See
+// previewModeCore.ts's header comment for the full rationale.
+import { getPreviewModeState, subscribePreviewModeState } from '../preview/previewModeCore';
 import { rankSpots } from '../scoring/score';
 import { computeDarknessSeasonState } from '../scoring/season';
 import { darknessFactor, solarElevationDeg } from '../scoring/solar';
@@ -118,6 +126,15 @@ export function buildTomorrowScore(
 }
 
 export function useForecast(): UseForecastResult {
+  // See src/preview/previewMode.ts (persistence) and previewModeCore.ts
+  // (the framework-free state this subscribes to directly). When Design
+  // preview is on (Settings), this hook skips fetching live data entirely
+  // and returns src/data/sampleForecast.ts's deterministic sample snapshot
+  // below instead -- every subscriber (all screens) re-renders the instant
+  // the toggle flips, same as the language/consent pattern this mirrors.
+  const [previewEnabled, setPreviewEnabled] = useState<boolean>(getPreviewModeState());
+  useEffect(() => subscribePreviewModeState(setPreviewEnabled), []);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
@@ -147,6 +164,13 @@ export function useForecast(): UseForecastResult {
   );
 
   const refresh = useCallback(async () => {
+    if (getPreviewModeState()) {
+      // Sample data is synchronous and derived below on every render; there
+      // is nothing to fetch while preview is on. Pull-to-refresh in this
+      // state is intentionally an instant no-op.
+      return;
+    }
+
     setLoading(true);
     setError(null);
     const backendRequested = shouldUseBackend();
@@ -239,8 +263,42 @@ export function useForecast(): UseForecastResult {
   }, []);
 
   useEffect(() => {
+    if (previewEnabled) return;
     void refresh();
-  }, [refresh]);
+  }, [refresh, previewEnabled]);
+
+  // See src/data/sampleForecast.ts. Recomputed only when the toggle itself
+  // flips (not on every render) -- the sample is deterministic given "now",
+  // so there's no need to regenerate it on unrelated re-renders.
+  const sample = useMemo(() => (previewEnabled ? getSampleForecastSnapshot() : null), [previewEnabled]);
+
+  if (sample) {
+    const sampleTopSpots = sample.rankedSpots.slice(0, 5);
+    const sampleCloseSpots = sample.rankedSpots
+      .filter((item) => (spotsById[item.spotId]?.distanceKm ?? 999) <= 10)
+      .slice(0, 3);
+    const sampleLevel = levelFromScore(sample.tonightScore.score);
+
+    return {
+      loading: false,
+      error: null,
+      lastUpdatedAt: sample.lastUpdatedAt,
+      dataQuality: sample.dataQuality,
+      kp: sample.kp,
+      rankedSpots: sample.rankedSpots,
+      topSpots: sampleTopSpots,
+      closeSpots: sampleCloseSpots,
+      spotsById,
+      forecastsBySpotId: sample.forecastsBySpotId,
+      tonightScore: sample.tonightScore,
+      tomorrowScore: sample.tomorrowScore,
+      sightingPossibleFrom: sample.sightingPossibleFrom,
+      darkness: sample.darkness,
+      recommendation: recommendationFromLevel(sampleLevel),
+      level: sampleLevel,
+      refresh
+    };
+  }
 
   const topSpots = rankedSpots.slice(0, 5);
   const closeSpots = rankedSpots.filter((item) => (spotsById[item.spotId]?.distanceKm ?? 999) <= 10).slice(0, 3);

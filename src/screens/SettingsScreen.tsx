@@ -1,6 +1,7 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { DesignPreviewToggle } from '../components/DesignPreviewToggle';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { PRIVACY_POLICY_URL } from '../constants/legal';
@@ -46,6 +47,11 @@ export function SettingsScreen() {
           <Text style={styles.linkRowText}>{t('consent.privacyPolicyLink')}</Text>
           <Ionicons name="chevron-forward" size={18} color={palette.textMuted} />
         </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>{t('settings.designPreviewSection')}</Text>
+        <DesignPreviewToggle />
       </View>
 
       <View style={styles.card}>

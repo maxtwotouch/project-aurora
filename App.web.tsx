@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 // See App.tsx for why these are imported per-weight rather than from the
 // package root (avoids Metro bundling all 18 Fraunces weight/italic files).
 import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
@@ -16,6 +17,7 @@ import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
+import { PreviewModeBanner } from './src/components/PreviewModeBanner';
 import { SettingsButton } from './src/components/SettingsButton';
 import { useForecast } from './src/hooks/useForecast';
 import { useTranslation } from './src/i18n/useTranslation';
@@ -238,8 +240,12 @@ export default function App() {
   );
 
   return (
-    <ConsentGate>
-      <NavigationContainer theme={navTheme}>
+    <SafeAreaProvider>
+      <ConsentGate>
+        {/* Mounted once here, above the whole navigator -- see
+            PreviewModeBanner's own header comment for why. */}
+        <PreviewModeBanner />
+        <NavigationContainer theme={navTheme}>
         <Stack.Navigator
           screenOptions={{
             headerStyle: {
@@ -326,8 +332,9 @@ export default function App() {
             )}
           </Stack.Screen>
         </Stack.Navigator>
-      </NavigationContainer>
-    </ConsentGate>
+        </NavigationContainer>
+      </ConsentGate>
+    </SafeAreaProvider>
   );
 }
 
