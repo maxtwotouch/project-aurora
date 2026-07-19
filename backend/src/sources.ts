@@ -164,6 +164,32 @@ export function estimateSightingPossibleFrom(sunsetIso: string | null): string |
   });
 }
 
+/** Formats an ISO instant as an Oslo-local "HH:MM" (24h) clock time, or
+ * `null` for an unparseable input. Shares `estimateSightingPossibleFrom`'s
+ * `toLocaleTimeString` + `OSLO_TIME_ZONE` approach rather than adding a new
+ * formatting strategy. */
+export function formatOsloClockTime(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+    timeZone: OSLO_TIME_ZONE
+  });
+}
+
+/** Formats a best-window start/end pair as an Oslo-local "HH:MM–HH:MM"
+ * range (used for the APNs `loc-args` alert text -- see fcm.ts's
+ * buildApnsAlert), or `null` if either endpoint is unparseable. */
+export function formatOsloTimeRange(startIso: string, endIso: string): string | null {
+  const start = formatOsloClockTime(startIso);
+  const end = formatOsloClockTime(endIso);
+  if (!start || !end) return null;
+  return `${start}–${end}`;
+}
+
 export function extractSunsetIso(payload: any): string | null {
   const candidates = [
     payload?.properties?.sunset?.time,

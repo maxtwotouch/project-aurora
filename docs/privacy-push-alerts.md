@@ -82,24 +82,79 @@ device/registration-token-shaped field ever appears in a published message
 
 ## What is sent in a push
 
-A data-only FCM message (no title/body composed server-side — the client
-renders localized text from its own i18n catalogs on receipt, per
-`docs/design-aurora-alerts.md` §2):
+A data-only `data` block (no title/body composed server-side — the
+foreground/Android client renders localized text from its own i18n
+catalogs on receipt, per `docs/design-aurora-alerts.md` §2 and PR #52's
+`src/notifications/alertsClient.ts`), **plus** two delivery-only blocks
+added after PR β review found a gap (see "iOS background/killed delivery"
+below) — none of the three blocks ever carries anything beyond what's
+already public at `GET /v1/tonight`:
 
 ```jsonc
 {
-  "threshold": "70",                          // which tier crossed (70 or 45)
-  "score": "82",                              // the best spot's score that triggered it
-  "spotId": "ersfjordbotn",                   // which spot, from the existing public spot catalog
-  "spotName": "Ersfjordbotn",
-  "bestWindowStart": "2026-07-19T20:00:00.000Z",
-  "bestWindowEnd": "2026-07-19T23:00:00.000Z"
+  "data": {
+    "threshold": "70",                          // which tier crossed (70 or 45)
+    "score": "82",                              // the best spot's score that triggered it
+    "spotId": "ersfjordbotn",                   // which spot, from the existing public spot catalog
+    "spotName": "Ersfjordbotn",
+    "bestWindowStart": "2026-07-19T20:00:00.000Z",
+    "bestWindowEnd": "2026-07-19T23:00:00.000Z"
+  },
+  "android": { "priority": "high" },            // timely (not battery-deferred) delivery; no new data
+  "apns": {
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "ALERT_TITLE_GE70",  // ALERT_TITLE_<TIER> / ALERT_BODY_<TIER>
+          "loc-key": "ALERT_BODY_GE70",         // per crossed tier -- never literal text
+          "loc-args": ["Ersfjordbotn", "20:00–23:00"] // [spotName, Oslo-local best-window range]
+        },
+        "sound": "default"
+      }
+    }
+  }
 }
 ```
 
 Every field here is already public information this backend serves at
 `GET /v1/tonight` to anyone, unauthenticated — nothing in this payload is
 derived from or identifies a subscriber.
+
+### iOS background/killed delivery (`apns` block)
+
+Found during PR β (client) review: a data-only FCM message does not wake a
+backgrounded or killed iOS app — only a native APNs `alert` does. Android
+and any foreground app on either OS were already fine (they compose their
+own notification from `data`, per PR #52). `backend/src/fcm.ts` now adds an
+`apns.payload.aps.alert` block using Apple's `title-loc-key`/`loc-key`/
+`loc-args` fields — this instructs iOS to render the notification **from
+strings baked into the app bundle itself** (`ALERT_TITLE_GE70`/
+`ALERT_BODY_GE70`/`ALERT_TITLE_GE45`/`ALERT_BODY_GE45`, written into
+`Localizable.strings` for five languages at prebuild time by
+`plugins/withAlertLocalizableStrings.js`), substituting `loc-args`
+positionally.
+
+This is still identifier-free and still device-language-localized, just by
+a different mechanism than the client's own data-driven render:
+
+- **No new data leaves this backend.** `loc-args` is built only from the
+  same `spotName`/`bestWindowStart`/`bestWindowEnd` fields already in
+  `data` above (see `fcm.ts`'s `buildApnsAlert`) — nothing about the
+  message's *content* changes, only how iOS is told to display it while the
+  app isn't running.
+- **Localization moves on-device, not further from it.** The backend never
+  chooses or sends a language or any composed text — iOS resolves
+  `title-loc-key`/`loc-key` against whichever `.lproj/Localizable.strings`
+  matches the *device's own* language setting, exactly as reliably as the
+  client's existing i18n-catalog render, just reachable even when the app
+  isn't running to do that rendering itself.
+- **`android: { priority: 'high' }`** is unrelated to localization or
+  identity — it only asks FCM to attempt timely (not battery-deferred)
+  delivery of the same `data` block Android already had.
+
+`test/alerts.test.ts`'s privacy-invariant scan (`doesNotMatch(...,
+/device|registration|expo[-_]?push|token/i)`) now covers the **entire**
+serialized message body, including these two new blocks, not just `data`.
 
 ## Opt-in mechanics
 

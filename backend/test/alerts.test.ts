@@ -14,6 +14,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { getOsloOffset } from '../src/sources.js';
 import type { FetchLike } from '../src/sources.js';
 import {
+  buildApnsAlert,
   buildServiceAccountJwt,
   loadFcmConfig,
   publishToTopic,
@@ -519,7 +520,7 @@ describe('fcm.ts -- publish payload shape + privacy invariant', () => {
     };
   }
 
-  test('publishes a topic-only, data-only message with the correct topic name and shape', async () => {
+  test('publishes a topic-addressed message carrying data, an android priority block, and a native APNs alert (title/body loc-keys + loc-args), never literal notification text', async () => {
     resetFcmStateForTests();
 
     const calls: { url: string; init: RequestInit }[] = [];
@@ -537,7 +538,14 @@ describe('fcm.ts -- publish payload shape + privacy invariant', () => {
 
     const outcome = await publishToTopic(
       'alerts-ge70',
-      { threshold: '70', score: '80', spotId: 'ersfjordbotn', bestWindowStart: '2026-01-10T20:00:00.000Z' },
+      {
+        threshold: '70',
+        score: '80',
+        spotId: 'ersfjordbotn',
+        spotName: 'Ersfjordbotn',
+        bestWindowStart: '2026-01-10T20:00:00.000Z',
+        bestWindowEnd: '2026-01-10T23:00:00.000Z'
+      },
       { env: makeEnv(), fetchImpl }
     );
 
@@ -552,25 +560,106 @@ describe('fcm.ts -- publish payload shape + privacy invariant', () => {
 
     const body = JSON.parse(publishCall.init.body as string);
     assert.deepEqual(Object.keys(body), ['message']);
-    assert.deepEqual(Object.keys(body.message).sort(), ['data', 'topic']);
+    assert.deepEqual(Object.keys(body.message).sort(), ['android', 'apns', 'data', 'topic']);
     assert.equal(body.message.topic, 'alerts-ge70');
     assert.deepEqual(body.message.data, {
       threshold: '70',
       score: '80',
       spotId: 'ersfjordbotn',
-      bestWindowStart: '2026-01-10T20:00:00.000Z'
+      spotName: 'Ersfjordbotn',
+      bestWindowStart: '2026-01-10T20:00:00.000Z',
+      bestWindowEnd: '2026-01-10T23:00:00.000Z'
+    });
+
+    // FCM v1 AndroidConfig.priority is a lowercase string enum ("high" /
+    // "normal"), not the uppercase Java/Kotlin constant names -- see
+    // fcm.ts's buildAndroidConfig.
+    assert.deepEqual(body.message.android, { priority: 'high' });
+
+    // Native APNs alert: title-loc-key/loc-key (never literal English text,
+    // since iOS must localize from the DEVICE's language, not this
+    // backend's) + loc-args positionally [spotName, "HH:MM-HH:MM" Oslo-local
+    // range] -- see fcm.ts's buildApnsAlert and
+    // plugins/withAlertLocalizableStrings.js for the ALERT_TITLE_GE70/
+    // ALERT_BODY_GE70 string-table entries these keys name.
+    assert.deepEqual(body.message.apns, {
+      payload: {
+        aps: {
+          alert: {
+            'title-loc-key': 'ALERT_TITLE_GE70',
+            'loc-key': 'ALERT_BODY_GE70',
+            'loc-args': ['Ersfjordbotn', '21:00–00:00']
+          },
+          sound: 'default'
+        }
+      }
     });
 
     // PRIVACY INVARIANT (see fcm.ts header comment / CLAUDE.md guardrails):
     // Option B never sends a device/registration token. Assert the request
     // is addressed by `topic` only -- never `token` or `condition` -- and
     // that no plausible token/device-identifier field sneaks into the
-    // message body anywhere.
+    // message body anywhere, including the new android/apns blocks (this
+    // scan covers the WHOLE serialized message, not just `data`).
     assert.equal('token' in body.message, false);
     assert.equal('condition' in body.message, false);
     assert.equal('registration_ids' in body.message, false);
     const serializedMessage = JSON.stringify(body.message);
     assert.doesNotMatch(serializedMessage, /device|registration|expo[-_]?push|token/i);
+  });
+
+  test('the ge45 topic maps to ALERT_TITLE_GE45/ALERT_BODY_GE45 loc-keys', async () => {
+    resetFcmStateForTests();
+
+    const fetchImpl = (async (url: string) => {
+      if (url === 'https://oauth2.googleapis.com/token') {
+        return { ok: true, status: 200, json: async () => ({ access_token: 'tok', expires_in: 3600 }) } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({}) } as Response;
+    }) as unknown as FetchLike;
+
+    const alert = buildApnsAlert('alerts-ge45', {
+      threshold: '45',
+      score: '50',
+      spotId: 'ersfjordbotn',
+      spotName: 'Ersfjordbotn',
+      bestWindowStart: '2026-01-10T20:00:00.000Z',
+      bestWindowEnd: '2026-01-10T23:00:00.000Z'
+    });
+
+    assert.deepEqual(alert, {
+      payload: {
+        aps: {
+          alert: {
+            'title-loc-key': 'ALERT_TITLE_GE45',
+            'loc-key': 'ALERT_BODY_GE45',
+            'loc-args': ['Ersfjordbotn', '21:00–00:00']
+          },
+          sound: 'default'
+        }
+      }
+    });
+
+    // Unused in this test beyond satisfying "fetchImpl is referenced" --
+    // buildApnsAlert itself makes no network call, this just documents that
+    // fact (no calls array to assert against, unlike the fetch-mocked test
+    // above).
+    void fetchImpl;
+  });
+
+  test('buildApnsAlert returns null for an unrecognized topic, or when data is missing spotName/bestWindowStart/bestWindowEnd -- degrades to data-only rather than throwing', () => {
+    const fullData = {
+      threshold: '70',
+      score: '80',
+      spotId: 'ersfjordbotn',
+      spotName: 'Ersfjordbotn',
+      bestWindowStart: '2026-01-10T20:00:00.000Z',
+      bestWindowEnd: '2026-01-10T23:00:00.000Z'
+    };
+
+    assert.equal(buildApnsAlert('some-other-topic', fullData), null);
+    assert.equal(buildApnsAlert('alerts-ge70', { ...fullData, spotName: '' }), null);
+    assert.equal(buildApnsAlert('alerts-ge70', { threshold: '70', score: '80', spotId: 'ersfjordbotn' }), null);
   });
 });
 
