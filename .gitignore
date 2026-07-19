@@ -13,5 +13,11 @@ yarn-error.*
 # isn't, since it's a locally-regenerated cache of in-memory counters.
 backend/data/usage-stats.json
 
+# Aurora alerts night-key/fired-tier state mirror (backend/src/alerts.ts).
+# Same reasoning as usage-stats.json above: a locally-regenerated cache, not
+# a seed file worth tracking. Contains no user data -- just {nightKey,
+# firedTiers, totalFired}, see alerts.ts's PersistedAlertState.
+backend/data/alerts-state.json
+
 .worktrees/.worktrees/
 .worktrees/
