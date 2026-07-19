@@ -63,6 +63,8 @@ a clear error instead of silently falling back -- see `backend/src/config.ts`.
 | `SOURCE_TIMEOUT_MS` | `10000` (10 s) | Timeout for outbound MET/NOAA calls before falling back to deterministic sample data. |
 | `USAGE_RETENTION_DAYS` | `180` (days) | How long a usage-counter hour bucket (`type\|spotId\|hourBucket`) is kept before being pruned from memory and `backend/data/usage-stats.json`, on both server boot and every periodic flush. |
 | `STATS_MIN_CELL` | `0` (off) | Small-cell/k-anonymity suppression threshold for `GET /v1/stats/usage`. When > 0, breakdown entries (`bySpot`/`byHour`/`byDay`) with a count below this value are omitted; totals remain exact. The owner must choose the real threshold before this endpoint's output is shared externally -- see `docs/privacy-usage-events.md`. |
+| `FCM_PROJECT_ID` | *(unset)* | Firebase project id for the aurora push-alerts topic publisher (`backend/src/fcm.ts`). Owner-held; see `docs/setup-firebase-alerts.md`. |
+| `FCM_SERVICE_ACCOUNT` | *(unset)* | Firebase service-account key as a single inline JSON string (not a file path). **Secret -- never commit a real value; set via `flyctl secrets set` or your provider's secret manager.** Leaving `FCM_PROJECT_ID`/`FCM_SERVICE_ACCOUNT` unset (either or both) is fully supported: the alerts engine still runs, but the publish step is inert (logs one line, sends nothing). See `docs/setup-firebase-alerts.md`. |
 
 None of these have real values checked into the repo; `backend/.env.example`
 holds placeholders only (`ADMIN_TOKEN=change-me`, clearly fake).
@@ -71,8 +73,11 @@ holds placeholders only (`ADMIN_TOKEN=change-me`, clearly fake).
 
 The server mirrors its latest snapshot to `backend/data/latest-snapshot.json`
 so a restart can serve stale-but-real data immediately, before the first live
-refresh completes (see `backend/README.md`). This directory is also where any
-future usage-stats persistence would live.
+refresh completes (see `backend/README.md`). This directory also holds
+`usage-stats.json` (aggregate usage counters) and `alerts-state.json` (aurora
+push-alerts night key / fired-tier state -- no user data, see
+`backend/src/alerts.ts`); both are gitignored, locally-regenerated caches,
+unlike the git-tracked `latest-snapshot.json` seed file.
 
 Mount it as a volume so it survives container recreation/redeploys:
 
