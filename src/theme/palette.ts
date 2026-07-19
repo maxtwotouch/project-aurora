@@ -14,13 +14,13 @@ const auroraIce = '#d5ecff';
 // (H~160-182), which is what made this hue pick cohere with the existing
 // UI rather than reading as a new palette.
 export const palette = {
-  night: '#061711',
-  nightSoft: '#0d231c',
-  nightPanel: '#133026',
-  card: '#142d25',
-  cardElevated: '#19392e',
-  cardBorder: '#336353',
-  cardBorderStrong: '#4d8874',
+  night: '#061617',
+  nightSoft: '#0d2023',
+  nightPanel: '#132d30',
+  card: '#14292d',
+  cardElevated: '#193639',
+  cardBorder: '#336163',
+  cardBorderStrong: '#4d8887',
   textPrimary: '#eef7f4',
   textSecondary: '#bdd0cf',
   textMuted: '#7f9899',
@@ -44,13 +44,13 @@ export const palette = {
   // '#152835', '#274253', '#284657', '#29475f' were all the same "sunken
   // panel + hairline border" pairing used with slightly different values).
   // Same hue family as the tokens above -- this is not a new palette.
-  surfaceSunken: '#10271f',
-  surfaceSunkenAlt: '#15352a',
-  surfaceOverlay: '#0f261e',
-  chipSurface: '#173c30',
-  chipSurfaceActive: '#1d4a3b',
-  borderHairline: '#285747',
-  borderHairlineStrong: '#356857',
+  surfaceSunken: '#102527',
+  surfaceSunkenAlt: '#153335',
+  surfaceOverlay: '#0f2426',
+  chipSurface: '#173c3c',
+  chipSurfaceActive: '#1d484a',
+  borderHairline: '#285657',
+  borderHairlineStrong: '#356568',
   glowMint: '#82f3c41f',
   glowBlue: '#91beff14',
 
