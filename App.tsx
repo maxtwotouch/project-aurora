@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 // Importing from each weight's own subpath (rather than the package root)
 // keeps Metro from bundling all 18 Fraunces weight/italic files -- the
 // aggregate `@expo-google-fonts/fraunces` entry point requires every one of
@@ -17,6 +18,7 @@ import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
+import { PreviewModeBanner } from './src/components/PreviewModeBanner';
 import { SettingsButton } from './src/components/SettingsButton';
 import { useForecast } from './src/hooks/useForecast';
 import { useTranslation } from './src/i18n/useTranslation';
@@ -119,6 +121,14 @@ function TabsRoot({
   fontsLoaded
 }: TabsRootProps) {
   const { t } = useTranslation();
+  // Bottom-tabs' own SafeAreaProviderCompat wraps its content *below* this
+  // point in the tree (see @react-navigation/bottom-tabs BottomTabView), not
+  // above it -- so this reads from the SafeAreaProvider mounted at the App
+  // root (see App.tsx's default export) instead. On a home-indicator iPhone,
+  // insets.bottom is the ~34pt system bar height; on web/older devices with
+  // no inset, it's 0, so the values below collapse back to the previous
+  // hardcoded height/padding exactly.
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs.Navigator
@@ -151,10 +161,16 @@ function TabsRoot({
         tabBarStyle: {
           backgroundColor: '#10202be8',
           borderTopColor: '#264455',
-          height: 70,
+          // Previously a hardcoded height: 70 / paddingBottom: 8, which
+          // overrode the inset handling the navigator would otherwise apply
+          // -- on home-indicator iPhones the tab bar sat flush against the
+          // system bar with no clearance. Growing both by insets.bottom (0
+          // on web/older devices, so this is a no-op there) reserves exactly
+          // that much extra space instead.
+          height: 70 + insets.bottom,
           paddingHorizontal: 10,
           paddingTop: 6,
-          paddingBottom: 8
+          paddingBottom: 8 + Math.max(insets.bottom, 0)
         },
         tabBarItemStyle: {
           minWidth: 0,
@@ -251,8 +267,12 @@ export default function App() {
   );
 
   return (
-    <ConsentGate>
-      <NavigationContainer theme={navTheme}>
+    <SafeAreaProvider>
+      <ConsentGate>
+        {/* Mounted once here, above the whole navigator, rather than per
+            screen -- see PreviewModeBanner's own header comment for why. */}
+        <PreviewModeBanner />
+        <NavigationContainer theme={navTheme}>
         <Stack.Navigator
           screenOptions={{
             headerStyle: {
@@ -340,8 +360,9 @@ export default function App() {
             {() => <SettingsScreen />}
           </Stack.Screen>
         </Stack.Navigator>
-      </NavigationContainer>
-    </ConsentGate>
+        </NavigationContainer>
+      </ConsentGate>
+    </SafeAreaProvider>
   );
 }
 

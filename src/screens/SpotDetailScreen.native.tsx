@@ -3,7 +3,6 @@ import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View, type Lay
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
-import { track } from '../analytics/events';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { HourlyTimeline } from '../components/HourlyTimeline';
 import { ScoreBadge } from '../components/ScoreBadge';
@@ -13,6 +12,7 @@ import { getSpotAccessInfo, getSpotImages } from '../data/spotExtras';
 import { getLocalizedSpotDescription } from '../data/spotDescriptions';
 import { getCurrentLanguage } from '../i18n';
 import { useTranslation } from '../i18n/useTranslation';
+import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { dressLevelFromColdScore } from '../scoring/score';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
@@ -84,11 +84,11 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
   useEffect(() => {
     // Only re-fires if the viewed spot itself changes (e.g. navigating from
     // one spot's detail screen to another without unmounting).
-    track('spot_view', spot.id);
+    trackUnlessPreview('spot_view', spot.id);
   }, [spot.id]);
 
   const navigateToSpot = () => {
-    track('navigate_pressed', spot.id);
+    trackUnlessPreview('navigate_pressed', spot.id);
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };

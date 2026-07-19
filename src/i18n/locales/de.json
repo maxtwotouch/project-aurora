@@ -293,6 +293,12 @@
     "privacySection": "Datenschutz",
     "aboutSection": "Über die App",
     "aboutAppName": "Tromsø Northern Lights",
-    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune"
+    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
+    "designPreviewSection": "Vorschau",
+    "designPreviewLabel": "Design-Vorschau (Beispieldaten)",
+    "designPreviewHelper": "Zeigt eine Beispielprognose für die Aurora-Saison anstelle von Live-Daten. Deaktiviert die Nutzungserfassung, solange aktiv."
+  },
+  "preview": {
+    "banner": "Beispieldaten — keine echte Prognose"
   }
 }

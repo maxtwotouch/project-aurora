@@ -2,9 +2,9 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimens
 import { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
-import { track } from '../analytics/events';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { useTranslation } from '../i18n/useTranslation';
+import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { palette } from '../theme/palette';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -33,7 +33,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   }, [rankedSpots, spots]);
 
   const navigateToSpot = (spot: Spot) => {
-    track('navigate_pressed', spot.id);
+    trackUnlessPreview('navigate_pressed', spot.id);
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };

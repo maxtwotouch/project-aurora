@@ -3,9 +3,9 @@ import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View } from 're
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
-import { track } from '../analytics/events';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { useTranslation } from '../i18n/useTranslation';
+import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
 import type { Spot, SpotScoreResult } from '../types';
@@ -40,7 +40,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   }, [rankedSpots, spots]);
 
   const navigateToSpot = (spot: Spot) => {
-    track('navigate_pressed', spot.id);
+    trackUnlessPreview('navigate_pressed', spot.id);
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
