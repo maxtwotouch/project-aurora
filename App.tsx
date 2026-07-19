@@ -61,6 +61,22 @@ const navTheme: Theme = {
 
 const typedSpots = spots as Spot[];
 
+/**
+ * Custom header title component instead of headerTitleStyle.fontFamily:
+ * iOS measures the title's width when it first renders (system font,
+ * since Fraunces loads async and we deliberately don't gate rendering on
+ * it) and does not re-measure when the wider serif swaps in -- producing
+ * "Toni..." truncation on device. Keying this component on fontsLoaded
+ * remounts it when Fraunces arrives, forcing a fresh measurement.
+ */
+function HeaderTitleText({ children }: { children?: React.ReactNode }) {
+  return (
+    <Text numberOfLines={1} style={styles.headerTitleText}>
+      {children}
+    </Text>
+  );
+}
+
 type TabsRootProps = {
   onOpenSpot: (spotId: string) => void;
   rankedSpots: SpotScoreResult[];
@@ -79,6 +95,7 @@ type TabsRootProps = {
   level: AuroraLevel;
   refresh: () => Promise<void>;
   onOpenSettings: () => void;
+  fontsLoaded: boolean;
 };
 
 function TabsRoot({
@@ -98,7 +115,8 @@ function TabsRoot({
   darkness,
   level,
   refresh,
-  onOpenSettings
+  onOpenSettings,
+  fontsLoaded
 }: TabsRootProps) {
   const { t } = useTranslation();
 
@@ -154,11 +172,9 @@ function TabsRoot({
         },
         headerTintColor: palette.textPrimary,
         headerShown: true,
-        headerTitleStyle: {
-          fontFamily: fraunces.bold,
-          fontSize: 18,
-          fontWeight: '700'
-        },
+        headerTitle: ({ children }) => (
+          <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
+        ),
         headerShadowVisible: false,
         headerTitleAlign: 'left',
         headerBackground: () => <View style={styles.headerBackground} />,
@@ -224,7 +240,7 @@ export default function App() {
   // once loading completes and the tree next re-renders (forecast refresh,
   // navigation, etc. all trigger that naturally) -- a brief, deliberate
   // FOUT-style swap rather than a loading gate.
-  useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+  const [fontsLoaded] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
 
   const forecast = useForecast();
   const { t } = useTranslation();
@@ -244,11 +260,9 @@ export default function App() {
             },
             headerTintColor: palette.textPrimary,
             headerShadowVisible: false,
-            headerTitleStyle: {
-              fontFamily: fraunces.bold,
-              fontSize: 18,
-              fontWeight: '700'
-            },
+            headerTitle: ({ children }) => (
+              <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
+            ),
             headerTitleAlign: 'left',
             headerBackground: () => <View style={styles.headerBackground} />
           }}
@@ -260,6 +274,7 @@ export default function App() {
                   navigation.navigate('SpotDetail', { spotId });
                 }}
                 onOpenSettings={() => navigation.navigate('Settings')}
+                fontsLoaded={fontsLoaded}
                 rankedSpots={forecast.rankedSpots}
                 loading={forecast.loading}
                 error={forecast.error}
@@ -334,6 +349,12 @@ const styles = StyleSheet.create({
   headerBackground: {
     flex: 1,
     backgroundColor: palette.night
+  },
+  headerTitleText: {
+    fontFamily: fraunces.bold,
+    fontSize: 18,
+    fontWeight: '700',
+    color: palette.textPrimary
   },
   backButton: {
     flexDirection: 'row',
