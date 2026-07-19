@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { LANGUAGE_NATIVE_LABELS, SUPPORTED_LANGUAGES } from '../i18n/languages';
+import { getCurrentLanguage, setLanguage } from '../i18n';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { radius, space, type WebPressableState } from '../theme/tokens';
@@ -23,11 +25,45 @@ type Props = {
  */
 export function ConsentModal({ onAccept, onDecline }: Props) {
   const { t } = useTranslation();
+  const currentLanguage = getCurrentLanguage();
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
       <View style={styles.backdrop} pointerEvents="auto" />
       <View style={styles.card}>
+        {/* Language first: the reader confirms their language BEFORE the
+            legally-relevant consent copy below. Each label is in its own
+            tongue; switching re-renders this whole modal instantly and
+            persists the choice (same mechanism as the Settings picker). */}
+        <View
+          style={styles.languageRow}
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('consent.languageRowA11y')}
+        >
+          {SUPPORTED_LANGUAGES.map((code) => {
+            const active = code === currentLanguage;
+            return (
+              <Pressable
+                key={code}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={LANGUAGE_NATIVE_LABELS[code]}
+                style={({ pressed, focused }: WebPressableState) => [
+                  styles.languageChip,
+                  active ? styles.languageChipActive : null,
+                  focused ? styles.focusRing : null,
+                  pressed ? styles.buttonPressed : null
+                ]}
+                onPress={() => void setLanguage(code)}
+              >
+                <Text style={active ? styles.languageChipTextActive : styles.languageChipText}>
+                  {LANGUAGE_NATIVE_LABELS[code]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         <Text style={styles.eyebrow}>{t('consent.eyebrow')}</Text>
         <Text style={styles.title}>{t('consent.title')}</Text>
         <Text style={styles.body}>{t('consent.body')}</Text>
@@ -94,6 +130,32 @@ const styles = StyleSheet.create({
     borderColor: palette.cardBorder,
     padding: space.lg,
     gap: space.sm
+  },
+  languageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space.xs,
+    marginBottom: space.xs
+  },
+  languageChip: {
+    paddingVertical: 6,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.borderHairlineStrong,
+    backgroundColor: palette.chipSurface
+  },
+  languageChipActive: {
+    borderColor: palette.auroraGreen,
+    backgroundColor: palette.chipSurfaceActive
+  },
+  languageChipText: {
+    ...typography.caption,
+    color: palette.textSecondary
+  },
+  languageChipTextActive: {
+    ...typography.caption,
+    color: palette.auroraMint
   },
   eyebrow: {
     ...typography.eyebrow,

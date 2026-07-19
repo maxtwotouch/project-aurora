@@ -278,7 +278,8 @@
     "toggleLabel": "Anonymous usage sharing",
     "toggleOnHelper": "Sharing anonymous spot views and navigation taps.",
     "toggleOffHelper": "Not sharing any usage data.",
-    "privacyPolicyLink": "Privacy policy"
+    "privacyPolicyLink": "Privacy policy",
+    "languageRowA11y": "Choose language"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

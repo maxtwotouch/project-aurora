@@ -278,7 +278,8 @@
     "toggleLabel": "Partage anonyme de l'utilisation",
     "toggleOnHelper": "Les consultations de sites et les appuis de navigation anonymes sont partagés.",
     "toggleOffHelper": "Aucune donnée d'utilisation n'est partagée.",
-    "privacyPolicyLink": "Politique de confidentialité"
+    "privacyPolicyLink": "Politique de confidentialité",
+    "languageRowA11y": "Choisir la langue"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
