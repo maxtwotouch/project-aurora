@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -159,7 +159,33 @@ export function ArcGauge({
         />
         <AnimatedCircle cx={tip.x} cy={tip.y} r={5.6} fill={tipColor} opacity={tipOpacity} />
       </Svg>
-      <View style={styles.numeralWrap} pointerEvents="none">
+      {/*
+        Centering note (iOS numeral offset bug): this used to be a
+        content-sized box positioned with only `top: '4%'` set (no
+        left/right). Absolutely-positioned children that pin one axis but
+        leave the other to fall back on the parent's flex alignment are a
+        known Yoga edge case that iOS resolves differently from
+        web/Android -- combined with Fraunces 900's taller iOS ascender
+        metrics inflating the text's own line box, the numeral rendered
+        shoved up-left of the arc's actual center on device instead of
+        centered under it.
+
+        Fix: stretch this wrap to the *full* gauge box (all four edges
+        pinned to 0) and center its content with `alignItems`/
+        `justifyContent` instead of a partial position offset -- this is
+        deterministic on every platform, no static-position fallback
+        involved. The original "nudge down slightly from dead-center, into
+        the dial's open lower region" composition is preserved via an
+        explicit pixel `translateY` (computed from `size`, matching the
+        old `top: 4%`) rather than a raw `top` offset.
+
+        Ported here from the app's original ScoreGauge (see that fix's
+        commit) rather than left there: numeral centering/Fraunces-metrics
+        correctness is a canonical-component concern -- every consumer of
+        this dial (this app's score, a sibling app's own metric) needs it,
+        not just the aurora score.
+      */}
+      <View style={[styles.numeralWrap, { transform: [{ translateY: size * 0.04 }] }]} pointerEvents="none">
         <Text style={[styles.numeral, { color: valueColor }]}>{displayValue}</Text>
         {label ? <Text style={[styles.label, { color: labelColor }]}>{label}</Text> : null}
       </View>
@@ -174,16 +200,31 @@ const styles = StyleSheet.create({
   },
   numeralWrap: {
     position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
-    // Nudged down slightly from dead-center so it sits in the dial's open
-    // (unswept) lower region.
-    top: '4%'
+    justifyContent: 'center'
   },
   numeral: {
-    ...typography.numeralLg
+    ...typography.numeralLg,
+    // Constrains the line box to (near) the glyph's own height instead of
+    // the font's full ascender/descender allowance, which is where Fraunces
+    // 900's iOS-vs-web metrics mismatch shows up as vertical drift; see the
+    // centering note above `numeralWrap`.
+    lineHeight: typography.numeralLg.fontSize,
+    ...Platform.select({
+      android: { includeFontPadding: false },
+      default: {}
+    })
   },
   label: {
     ...typography.eyebrow,
-    marginTop: -2
+    marginTop: -2,
+    ...Platform.select({
+      android: { includeFontPadding: false },
+      default: {}
+    })
   }
 });

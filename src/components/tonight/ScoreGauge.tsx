@@ -25,6 +25,14 @@ type Props = {
  * screen have one obvious, score-flavored import -- and so this is the one
  * place aurora-specific gauge defaults (should they ever diverge from the
  * design system's generic ones) would live.
+ *
+ * The native numeral-centering fix (full absolute-fill centering wrap,
+ * pinned lineHeight, includeFontPadding:false on Android -- see dev's
+ * "native preview-banner gap + gauge numeral centering" fix) now lives
+ * inside `ArcGauge` itself, not here: it's a canonical-component concern
+ * (every consumer of the dial needs correct iOS/Android numeral metrics,
+ * not just the aurora score), so this wrapper needed no changes to inherit
+ * it.
  */
 export function ScoreGauge({ score, size, label, accessibilityLabel }: Props) {
   return <ArcGauge value={score} max={100} size={size} label={label} accessibilityLabel={accessibilityLabel} />;
