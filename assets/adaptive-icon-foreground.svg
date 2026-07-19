@@ -1,0 +1,16 @@
+<svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aurora over the Tromsø bridge and fjord peaks">
+  <!--
+    Android adaptive icon foreground layer. Transparent background (the
+    solid backgroundColor lives in app.json's android.adaptiveIcon so the
+    OS can composite/animate the two layers separately). The mark is scaled
+    (0.6875x) and translated to sit inside Android's ~66dp-diameter safe
+    zone on the 108x108dp canvas — keeps every stroke clear of the
+    circle/squircle/rounded-square masks different OEM launchers apply.
+  -->
+  <g transform="translate(19.625,18.25) scale(0.6875)">
+    <path d="M2,82 L22,48 L34,66 L50,28 L66,66 L84,42 L98,82 Z" fill="#142d25"/>
+    <path d="M14,90 Q50,74 86,90" fill="none" stroke="#4d8874" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M8,32 C24,20 34,38 50,26 C64,16 72,32 92,22" fill="none" stroke="#67efc1" stroke-width="6.4" stroke-linecap="round"/>
+    <circle cx="50" cy="82" r="2.1" fill="#d97b52"/>
+  </g>
+</svg>

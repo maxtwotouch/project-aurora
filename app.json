@@ -8,13 +8,15 @@
     },
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "updates": {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/c3231a13-9f7e-4c36-878c-d1725e889b81"
     },
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f172a"
+      "backgroundColor": "#061711"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -27,10 +29,15 @@
       }
     },
     "android": {
-      "package": "com.maxtwotouch.tromsonorthernlights"
+      "package": "com.maxtwotouch.tromsonorthernlights",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#061711"
+      }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
@@ -39,6 +46,7 @@
     },
     "plugins": [
       "expo-localization",
+      "expo-font",
       "./plugins/withFmtConstevalFix.js"
     ]
   }

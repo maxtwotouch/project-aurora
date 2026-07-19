@@ -45,6 +45,7 @@
       "low": "Low chance tonight"
     },
     "scoreSuffix": "out of 100",
+    "scoreGaugeA11y": "Aurora score tonight, {{score}} out of 100",
     "daytimeHint": "Daylight is still up. First realistic viewing window starts around {{time}}.",
     "polarDay": {
       "statusLabel": "Aurora season is closed for now",

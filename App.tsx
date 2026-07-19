@@ -5,6 +5,14 @@ import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+// Importing from each weight's own subpath (rather than the package root)
+// keeps Metro from bundling all 18 Fraunces weight/italic files -- the
+// aggregate `@expo-google-fonts/fraunces` entry point requires every one of
+// them at module-eval time regardless of which named exports are used.
+import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
+import { Fraunces_700Bold } from '@expo-google-fonts/fraunces/700Bold';
+import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
@@ -19,6 +27,7 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
+import { fraunces } from './src/theme/type';
 import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
@@ -147,8 +156,9 @@ function TabsRoot({
         headerTintColor: palette.textPrimary,
         headerShown: true,
         headerTitleStyle: {
+          fontFamily: fraunces.bold,
           fontSize: 18,
-          fontWeight: '800'
+          fontWeight: '700'
         },
         headerShadowVisible: false,
         headerTitleAlign: 'left',
@@ -205,6 +215,18 @@ function TabsRoot({
 }
 
 export default function App() {
+  // Deliberately not awaited/gated: we call useFonts (it kicks off async
+  // loading) but never branch render on its `fontsLoaded` boolean, so the
+  // app never sits on a blank/loading screen waiting for a display face.
+  // `typography.display/title/numeralMd/numeralLg` (src/theme/type.ts)
+  // reference these Fraunces family names directly; React Native falls
+  // back to the system font for any not-yet-registered `fontFamily`, so
+  // the very first frame renders in the system font and swaps to Fraunces
+  // once loading completes and the tree next re-renders (forecast refresh,
+  // navigation, etc. all trigger that naturally) -- a brief, deliberate
+  // FOUT-style swap rather than a loading gate.
+  useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+
   const forecast = useForecast();
   const { t } = useTranslation();
 
@@ -224,8 +246,9 @@ export default function App() {
             headerTintColor: palette.textPrimary,
             headerShadowVisible: false,
             headerTitleStyle: {
+              fontFamily: fraunces.bold,
               fontSize: 18,
-              fontWeight: '800'
+              fontWeight: '700'
             },
             headerTitleAlign: 'left',
             headerBackground: () => <View style={styles.headerBackground} />

@@ -6,6 +6,12 @@ import type { Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+// See App.tsx for why these are imported per-weight rather than from the
+// package root (avoids Metro bundling all 18 Fraunces weight/italic files).
+import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
+import { Fraunces_700Bold } from '@expo-google-fonts/fraunces/700Bold';
+import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
@@ -21,6 +27,7 @@ import { SpotDetailScreen } from './src/screens/SpotDetailScreen.web';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
 import { radius, space, type WebPressableState } from './src/theme/tokens';
+import { fraunces } from './src/theme/type';
 import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 // Desktop web should not read as a phone screen inside a browser: full-bleed
@@ -149,6 +156,7 @@ function TabsRoot({
         },
         headerTintColor: palette.textPrimary,
         headerTitleStyle: {
+          fontFamily: fraunces.bold,
           fontSize: 18,
           fontWeight: '700'
         },
@@ -216,6 +224,12 @@ function TabsRoot({
 }
 
 export default function App() {
+  // See App.tsx for the fuller rationale: not gated on `fontsLoaded`, so
+  // the page never blocks on the display face -- text using it falls back
+  // to the system font (web's own font-display: swap equivalent) until
+  // registration completes and the tree next re-renders.
+  useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+
   const forecast = useForecast();
   const { t } = useTranslation();
 

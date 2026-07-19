@@ -6,6 +6,7 @@ import { BestWindowSection } from './BestWindowSection';
 import { DataBand, type DataBandItem } from './DataBand';
 import { decisionStyle, type DecisionKey } from './decision';
 import { PolarDayNotice } from './PolarDayNotice';
+import { ScoreGauge } from './ScoreGauge';
 import { DataQualityBanner } from '../DataQualityBanner';
 import { useTranslation } from '../../i18n/useTranslation';
 import { palette } from '../../theme/palette';
@@ -129,8 +130,11 @@ export function HeroSection({
             <View style={[styles.decisionPill, { backgroundColor: decisionColors.bg, borderColor: decisionColors.border }]}>
               <Text style={[styles.decisionText, { color: decisionColors.text }]}>{t(`tonight.decision.${decision}`)}</Text>
             </View>
-            <Text style={styles.score}>{tonightScoreValue}</Text>
-            <Text style={styles.scoreSuffix}>{t('tonight.scoreSuffix')}</Text>
+            <ScoreGauge
+              score={tonightScoreValue}
+              label={t('tonight.scoreSuffix')}
+              accessibilityLabel={t('tonight.scoreGaugeA11y', { score: tonightScoreValue })}
+            />
           </View>
         )}
       </View>
@@ -217,11 +221,11 @@ const styles = StyleSheet.create({
     marginTop: space.xxs
   },
   decisionCluster: {
-    alignItems: 'flex-end',
-    gap: space.xxs
+    alignItems: 'center',
+    gap: space.xs
   },
   decisionPill: {
-    alignSelf: 'flex-end',
+    alignSelf: 'center',
     borderWidth: 1,
     borderRadius: radius.pill,
     paddingHorizontal: space.sm,
@@ -231,14 +235,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     fontWeight: '800',
     letterSpacing: 0.4
-  },
-  score: {
-    ...typography.numeralLg,
-    color: palette.textPrimary
-  },
-  scoreSuffix: {
-    ...typography.caption,
-    color: palette.textMuted
   },
   daylightNotice: {
     flexDirection: 'row',
