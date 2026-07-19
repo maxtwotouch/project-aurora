@@ -246,7 +246,9 @@
     "noPhotosText": "Des photos vérifiées pour ce site arrivent bientôt.",
     "mapPreviewSimplified": "L'aperçu de la carte est simplifié dans la version bêta web.",
     "openInGoogleMaps": "Ouvrir dans Google Maps",
-    "hourlyClearnessA11y": "Clarté du ciel par heure pour ce site"
+    "hourlyClearnessA11y": "Clarté du ciel par heure pour ce site",
+    "heroImageA11y": "Photo de {{name}}. Crédit photo : {{author}}, {{license}}.",
+    "photoCredit": "Photo : {{author}} · {{license}}"
   },
   "spotCard": {
     "a11yLabel": "{{name}}, score {{score}} sur 100, {{trend}}",

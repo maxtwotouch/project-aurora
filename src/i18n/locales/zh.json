@@ -246,7 +246,9 @@
     "noPhotosText": "该地点的核实照片即将上线。",
     "mapPreviewSimplified": "网页测试版的地图预览为简化版本。",
     "openInGoogleMaps": "在谷歌地图中打开",
-    "hourlyClearnessA11y": "该地点每小时的天空晴朗度"
+    "hourlyClearnessA11y": "该地点每小时的天空晴朗度",
+    "heroImageA11y": "{{name}}的照片。摄影：{{author}}，{{license}}。",
+    "photoCredit": "照片：{{author}} · {{license}}"
   },
   "spotCard": {
     "a11yLabel": "{{name}}，分数 {{score}} 分（满分100），{{trend}}",
