@@ -38,6 +38,21 @@ export function HourlyTimeline({ points, highlightStart, highlightEnd, toneFor, 
 
   const startMs = highlightStart ? new Date(highlightStart).getTime() : null;
   const endMs = highlightEnd ? new Date(highlightEnd).getTime() : null;
+  // The one column where the highlighted "best window" begins gets a small
+  // copper tick above its bar -- the timeline's own genuinely-timing accent
+  // (see decision.ts for the other two copper spots): it marks *when to
+  // start waiting for*, which is exactly the "patience" reading copper is
+  // reserved for elsewhere. Purely decorative -- the per-bar accessibility
+  // label below already speaks "best window" for every bar in range, so the
+  // tick itself is hidden from assistive tech rather than adding a second,
+  // redundant announcement.
+  const windowStartIndex =
+    startMs !== null && endMs !== null
+      ? shown.findIndex((point) => {
+          const ms = new Date(point.time).getTime();
+          return ms >= startMs && ms <= endMs;
+        })
+      : -1;
 
   return (
     // Not `accessible` here: an accessible container collapses all children
@@ -66,6 +81,11 @@ export function HourlyTimeline({ points, highlightStart, highlightEnd, toneFor, 
                 percent: heightPct
               })}
             >
+              <View style={styles.tickSlot}>
+                {index === windowStartIndex ? (
+                  <View style={styles.windowStartTick} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                ) : null}
+              </View>
               <View style={styles.track}>
                 <View
                   style={[
@@ -103,6 +123,21 @@ const styles = StyleSheet.create({
     minWidth: 0,
     alignItems: 'center',
     gap: space.xxs
+  },
+  tickSlot: {
+    height: 7,
+    alignItems: 'center',
+    justifyContent: 'flex-end'
+  },
+  windowStartTick: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: palette.accentWarm
   },
   track: {
     width: '100%',

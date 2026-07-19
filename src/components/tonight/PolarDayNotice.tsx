@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
+import { MidnightSunIcon } from '../icons/MidnightSunIcon';
 import { useTranslation } from '../../i18n/useTranslation';
 import { palette } from '../../theme/palette';
 import { radius, space } from '../../theme/tokens';
@@ -22,8 +22,10 @@ const formatSeasonReturnsDate = (isoDate: string, locale: string) =>
 /**
  * Polar day (midnight sun): the sky never gets dark enough for aurora
  * tonight. This is seasonal truth, not an error -- calm informational
- * styling (same tone as the "later tonight" decision state), not the
- * warning/danger palette.
+ * styling (info blue), not the warning/danger palette. The icon itself
+ * carries the one warm accent (a copper "town light" on the horizon; see
+ * MidnightSunIcon) rather than recoloring the whole notice, so the
+ * surrounding container keeps reading as neutral fact.
  */
 export function PolarDayNotice({ seasonReturns }: Props) {
   const { t, i18n } = useTranslation();
@@ -31,7 +33,7 @@ export function PolarDayNotice({ seasonReturns }: Props) {
 
   return (
     <View style={styles.polarDayNotice}>
-      <Ionicons name="partly-sunny" size={20} color={palette.textOnInfoSurface} />
+      <MidnightSunIcon size={22} color={palette.textOnInfoSurface} townLightColor={palette.accentWarm} />
       <View style={styles.polarDayCopy}>
         <Text style={styles.polarDayHeadline}>{t('tonight.polarDay.headline')}</Text>
         <Text style={styles.polarDayBody}>

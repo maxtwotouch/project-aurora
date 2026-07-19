@@ -16,6 +16,7 @@ import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
+import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
 import { SettingsButton } from './src/components/SettingsButton';
 import { useForecast } from './src/hooks/useForecast';
 import { useTranslation } from './src/i18n/useTranslation';
@@ -107,23 +108,21 @@ function TabsRoot({
         tabBarActiveTintColor: palette.auroraGreen,
         tabBarInactiveTintColor: palette.textMuted,
         tabBarIcon: ({ color, size, focused }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'ellipse';
+          let Icon = TonightIcon;
 
-          if (route.name === 'Tonight') {
-            iconName = focused ? 'moon' : 'moon-outline';
-          } else if (route.name === 'SpotsMap') {
-            iconName = focused ? 'map' : 'map-outline';
+          if (route.name === 'SpotsMap') {
+            Icon = MapIcon;
           } else if (route.name === 'AllSpots') {
-            iconName = focused ? 'list' : 'list-outline';
+            Icon = SpotsIcon;
           } else if (route.name === 'AuroraMap') {
-            iconName = focused ? 'color-wand' : 'color-wand-outline';
+            Icon = AuroraIcon;
           } else if (route.name === 'Live') {
-            iconName = focused ? 'videocam' : 'videocam-outline';
+            Icon = LiveIcon;
           }
 
           return (
             <View style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}>
-              <Ionicons name={iconName} size={size} color={color} />
+              <Icon size={size} color={color} focused={focused} />
             </View>
           );
         },

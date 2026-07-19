@@ -15,15 +15,22 @@ export function decisionKey(score: number, isDaytimeNow: boolean, bestCloudCover
   return 'bestLater';
 }
 
+// `laterTonight` ("it's daytime, come back after dark") and `bestLater`
+// ("clearer skies later in the window") both mean the same thing at heart:
+// not now, but the timing will work out -- patience, not a problem. That's
+// the copper accent's one genuinely-earned spot in the decision system: the
+// other two states are still a real status color (green = go, amber = a
+// closer call) so recoloring them would blur an existing meaning, but these
+// two were previously borrowed from unrelated info/danger tones (blue "fact"
+// and red "wrong") that never quite fit a "wait for it" message. Copper
+// reads as warmth/dusk/anticipation rather than an error, which is what a
+// "come back later" recommendation actually is.
 export function decisionStyle(label: DecisionKey) {
   if (label === 'goNow') {
     return { bg: palette.successSurface, border: palette.auroraGreen, text: palette.auroraMint };
   }
-  if (label === 'laterTonight') {
-    return { bg: palette.infoSurface, border: palette.auroraBlue, text: palette.textOnInfoSurface };
+  if (label === 'laterTonight' || label === 'bestLater') {
+    return { bg: palette.accentWarmSurface, border: palette.accentWarm, text: palette.textOnAccentWarmSurface };
   }
-  if (label === 'wait') {
-    return { bg: palette.warningSurface, border: palette.warning, text: palette.textOnWarningSurface };
-  }
-  return { bg: palette.dangerSurface, border: palette.danger, text: palette.textOnDangerSurface };
+  return { bg: palette.warningSurface, border: palette.warning, text: palette.textOnWarningSurface };
 }

@@ -246,7 +246,9 @@
     "noPhotosText": "Verifizierte Fotos für diesen Ort folgen in Kürze.",
     "mapPreviewSimplified": "Die Kartenvorschau ist in der Web-Beta vereinfacht.",
     "openInGoogleMaps": "In Google Maps öffnen",
-    "hourlyClearnessA11y": "Stündliche Himmelsklarheit für diesen Ort"
+    "hourlyClearnessA11y": "Stündliche Himmelsklarheit für diesen Ort",
+    "heroImageA11y": "Foto von {{name}}. Fotonachweis: {{author}}, {{license}}.",
+    "photoCredit": "Foto: {{author}} · {{license}}"
   },
   "spotCard": {
     "a11yLabel": "{{name}}, Wert {{score}} von 100, {{trend}}",
