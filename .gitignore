@@ -21,3 +21,15 @@ backend/data/alerts-state.json
 
 .worktrees/.worktrees/
 .worktrees/
+
+# Firebase native config for aurora push alerts (PR beta,
+# docs/design-aurora-alerts.md / docs/setup-firebase-alerts.md section 5).
+# Neither file is a secret on its own (they're bundled into shipped app
+# binaries and are not treated as sensitive by Firebase/Google), but they
+# are owner-held and app-instance-specific -- see app.config.js's
+# withFirebaseIfConfigured for how their mere presence/absence changes what
+# gets built. Ignored here defensively so a local `Generate new... /
+# download` never gets committed by accident; the owner adds them locally
+# (repo root) or via EAS's own credentials/secret-file mechanism.
+/google-services.json
+/GoogleService-Info.plist

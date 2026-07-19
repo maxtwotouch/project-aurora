@@ -300,5 +300,23 @@
   },
   "preview": {
     "banner": "示例数据 — 非真实预报"
+  },
+  "alerts": {
+    "sectionTitle": "极光提醒",
+    "toggleLabel": "极光提醒",
+    "toggleHelperOff": "今晚条件不错时接收推送通知。",
+    "toggleHelperOn": "达到你选择的阈值时会收到推送通知（每晚最多一次）。",
+    "tierPickerLabel": "提醒条件",
+    "tierOff": "关闭",
+    "tierGe45": "有一定机会（45+）",
+    "tierGe70": "仅极佳夜晚（70+）",
+    "unavailableHelper": "此版本尚未提供极光提醒功能 — 将在未来更新中推出。",
+    "webUnsupportedHelper": "极光提醒仅支持 iOS 和 Android 应用，网页版暂不支持。",
+    "permissionDeniedHelper": "系统设置中已关闭此应用的通知权限。请在系统设置中开启，才能接收极光提醒。",
+    "notification": {
+      "titleGe70": "今晚极光机会极佳",
+      "titleGe45": "今晚有极光机会",
+      "body": "{{spotName}} 评分 {{score}}/100 — 最佳时段 {{start}}–{{end}}。"
+    }
   }
 }
