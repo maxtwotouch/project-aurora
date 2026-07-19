@@ -32,7 +32,8 @@
       "spots": "地点",
       "aurora": "极光",
       "live": "实时"
-    }
+    },
+    "settingsA11yLabel": "设置"
   },
   "tonight": {
     "loading": "正在加载今晚的实况报告...",
@@ -273,13 +274,22 @@
     "body": "分享匿名使用数据——我们只统计用户查看和导航前往的地点（绝不记录您是谁，绝不记录您的位置，仅记录地点名称和时间）。您可以拒绝，一切功能照常使用。",
     "acceptButton": "分享匿名统计数据",
     "declineButton": "不用了",
-    "footnote": "您可以稍后在“全部地点”标签中更改此设置。",
+    "footnote": "您可以稍后在“设置”中更改此选项。",
     "toggleLabel": "匿名使用数据共享",
     "toggleOnHelper": "正在共享匿名的地点浏览和导航点击数据。",
     "toggleOffHelper": "未共享任何使用数据。",
-    "privacyPolicyLink": "隐私政策"
+    "privacyPolicyLink": "隐私政策",
+    "languageRowA11y": "选择语言"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
+  },
+  "settings": {
+    "title": "设置",
+    "languageSection": "语言",
+    "privacySection": "隐私",
+    "aboutSection": "关于",
+    "aboutAppName": "Tromsø Northern Lights",
+    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune"
   }
 }

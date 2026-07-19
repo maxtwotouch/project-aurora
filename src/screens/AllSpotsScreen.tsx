@@ -2,9 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DataQualityBanner } from '../components/DataQualityBanner';
-import { LanguagePicker } from '../components/LanguagePicker';
 import { SpotCard } from '../components/SpotCard';
-import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import type { AppDataQuality, Spot, SpotScoreResult } from '../types';
@@ -126,8 +124,6 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
       })}
 
       <Text style={styles.attribution}>{t('allSpots.attribution')}</Text>
-      <UsageConsentToggle />
-      <LanguagePicker />
     </ScrollView>
   );
 }

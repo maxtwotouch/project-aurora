@@ -3,7 +3,7 @@
 _Last updated: [DATE — set at publication]_
 
 This is the repo-canonical source for the privacy policy shown in the app and published at
-`public/privacy.html` (served at `https://maxtwotouch.github.io/project-aurora/privacy.html`
+`public/privacy.html` (served at `https://aurora.hovding.dev/privacy.html`
 once merged). The two files must be kept in sync; if you edit one, edit the other.
 
 ## What this app is
