@@ -45,6 +45,7 @@
       "low": "Pocas probabilidades esta noche"
     },
     "scoreSuffix": "de 100",
+    "scoreGaugeA11y": "Puntuación de aurora esta noche, {{score}} de 100",
     "daytimeHint": "Todavía hay luz de día. La primera franja de observación realista comienza alrededor de las {{time}}.",
     "polarDay": {
       "statusLabel": "La temporada de auroras está cerrada por ahora",

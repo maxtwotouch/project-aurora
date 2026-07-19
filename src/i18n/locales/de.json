@@ -45,6 +45,7 @@
       "low": "Heute Nacht geringe Chancen"
     },
     "scoreSuffix": "von 100",
+    "scoreGaugeA11y": "Aurora-Wert heute Nacht, {{score}} von 100",
     "daytimeHint": "Es ist noch hell. Das erste realistische Zeitfenster beginnt gegen {{time}} Uhr.",
     "polarDay": {
       "statusLabel": "Polarlicht-Saison derzeit geschlossen",

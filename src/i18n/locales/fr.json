@@ -45,6 +45,7 @@
       "low": "Faibles chances ce soir"
     },
     "scoreSuffix": "sur 100",
+    "scoreGaugeA11y": "Score aurore ce soir, {{score}} sur 100",
     "daytimeHint": "Il fait encore jour. Le premier créneau d'observation réaliste commence vers {{time}}.",
     "polarDay": {
       "statusLabel": "Saison des aurores actuellement fermée",

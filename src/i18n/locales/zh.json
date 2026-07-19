@@ -45,6 +45,7 @@
       "low": "今晚机会较低"
     },
     "scoreSuffix": "满分100",
+    "scoreGaugeA11y": "今晚极光分数，满分100分中的{{score}}分",
     "daytimeHint": "现在天还亮着。最早可行的观测时段大约从{{time}}开始。",
     "polarDay": {
       "statusLabel": "极光季暂未开始",
