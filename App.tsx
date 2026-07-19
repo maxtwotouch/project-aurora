@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 // Importing from each weight's own subpath (rather than the package root)
 // keeps Metro from bundling all 18 Fraunces weight/italic files -- the
 // aggregate `@expo-google-fonts/fraunces` entry point requires every one of
@@ -267,106 +267,137 @@ export default function App() {
   );
 
   return (
-    <SafeAreaProvider>
+    // `initialMetrics` makes the very first render already know the device's
+    // safe-area frame/insets instead of waiting on an async native
+    // measurement round-trip. Without it, this provider's `insets` state
+    // starts `null` and (per react-native-safe-area-context) renders none of
+    // its children until that first measurement resolves -- on a real
+    // device that resolves fast enough to be invisible for a *simple* tree,
+    // but every consumer downstream (this banner, the navigator's own compat
+    // safe-area provider, the header's inset math) re-renders/re-measures
+    // the instant it flips from null to a value, which is exactly the kind
+    // of one-time layout jump that produces a stuck/miscomputed gap on iOS.
+    // `initialWindowMetrics` is the synchronous value react-navigation's own
+    // internal `SafeAreaProviderCompat` already falls back to, so passing it
+    // here just makes our root provider agree with it from frame one instead
+    // of racing it.
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <ConsentGate>
-        {/* Mounted once here, above the whole navigator, rather than per
-            screen -- see PreviewModeBanner's own header comment for why. */}
-        <PreviewModeBanner />
-        <NavigationContainer theme={navTheme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: palette.night
-            },
-            headerTintColor: palette.textPrimary,
-            headerShadowVisible: false,
-            headerTitle: ({ children }) => (
-              <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
-            ),
-            headerTitleAlign: 'left',
-            headerBackground: () => <View style={styles.headerBackground} />
-          }}
-        >
-          <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-            {({ navigation }) => (
-              <TabsRoot
-                onOpenSpot={(spotId) => {
-                  navigation.navigate('SpotDetail', { spotId });
+        {/* Explicit flex column: the banner (fixed content height, its own
+            insets.top padding) followed by a `flex: 1` sibling that owns all
+            remaining space for the navigator. Written out as real Views
+            (rather than relying on ConsentGate's bare `<>{children}</>`
+            fragment flattening into implicitly-correct flex siblings) so
+            there is no ambiguity about whether every layer between the root
+            and the navigator carries the sizing it needs. */}
+        <View style={styles.root}>
+          {/* Mounted once here, above the whole navigator, rather than per
+              screen -- see PreviewModeBanner's own header comment for why. */}
+          <PreviewModeBanner />
+          <View style={styles.navRoot}>
+            <NavigationContainer theme={navTheme}>
+              <Stack.Navigator
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: palette.night
+                  },
+                  headerTintColor: palette.textPrimary,
+                  headerShadowVisible: false,
+                  headerTitle: ({ children }) => (
+                    <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
+                  ),
+                  headerTitleAlign: 'left',
+                  headerBackground: () => <View style={styles.headerBackground} />
                 }}
-                onOpenSettings={() => navigation.navigate('Settings')}
-                fontsLoaded={fontsLoaded}
-                rankedSpots={forecast.rankedSpots}
-                loading={forecast.loading}
-                error={forecast.error}
-                lastUpdatedAt={forecast.lastUpdatedAt}
-                dataQuality={forecast.dataQuality}
-                kp={forecast.kp}
-                topSpots={forecast.topSpots}
-                closeSpots={forecast.closeSpots}
-                spotsById={forecast.spotsById}
-                tonightScore={forecast.tonightScore}
-                tomorrowScore={forecast.tomorrowScore}
-                sightingPossibleFrom={forecast.sightingPossibleFrom}
-                darkness={forecast.darkness}
-                level={forecast.level}
-                refresh={forecast.refresh}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="SpotDetail"
-            options={({ route, navigation }) => ({
-              title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={styles.backButton}
-                  onPress={() => navigation.goBack()}
+              >
+                <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+                  {({ navigation }) => (
+                    <TabsRoot
+                      onOpenSpot={(spotId) => {
+                        navigation.navigate('SpotDetail', { spotId });
+                      }}
+                      onOpenSettings={() => navigation.navigate('Settings')}
+                      fontsLoaded={fontsLoaded}
+                      rankedSpots={forecast.rankedSpots}
+                      loading={forecast.loading}
+                      error={forecast.error}
+                      lastUpdatedAt={forecast.lastUpdatedAt}
+                      dataQuality={forecast.dataQuality}
+                      kp={forecast.kp}
+                      topSpots={forecast.topSpots}
+                      closeSpots={forecast.closeSpots}
+                      spotsById={forecast.spotsById}
+                      tonightScore={forecast.tonightScore}
+                      tomorrowScore={forecast.tomorrowScore}
+                      sightingPossibleFrom={forecast.sightingPossibleFrom}
+                      darkness={forecast.darkness}
+                      level={forecast.level}
+                      refresh={forecast.refresh}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="SpotDetail"
+                  options={({ route, navigation }) => ({
+                    title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
                 >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {({ route }) => (
-              <SpotDetailScreen
-                spot={spotsById[route.params.spotId]}
-                result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-                forecast={forecast.forecastsBySpotId[route.params.spotId]}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="Settings"
-            options={({ navigation }) => ({
-              title: t('settings.title'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={styles.backButton}
-                  onPress={() => navigation.goBack()}
+                  {({ route }) => (
+                    <SpotDetailScreen
+                      spot={spotsById[route.params.spotId]}
+                      result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                      forecast={forecast.forecastsBySpotId[route.params.spotId]}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="Settings"
+                  options={({ navigation }) => ({
+                    title: t('settings.title'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
                 >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {() => <SettingsScreen />}
-          </Stack.Screen>
-        </Stack.Navigator>
-        </NavigationContainer>
+                  {() => <SettingsScreen />}
+                </Stack.Screen>
+              </Stack.Navigator>
+            </NavigationContainer>
+          </View>
+        </View>
       </ConsentGate>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1
+  },
+  navRoot: {
+    flex: 1
+  },
   headerBackground: {
     flex: 1,
     backgroundColor: palette.night

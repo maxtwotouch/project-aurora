@@ -7,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 // See App.tsx for why these are imported per-weight rather than from the
 // package root (avoids Metro bundling all 18 Fraunces weight/italic files).
 import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
@@ -240,12 +240,22 @@ export default function App() {
   );
 
   return (
-    <SafeAreaProvider>
+    // `initialWindowMetrics` is a no-op on web (always `null` there -- see
+    // InitialWindow.ts vs InitialWindow.native.ts in
+    // react-native-safe-area-context), so this doesn't change web behavior;
+    // it's here purely so App.tsx and App.web.tsx stay structurally
+    // identical. See App.tsx for the native-side rationale.
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <ConsentGate>
-        {/* Mounted once here, above the whole navigator -- see
-            PreviewModeBanner's own header comment for why. */}
-        <PreviewModeBanner />
-        <NavigationContainer theme={navTheme}>
+        {/* Explicit flex column -- see App.tsx for why this is spelled out
+            as real Views rather than relying on ConsentGate's fragment to
+            flatten into implicitly-correct flex siblings. */}
+        <View style={styles.root}>
+          {/* Mounted once here, above the whole navigator -- see
+              PreviewModeBanner's own header comment for why. */}
+          <PreviewModeBanner />
+          <View style={styles.navRoot}>
+            <NavigationContainer theme={navTheme}>
         <Stack.Navigator
           screenOptions={{
             headerStyle: {
@@ -332,13 +342,21 @@ export default function App() {
             )}
           </Stack.Screen>
         </Stack.Navigator>
-        </NavigationContainer>
+            </NavigationContainer>
+          </View>
+        </View>
       </ConsentGate>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1
+  },
+  navRoot: {
+    flex: 1
+  },
   webPage: {
     flex: 1,
     backgroundColor: palette.night
