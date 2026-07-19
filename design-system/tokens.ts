@@ -49,11 +49,25 @@ export const ground = {
   borderStrong: '#4d8887'
 } as const;
 
-/** Body/UI text on the ground ramp. See README's contrast table for pairing ratios. */
+/**
+ * Body/UI text on the ground ramp. See README's contrast table for pairing
+ * ratios.
+ *
+ * `muted` was lightened from `#7f9899` to `#9db1b1` (owner-approved
+ * contrast fix): the original value measured 4.21:1 on `ground.surfaceElevated`
+ * and, once every real background `text.muted` renders against was
+ * re-checked (not just the ones already documented), an even tighter
+ * pairing turned up -- 3.30:1 on `surface.chipActive` (SpotCard's web
+ * hover background) -- both below WCAG AA's 4.5:1 for body text. `#9db1b1`
+ * is the minimal same-hue/-saturation lightening (hue/saturation held
+ * fixed, lightness raised just enough) that clears 4.5:1 against every
+ * background this token is used on, including that hover state -- see
+ * README's contrast table for the full re-measured set.
+ */
 export const text = {
   primary: '#eef7f4',
   secondary: '#bdd0cf',
-  muted: '#7f9899',
+  muted: '#9db1b1',
   /** Dark text for use ON a signal-colored surface (e.g. inside the gauge tip). */
   onSignal: '#04110d',
   onInfoSurface: '#d5ecff',

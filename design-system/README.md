@@ -176,16 +176,37 @@ lighter text than the app already uses them for**.
 | `text.onWarningSurface` on `status.warningSurface` | 9.78:1 | |
 | `text.onDangerSurface` on `status.dangerSurface` | 10.56:1 | |
 | `text.onInfoSurface` on `status.infoSurface` | 11.76:1 | |
-| **`text.muted` on `ground.base`** | **6.04:1** | Comfortable |
-| **`text.muted` on `ground.surface`** | **4.95:1** | Passes AA, barely — treat as a floor, don't go darker/smaller from here |
-| **`text.muted` on `ground.surfaceElevated`** | **4.21:1** | **Fails AA for body text.** This is the tightest pairing in the palette — `text.muted` on an elevated surface is only safe for large/bold text or non-critical decorative labels, never a small caption. If you need muted body text on an elevated card, use `text.secondary` instead. |
-| **`accentWarm.base` on `ground.panel`** | **4.78:1** | Passes AA, barely — treat `accentWarm.base` as text-sized-up-or-bold only on `ground.panel`; it's more comfortable (6.08:1) on `ground.base`. |
+| `text.muted` on `ground.base` | 8.25:1 | Comfortable |
+| `text.muted` on `ground.soft` | 7.50:1 | |
+| `text.muted` on `ground.panel` | 6.47:1 | The hero surface — this is where `DataBand`'s eyebrow labels actually sit |
+| `text.muted` on `ground.surface` (`card`) | 6.76:1 | |
+| `text.muted` on `ground.surfaceElevated` | 5.75:1 | |
+| `text.muted` on `surface.chip` | 5.35:1 | |
+| **`text.muted` on `surface.chipActive`** | **4.50:1** | **The tightest pairing in the whole palette**, and the one that set `text.muted`'s value (see below) — `surface.chipActive` is a hover/active background (e.g. `SpotCard`'s web hover state), so it's easy to miss in a static audit. Sits exactly at the AA floor: treat it as a hard floor, not a comfortable margin — don't introduce a new background darker than `surface.chipActive` and assume `text.muted` still clears it without re-measuring. |
+| `accentWarm.base` on `ground.panel` | 4.78:1 | Passes AA, barely — treat `accentWarm.base` as text-sized-up-or-bold only on `ground.panel`; it's more comfortable (6.08:1) on `ground.base`. |
+
+`text.muted` was revised from `#7f9899` to **`#9db1b1`** (owner-approved,
+2026-07-19) after this table's first pass turned out to be incomplete: it
+only checked `text.muted` against `ground.surface`/`ground.surfaceElevated`
+and missed `surface.chip`/`surface.chipActive` entirely, where the
+*original* value measured a worse 3.92:1 and 3.30:1 respectively — both
+clear AA failures, not just the documented 4.21:1 on `ground.surfaceElevated`.
+`#9db1b1` is the minimal lightening (hue and saturation held fixed,
+lightness raised only as far as needed) that clears 4.5:1 against the
+worst of these (`surface.chipActive`) — every other pairing above has
+comfortable headroom as a result. It stays clearly distinct from
+`text.secondary` (relative luminance 0.42 vs. 0.60 — noticeably darker,
+so the two still read as separate hierarchy tiers, not near-duplicates)
+and from `text.primary` (0.42 vs. 0.94), so "muted" still reads as muted.
 
 **Rule of thumb for a new palette**: whenever you introduce a "muted" or
-"tertiary" text tone, check it against your *most elevated* surface, not
-just your base background — elevation narrows contrast, and that's where
-a palette that "passes" on paper quietly fails on the actual busiest card
-in the app.
+"tertiary" text tone, check it against your *most elevated* surface AND
+your *hover/active/pressed* surfaces, not just your base background and
+resting-state cards — elevation and interaction states both narrow
+contrast, and that's where a palette that "passes" on paper quietly fails
+on the actual busiest, most-interacted-with card in the app. A "muted on
+static surfaces only" audit is an incomplete audit — this system's own
+first pass at this table made exactly that mistake.
 
 ## Typography
 
@@ -319,7 +340,8 @@ domain (where/what to eat vs. where/when to see the aurora).
   that aren't problems; a written, one-sentence rule for what any warm/
   off-family accent color is allowed to mean, checked before every reuse.
 - **The WCAG ≥4.5:1 discipline**, including checking your most elevated
-  surface, not just your base background, for every "muted" text tone.
+  *and* your hover/active surfaces, not just your base background, for
+  every "muted" text tone.
 
 ### What gets re-derived
 
