@@ -32,7 +32,8 @@
       "spots": "Spots",
       "aurora": "Aurora",
       "live": "Live"
-    }
+    },
+    "settingsA11yLabel": "Settings"
   },
   "tonight": {
     "loading": "Loading tonight's field report...",
@@ -275,5 +276,13 @@
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
+  },
+  "settings": {
+    "title": "Settings",
+    "languageSection": "Language",
+    "privacySection": "Privacy",
+    "aboutSection": "About",
+    "aboutAppName": "Tromsø Northern Lights",
+    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune"
   }
 }

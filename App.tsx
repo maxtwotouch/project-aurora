@@ -8,12 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
+import { SettingsButton } from './src/components/SettingsButton';
 import { useForecast } from './src/hooks/useForecast';
 import { useTranslation } from './src/i18n/useTranslation';
 import { AllSpotsScreen } from './src/screens/AllSpotsScreen';
 import { AuroraMapScreen } from './src/screens/AuroraMapScreen';
 import { LiveCamerasScreen } from './src/screens/LiveCamerasScreen';
 import { MapScreen } from './src/screens/MapScreen.native';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
@@ -22,6 +24,7 @@ import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, 
 type RootStackParamList = {
   Tabs: undefined;
   SpotDetail: { spotId: string };
+  Settings: undefined;
 };
 
 type TabsParamList = {
@@ -64,6 +67,7 @@ type TabsRootProps = {
   sightingPossibleFrom: string | null;
   level: AuroraLevel;
   refresh: () => Promise<void>;
+  onOpenSettings: () => void;
 };
 
 function TabsRoot({
@@ -81,7 +85,8 @@ function TabsRoot({
   tomorrowScore,
   sightingPossibleFrom,
   level,
-  refresh
+  refresh,
+  onOpenSettings
 }: TabsRootProps) {
   const { t } = useTranslation();
 
@@ -138,14 +143,17 @@ function TabsRoot({
           backgroundColor: palette.night
         },
         headerTintColor: palette.textPrimary,
-        headerShown: false,
+        headerShown: true,
         headerTitleStyle: {
           fontSize: 18,
           fontWeight: '800'
         },
         headerShadowVisible: false,
         headerTitleAlign: 'left',
-        headerBackground: () => <View style={styles.headerBackground} />
+        headerBackground: () => <View style={styles.headerBackground} />,
+        headerRight: () => (
+          <SettingsButton accessibilityLabel={t('nav.settingsA11yLabel')} onPress={onOpenSettings} />
+        )
       })}
     >
       <Tabs.Screen name="Tonight" options={{ title: t('nav.tabs.tonight') }}>
@@ -226,6 +234,7 @@ export default function App() {
                 onOpenSpot={(spotId) => {
                   navigation.navigate('SpotDetail', { spotId });
                 }}
+                onOpenSettings={() => navigation.navigate('Settings')}
                 rankedSpots={forecast.rankedSpots}
                 loading={forecast.loading}
                 error={forecast.error}
@@ -268,6 +277,26 @@ export default function App() {
                 forecast={forecast.forecastsBySpotId[route.params.spotId]}
               />
             )}
+          </Stack.Screen>
+          <Stack.Screen
+            name="Settings"
+            options={({ navigation }) => ({
+              title: t('settings.title'),
+              headerBackVisible: false,
+              headerLeft: () => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.goBack')}
+                  style={styles.backButton}
+                  onPress={() => navigation.goBack()}
+                >
+                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                  <Text style={styles.backText}>{t('common.back')}</Text>
+                </Pressable>
+              )
+            })}
+          >
+            {() => <SettingsScreen />}
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
