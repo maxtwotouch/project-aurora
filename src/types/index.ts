@@ -80,6 +80,19 @@ export type DaylightHint = {
   sightingPossibleFrom: string | null;
 };
 
+/**
+ * Whether it's currently too bright (midnight sun) for aurora to ever be
+ * visible tonight, and if so, when that's expected to change. See
+ * src/scoring/season.ts (direct-source path) / backend/src/season.ts
+ * (backend path) for the computation.
+ */
+export type DarknessSeasonState = {
+  seasonClosed: boolean;
+  /** ISO YYYY-MM-DD of the first night expected to get dark enough for
+   * aurora viewing, or `null` when the season is currently open. */
+  seasonReturns: string | null;
+};
+
 export type AppDataQuality = {
   sourceMode: 'backend' | 'direct';
   backendRequested: boolean;

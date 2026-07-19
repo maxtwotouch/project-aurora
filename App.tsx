@@ -19,7 +19,7 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
-import type { AppDataQuality, AuroraLevel, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -65,6 +65,7 @@ type TabsRootProps = {
   tonightScore: GeneralForecastScore | null;
   tomorrowScore: GeneralForecastScore | null;
   sightingPossibleFrom: string | null;
+  darkness: DarknessSeasonState | null;
   level: AuroraLevel;
   refresh: () => Promise<void>;
   onOpenSettings: () => void;
@@ -84,6 +85,7 @@ function TabsRoot({
   tonightScore,
   tomorrowScore,
   sightingPossibleFrom,
+  darkness,
   level,
   refresh,
   onOpenSettings
@@ -171,6 +173,7 @@ function TabsRoot({
             tonightScore={tonightScore}
             tomorrowScore={tomorrowScore}
             sightingPossibleFrom={sightingPossibleFrom}
+            darkness={darkness}
             level={level}
             refresh={refresh}
           />
@@ -247,6 +250,7 @@ export default function App() {
                 tonightScore={forecast.tonightScore}
                 tomorrowScore={forecast.tomorrowScore}
                 sightingPossibleFrom={forecast.sightingPossibleFrom}
+                darkness={forecast.darkness}
                 level={forecast.level}
                 refresh={forecast.refresh}
               />

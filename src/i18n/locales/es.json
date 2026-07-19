@@ -46,6 +46,12 @@
     },
     "scoreSuffix": "de 100",
     "daytimeHint": "Todavía hay luz de día. La primera franja de observación realista comienza alrededor de las {{time}}.",
+    "polarDay": {
+      "statusLabel": "La temporada de auroras está cerrada por ahora",
+      "headline": "Demasiada luz para ver auroras ahora mismo",
+      "body": "El sol de medianoche mantiene el cielo claro toda la noche — la temporada de auroras vuelve alrededor del {{date}}.",
+      "unknownDate": "más adelante este año"
+    },
     "decision": {
       "goNow": "Vaya ahora",
       "wait": "Espere",

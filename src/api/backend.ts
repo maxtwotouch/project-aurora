@@ -1,4 +1,4 @@
-import type { GeneralForecastScore, HourlyForecast, KpTrend, SpotScoreResult } from '../types';
+import type { DarknessSeasonState, GeneralForecastScore, HourlyForecast, KpTrend, SpotScoreResult } from '../types';
 
 type BackendTonightSnapshot = {
   updatedAt: string;
@@ -13,6 +13,7 @@ type BackendTonightSnapshot = {
     usingFallbackKp: boolean;
     fallbackWeatherSpotIds: string[];
   };
+  darkness: DarknessSeasonState;
 };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;

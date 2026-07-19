@@ -46,6 +46,12 @@
     },
     "scoreSuffix": "von 100",
     "daytimeHint": "Es ist noch hell. Das erste realistische Zeitfenster beginnt gegen {{time}} Uhr.",
+    "polarDay": {
+      "statusLabel": "Polarlicht-Saison derzeit geschlossen",
+      "headline": "Gerade zu hell für Polarlichter",
+      "body": "Die Mitternachtssonne hält den Himmel die ganze Nacht hell — die Polarlicht-Saison beginnt wieder um den {{date}}.",
+      "unknownDate": "später dieses Jahr"
+    },
     "decision": {
       "goNow": "Jetzt losfahren",
       "wait": "Warten",

@@ -1,14 +1,18 @@
+import { darknessFactor, solarElevationDeg } from './solar.js';
 import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from './types.js';
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
+// Every constant below is explained (including which are heuristics tuned by
+// feel vs. derived from something concrete) in ../../docs/scoring-model.md.
 export function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
   const cloudFactor = 100 - cloudCover;
-  const kpFactor = kp * 15;
-  const estimatedDriveMinutes = distanceKm * 1.15;
+  const kpFactor = kp * 15; // KP weighting -- see docs/scoring-model.md ("KP weighting: kp * 15")
+  const estimatedDriveMinutes = distanceKm * 1.15; // drive-time proxy -- see docs/scoring-model.md ("Distance penalty")
   const distancePenalty = estimatedDriveMinutes > 120 ? (estimatedDriveMinutes - 120) * 0.35 : 0;
-  const lightPenalty = lightPollution * 5;
+  const lightPenalty = lightPollution * 5; // light-pollution penalty -- see docs/scoring-model.md ("Light pollution penalty")
 
+  // 0.7/0.3 cloud/KP blend -- see docs/scoring-model.md ("Cloud/KP blend").
   return clamp(0.7 * cloudFactor + 0.3 * kpFactor - distancePenalty - lightPenalty, 0, 100);
 }
 
@@ -17,6 +21,7 @@ function computeColdScore(temperature: number, windSpeed: number): number {
   return clamp(Math.round((2 - perceived) * 6.5), 0, 100);
 }
 
+// Dress thresholds (80/60/40) -- see ../../docs/scoring-model.md ("Cold-score dress thresholds").
 function dressAdviceFromColdScore(coldScore: number): string {
   if (coldScore >= 80) {
     return 'Arctic setup: thermal base, insulated mid-layer, down jacket, windproof shell, mittens, warm boots.';
@@ -30,7 +35,8 @@ function dressAdviceFromColdScore(coldScore: number): string {
   return 'Cool: light layers plus a wind-resistant outer jacket.';
 }
 
-function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] {
+// Threshold rationale documented in ../../docs/scoring-model.md ("Trend thresholds").
+export function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] {
   const current = hourlyScores[0]?.score ?? 0;
   let bestIndex = 0;
   let bestScore = current;
@@ -42,12 +48,22 @@ function deriveTrend(hourlyScores: SpotHourlyScore[]): SpotScoreResult['trend'] 
     }
   }
 
+  // The headline `score` reported for a spot (see scoreSpot below) is always
+  // the BEST hour's score, not hourlyScores[0]'s in isolation -- so trend
+  // must be judged against that same best hour, not "now" alone. Otherwise
+  // the UI could show e.g. "80 - good now" when the 80 is actually five
+  // hours away.
+  const GOOD_SCORE = 55; // "good" bar -- the headline score itself is worth heading out for
+  const DECENT_SCORE = 40; // "decent" bar -- below this, a later hour isn't worth flagging as an upgrade
+  const MEANINGFUL_IMPROVEMENT = 8; // points of gain needed to call a later hour "meaningfully better" than now
+  const IMMINENT_INDEX = 1; // "now-or-imminent" = the best hour is index 0 (now) or 1 (next hour)
+
+  const isImminent = bestIndex <= IMMINENT_INDEX;
   const improvement = bestScore - current;
-  if (improvement >= 8 && bestIndex >= 2) return 'improving';
-  if (current >= 55) return 'good_now';
-  if (bestIndex <= 2 && current >= 40) return 'good_now';
-  if (bestScore < 40) return 'worse';
-  return bestIndex >= 2 ? 'improving' : 'worse';
+
+  if (isImminent && bestScore >= GOOD_SCORE) return 'good_now';
+  if (!isImminent && bestScore >= DECENT_SCORE && improvement >= MEANINGFUL_IMPROVEMENT) return 'improving';
+  return 'worse';
 }
 
 function findBestWindow(hourlyScores: SpotHourlyScore[]) {
@@ -99,13 +115,30 @@ function findBestWindow(hourlyScores: SpotHourlyScore[]) {
 }
 
 function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): SpotScoreResult {
-  const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => ({
-    time: hour.time,
-    cloudCover: hour.cloudCover,
-    temperature: Number(hour.temperature ?? 0),
-    windSpeed: Number(hour.windSpeed ?? 0),
-    score: computeScore(hour.cloudCover, kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0, spot.distanceKm, spot.lightPollution)
-  }));
+  const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => {
+    const rawScore = computeScore(
+      hour.cloudCover,
+      kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0,
+      spot.distanceKm,
+      spot.lightPollution
+    );
+    // Aurora is physically invisible in a bright sky (e.g. Tromso's
+    // midnight sun in summer) regardless of how clear/active the forecast
+    // looks -- gate every hourly score by how dark the sky actually is at
+    // that spot's own coordinates before window selection ever runs, so
+    // "best window" naturally lands in genuinely dark hours (or collapses
+    // to 0 when there are none tonight).
+    const elevation = solarElevationDeg(new Date(hour.time).getTime(), spot.lat, spot.lon);
+    const score = rawScore * darknessFactor(elevation);
+
+    return {
+      time: hour.time,
+      cloudCover: hour.cloudCover,
+      temperature: Number(hour.temperature ?? 0),
+      windSpeed: Number(hour.windSpeed ?? 0),
+      score
+    };
+  });
 
   const { start, end, bestHour } = findBestWindow(hourlyScores);
   const coldScore = computeColdScore(bestHour.temperature, bestHour.windSpeed);
@@ -127,6 +160,7 @@ function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): 
   };
 }
 
+// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate").
 function applyCloudGate(result: SpotScoreResult): SpotScoreResult {
   if (result.cloudCoverAtBestHour <= 80) {
     return result;

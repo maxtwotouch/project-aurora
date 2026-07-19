@@ -72,6 +72,18 @@ export type DataQuality = {
   staleSnapshot?: boolean;
 };
 
+/**
+ * Whether it's currently too bright (midnight sun) for aurora to ever be
+ * visible tonight, and if so, when that's expected to change. See
+ * backend/src/season.ts for the computation.
+ */
+export type DarknessSeasonState = {
+  seasonClosed: boolean;
+  /** ISO YYYY-MM-DD of the first night expected to get dark enough for
+   * aurora viewing, or `null` when the season is currently open. */
+  seasonReturns: string | null;
+};
+
 export type TonightSnapshot = {
   updatedAt: string;
   kp: KpTrend;
@@ -82,6 +94,7 @@ export type TonightSnapshot = {
   rankings: SpotScoreResult[];
   forecastsBySpotId: Record<string, HourlyForecast[]>;
   dataQuality: DataQuality;
+  darkness: DarknessSeasonState;
 };
 
 /**
