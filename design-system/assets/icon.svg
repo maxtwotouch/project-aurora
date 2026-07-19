@@ -1,0 +1,28 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aurora over the Tromsø bridge and fjord peaks">
+  <!--
+    "Fjord Line" mark (brand direction A, green band): the place itself as
+    the icon — three fjord peaks, the bridge's arc, one thick aurora
+    stroke. Deliberately reduced to this few a shapes so it stays legible
+    at 64px (see the sibling icon-sizes screenshot) — no fine bridge
+    pylons, no dense star field, just the silhouette + the arc + the band.
+    Colors are the app's own tokens (src/theme/palette.ts): night, card,
+    cardBorderStrong, auroraGreen, accentWarm.
+  -->
+  <rect width="100" height="100" fill="#061711"/>
+
+  <!-- fjord peaks -->
+  <path d="M2,82 L22,48 L34,66 L50,28 L66,66 L84,42 L98,82 Z" fill="#142d25"/>
+
+  <!-- bridge arc (Tromsø bridge, simplified to a single stroke — no pylon ticks, they disappear below ~120px) -->
+  <path d="M14,90 Q50,74 86,90" fill="none" stroke="#4d8874" stroke-width="3.4" stroke-linecap="round"/>
+
+  <!-- aurora band, green (not copper — see palette.ts accentWarm comment for why) -->
+  <path d="M8,32 C24,20 34,38 50,26 C64,16 72,32 92,22" fill="none" stroke="#67efc1" stroke-width="6.4" stroke-linecap="round"/>
+
+  <!-- one warm "town light" on the bridge crest: copper survives as a small secondary accent, not the band itself -->
+  <circle cx="50" cy="82" r="2.1" fill="#d97b52"/>
+
+  <!-- minimal star dust, only reads at larger renders -->
+  <circle cx="80" cy="14" r="1" fill="#67efc1" opacity="0.5"/>
+  <circle cx="20" cy="17" r="0.7" fill="#67efc1" opacity="0.4"/>
+</svg>
