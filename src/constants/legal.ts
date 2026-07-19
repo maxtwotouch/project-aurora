@@ -4,4 +4,4 @@
  * Expo web export (see README.md's GitHub Pages deployment section), which
  * publishes it at this URL once merged and deployed.
  */
-export const PRIVACY_POLICY_URL = 'https://maxtwotouch.github.io/project-aurora/privacy.html';
+export const PRIVACY_POLICY_URL = 'https://aurora.hovding.dev/privacy.html';

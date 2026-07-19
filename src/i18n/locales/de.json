@@ -32,7 +32,8 @@
       "spots": "Orte",
       "aurora": "Aurora",
       "live": "Live"
-    }
+    },
+    "settingsA11yLabel": "Einstellungen"
   },
   "tonight": {
     "loading": "Der heutige Lagebericht wird geladen ...",
@@ -273,13 +274,22 @@
     "body": "Teilen Sie anonyme Nutzungsdaten mit uns — wir zählen, welche Orte Nutzer ansehen und zu welchen sie navigieren (nie, wer Sie sind, nie Ihren Standort, nur Ortsnamen und die Uhrzeit). Sie können ablehnen, und alles funktioniert genauso weiter.",
     "acceptButton": "Anonyme Zählung teilen",
     "declineButton": "Nein, danke",
-    "footnote": "Sie können dies später jederzeit im Tab „Alle Orte“ ändern.",
+    "footnote": "Sie können dies später jederzeit in den Einstellungen ändern.",
     "toggleLabel": "Anonyme Nutzungsfreigabe",
     "toggleOnHelper": "Anonyme Ortsansichten und Navigations-Taps werden geteilt.",
     "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt.",
-    "privacyPolicyLink": "Datenschutzerklärung"
+    "privacyPolicyLink": "Datenschutzerklärung",
+    "languageRowA11y": "Sprache wählen"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "languageSection": "Sprache",
+    "privacySection": "Datenschutz",
+    "aboutSection": "Über die App",
+    "aboutAppName": "Tromsø Northern Lights",
+    "aboutDataSources": "MET Norway · NOAA · Tromsø kommune"
   }
 }
