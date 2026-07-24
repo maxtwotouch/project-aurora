@@ -46,14 +46,25 @@ export function clampKp(value: number): number {
   return Math.max(0, Math.min(9, value));
 }
 
-// Deterministic, plausible layer split for the fallback forecast (no real
-// per-layer data is available here) -- weighted toward low/mid cloud, the
-// most common coastal-Tromso overcast pattern, so the fallback's layered
-// score behaves like a typical real overcast night rather than an unusual
-// all-cirrus one. See docs/scoring-model.md ("Layered clouds").
-const FALLBACK_CLOUD_LOW_SHARE = 0.5;
-const FALLBACK_CLOUD_MEDIUM_SHARE = 0.3;
-const FALLBACK_CLOUD_HIGH_SHARE = 0.2;
+// Deterministic layer split for the fallback forecast (no real per-layer
+// data is available here). We deliberately attribute the ENTIRE aggregate
+// to the LOW (fully-blocking) layer rather than guessing a plausible mixed
+// split: when we don't know the real cloud composition, the resilience
+// discipline this codebase follows (see CLAUDE.md, "keep external-source
+// calls resilient") is degraded data -> conservative output, never an
+// optimistic guess. A mixed low/medium/high split would make
+// computeEffectiveCloudCover's recombined transmission *higher* than the
+// aggregate alone (since medium/high block less than low per-percent),
+// which would make a MET-unreachable ("we don't actually know tonight's
+// sky") night score more optimistically than the same aggregate value did
+// before layered clouds existed -- exactly backwards for a fallback path.
+// With low=1.0 and medium=high=0, computeEffectiveCloudCover recombines to
+// exactly `cloudCover` (transmission = 1 - 1.0*(cloudCover/100)), so
+// fallback scoring is bit-identical to the pre-layered-clouds behavior.
+// See docs/scoring-model.md ("Layered clouds").
+const FALLBACK_CLOUD_LOW_SHARE = 1;
+const FALLBACK_CLOUD_MEDIUM_SHARE = 0;
+const FALLBACK_CLOUD_HIGH_SHARE = 0;
 
 export function buildFallbackForecast(now: Clock = Date.now): HourlyForecast[] {
   const start = new Date(now());
@@ -234,8 +245,13 @@ export function parseKpEntry(entry: unknown): number | null {
 // _medium/_high) -- returns undefined (rather than throwing or defaulting to
 // 0) when the field is absent/non-numeric, so callers can gracefully fall
 // back to the aggregate cloud_area_fraction. See docs/scoring-model.md
-// ("Layered clouds").
+// ("Layered clouds"). `null` is checked explicitly before the `Number(...)`
+// coercion: `Number(null) === 0` is a finite number, so without this check
+// an explicit `null` field would silently parse as "0% cloud in this
+// layer" -- a treat-overcast-as-clear failure mode, and a contradiction of
+// this function's own "absent/non-numeric -> undefined" contract.
 export function parseCloudLayer(value: unknown): number | undefined {
+  if (value === null) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }

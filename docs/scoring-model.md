@@ -129,14 +129,30 @@ into a single effective transmission, converted back to an effective 0-100
 80% covered in low stratus (transmission `1 - 1.0*0.8 = 0.2`, effective
 cloud cover of 80).
 
+**Known gap (deferred, not a bug):** the `>80%` cloud gate (below) still
+checks the raw *aggregate* `cloudCoverAtBestHour`, not this effective
+transmission, so an 85%-aggregate night that's mostly thin, translucent
+cirrus (effective cloud cover well under 80 by the math above) still gets
+hard-capped at 20 by the gate -- the same as an 85%-aggregate night of solid
+low stratus. Making the gate layer-aware is left for a follow-up once the
+validation loop (see below) has enough real outcome data to confirm the
+layer weights themselves are trustworthy enough to gate on, rather than
+just to nudge a soft blend with.
+
 **Graceful degradation is the point, not an afterthought:** whenever any of
 the three layer fields is missing -- an older cached snapshot from before
 this change, or any source that only ever populates the aggregate field --
 `computeEffectiveCloudCover` falls back to the plain `cloudCover` value
 untouched, exactly reproducing the pre-upgrade behavior. `sources.ts`'s
 deterministic fallback forecast (used when the MET API itself is
-unreachable) also emits a plausible layered split rather than omitting the
-fields, so even a fully-offline forecast exercises the same code path.
+unreachable) is a case of exactly this: rather than guessing a plausible
+mixed layer split, it deliberately attributes the *entire* aggregate to the
+low (fully-blocking) layer, so `computeEffectiveCloudCover` recombines it
+back to exactly the aggregate value -- fallback scoring stays bit-identical
+to how it scored before layered clouds existed. Degraded/unknown data must
+never make the fallback path score more optimistically than the plain
+aggregate did; a mixed split (guessing some thin high cloud) would have done
+exactly that.
 
 ### Light pollution penalty: `lightPollution * 5`
 

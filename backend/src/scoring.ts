@@ -36,7 +36,11 @@ const KP_AURORA_CURVE: ReadonlyArray<readonly [kp: number, points: number]> = [
   [9, 110]
 ];
 
-function kpAuroraFactor(kp: number): number {
+// Exported so other Kp -> score consumers (e.g. snapshot.ts's
+// buildTomorrowScore) share this exact curve rather than keeping their own
+// separate linear approximation -- see docs/scoring-model.md ("Latitude-aware
+// KP curve").
+export function kpAuroraFactor(kp: number): number {
   const clamped = clamp(kp, 0, 9);
 
   for (let i = 0; i < KP_AURORA_CURVE.length - 1; i += 1) {
@@ -291,7 +295,12 @@ function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): 
   };
 }
 
-// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate").
+// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate"). Known
+// conservative gap: this still gates on the raw aggregate `cloudCover`, not
+// the layered-clouds effective cover, so e.g. an 85%-aggregate thin-cirrus
+// night stays capped even though computeEffectiveCloudCover would treat it
+// as much more transparent -- see docs/scoring-model.md ("Layered clouds")
+// for the worked example. Left as-is pending validation-loop data.
 function applyCloudGate(result: SpotScoreResult): SpotScoreResult {
   if (result.cloudCoverAtBestHour <= 80) {
     return result;

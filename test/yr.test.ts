@@ -36,6 +36,24 @@ function jsonResponse(body: unknown, ok = true, status = 200) {
   } as Response;
 }
 
+// Mirrors backend/src/scoring.ts's / src/scoring/score.ts's identical
+// computeEffectiveCloudCover (same named blocking weights: low fully-opaque,
+// medium mostly-opaque, high thin/translucent). Duplicated here rather than
+// imported, since yr.ts tests intentionally don't reach into scoring
+// internals -- but the point of the fallback tests below is to assert the
+// actual downstream claim ("recombines to exactly the aggregate"), not just
+// pin whatever numbers today's FALLBACK_CLOUD_*_SHARE constants happen to
+// produce.
+function recombineEffectiveCloudCover(low: number, medium: number, high: number): number {
+  const CLOUD_LOW_BLOCKING = 1.0;
+  const CLOUD_MEDIUM_BLOCKING = 0.75;
+  const CLOUD_HIGH_BLOCKING = 0.4;
+  const lowTransmission = 1 - CLOUD_LOW_BLOCKING * (low / 100);
+  const mediumTransmission = 1 - CLOUD_MEDIUM_BLOCKING * (medium / 100);
+  const highTransmission = 1 - CLOUD_HIGH_BLOCKING * (high / 100);
+  return 100 * (1 - lowTransmission * mediumTransmission * highTransmission);
+}
+
 function makeSpot(overrides: Partial<Spot> = {}): Spot {
   return {
     id: 'yr-test-spot',
@@ -143,8 +161,9 @@ describe('fetchSpotForecastDetailed / fetchPointForecastDetailed: layered cloud 
     assert.equal(hourly[1].cloudCoverHigh, 2);
   });
 
-  test('a malformed MET payload (missing properties.timeseries) falls back to a forecast whose layered ' +
-    'fields are consistent with its own aggregate (50/30/20 low/medium/high split)', async () => {
+  test('a malformed MET payload (missing properties.timeseries) falls back to a forecast that attributes ' +
+    'the ENTIRE aggregate to the low (fully-blocking) layer, so recombined effective cloud cover is exactly ' +
+    'the aggregate (FIX 1: conservative fallback, never more optimistic than the plain aggregate)', async () => {
     globalThis.fetch = (async () => jsonResponse({ unexpected: 'shape' })) as typeof fetch;
 
     const { hourly, usedFallback } = await fetchSpotForecastDetailed(makeSpot({ lat: 69.204, lon: 18.204 }));
@@ -155,9 +174,17 @@ describe('fetchSpotForecastDetailed / fetchPointForecastDetailed: layered cloud 
       [72, 68, 63, 58, 55, 52, 50, 54, 59, 64, 69, 74]
     );
     for (const hour of hourly) {
-      assert.equal(hour.cloudCoverLow, Math.round(hour.cloudCover * 0.5));
-      assert.equal(hour.cloudCoverMedium, Math.round(hour.cloudCover * 0.3));
-      assert.equal(hour.cloudCoverHigh, Math.round(hour.cloudCover * 0.2));
+      assert.equal(hour.cloudCoverLow, hour.cloudCover);
+      assert.equal(hour.cloudCoverMedium, 0);
+      assert.equal(hour.cloudCoverHigh, 0);
+      // Float-tolerant: the transmission-product recombination can land a
+      // hair off an exact integer, same as the 1e-9 cross-check pattern used
+      // elsewhere in this suite.
+      const recombined = recombineEffectiveCloudCover(hour.cloudCoverLow!, hour.cloudCoverMedium!, hour.cloudCoverHigh!);
+      assert.ok(
+        Math.abs(recombined - hour.cloudCover) < 1e-9,
+        `expected recombined effective cloud cover ~${hour.cloudCover}, got ${recombined}`
+      );
     }
   });
 
@@ -170,9 +197,9 @@ describe('fetchSpotForecastDetailed / fetchPointForecastDetailed: layered cloud 
 
     assert.equal(usedFallback, true);
     assert.equal(hourly[0].cloudCover, 72);
-    assert.equal(hourly[0].cloudCoverLow, 36);
-    assert.equal(hourly[0].cloudCoverMedium, Math.round(72 * 0.3));
-    assert.equal(hourly[0].cloudCoverHigh, Math.round(72 * 0.2));
+    assert.equal(hourly[0].cloudCoverLow, 72);
+    assert.equal(hourly[0].cloudCoverMedium, 0);
+    assert.equal(hourly[0].cloudCoverHigh, 0);
   });
 
   test('a non-ok MET response falls back to the deterministic layered cloud sequence', async () => {
@@ -182,6 +209,6 @@ describe('fetchSpotForecastDetailed / fetchPointForecastDetailed: layered cloud 
 
     assert.equal(usedFallback, true);
     assert.equal(hourly[0].cloudCover, 72);
-    assert.equal(hourly[0].cloudCoverLow, 36);
+    assert.equal(hourly[0].cloudCoverLow, 72);
   });
 });

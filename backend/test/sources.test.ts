@@ -22,6 +22,23 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+// Mirrors backend/src/scoring.ts's computeEffectiveCloudCover exactly (same
+// named blocking weights: low fully-opaque, medium mostly-opaque, high
+// thin/translucent). Duplicated here rather than imported, since sources.ts
+// tests intentionally don't reach into scoring.ts internals -- but the
+// point of the fallback tests below is to assert the actual downstream
+// claim ("recombines to exactly the aggregate"), not just pin whatever
+// numbers today's FALLBACK_CLOUD_*_SHARE constants happen to produce.
+function recombineEffectiveCloudCover(low: number, medium: number, high: number): number {
+  const CLOUD_LOW_BLOCKING = 1.0;
+  const CLOUD_MEDIUM_BLOCKING = 0.75;
+  const CLOUD_HIGH_BLOCKING = 0.4;
+  const lowTransmission = 1 - CLOUD_LOW_BLOCKING * (low / 100);
+  const mediumTransmission = 1 - CLOUD_MEDIUM_BLOCKING * (medium / 100);
+  const highTransmission = 1 - CLOUD_HIGH_BLOCKING * (high / 100);
+  return 100 * (1 - lowTransmission * mediumTransmission * highTransmission);
+}
+
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return {
     ok,
@@ -272,14 +289,14 @@ describe('parseCloudLayer: optional per-layer cloud field parsing', () => {
     assert.equal(parseCloudLayer({}), undefined);
   });
 
-  // Surprise: `null` does NOT return undefined here, because `Number(null)`
-  // coerces to 0 (a finite number) in JS -- so a `null` field is silently
-  // parsed as "0% cloud in this layer" rather than "field absent." This is
-  // an artifact of the `Number(value)` + `Number.isFinite` implementation,
-  // not something this test suite can safely change (source is out of
-  // scope), but it's worth pinning explicitly so it doesn't regress silently.
-  test('null coerces to 0 via Number(null), NOT undefined -- documents an implementation quirk', () => {
-    assert.equal(parseCloudLayer(null), 0);
+  // `null` is checked explicitly before the `Number(...)` coercion (fixed:
+  // `Number(null)` coerces to 0, a finite number, which would otherwise
+  // silently parse an explicit `null` field as "0% cloud in this layer"
+  // rather than "field absent" -- a treat-overcast-as-clear failure mode,
+  // and a contradiction of this function's own "absent/non-numeric ->
+  // undefined" contract).
+  test('null returns undefined, same as any other absent/non-numeric value', () => {
+    assert.equal(parseCloudLayer(null), undefined);
   });
 });
 
@@ -376,28 +393,47 @@ describe('fetchSpotForecastWithQuality / fetchPointForecastWithQuality: layered 
     assert.equal(hourly[1].cloudCoverHigh, 2);
   });
 
-  test('the deterministic fallback forecast emits layered values consistent with its own aggregate ' +
-    '(50/30/20 low/medium/high split of cloudCover)', () => {
+  test('the deterministic fallback forecast attributes the ENTIRE aggregate to the low (fully-blocking) ' +
+    'layer, so the recombined effective cloud cover is exactly the aggregate for every entry (FIX 1: ' +
+    'conservative fallback, never more optimistic than the plain aggregate)', () => {
     const fallback = buildFallbackForecast(() => new Date('2026-07-16T00:00:00Z').getTime());
 
     assert.equal(fallback.length, 12);
     for (const hour of fallback) {
-      assert.equal(hour.cloudCoverLow, Math.round(hour.cloudCover * 0.5));
-      assert.equal(hour.cloudCoverMedium, Math.round(hour.cloudCover * 0.3));
-      assert.equal(hour.cloudCoverHigh, Math.round(hour.cloudCover * 0.2));
+      assert.equal(hour.cloudCoverLow, hour.cloudCover);
+      assert.equal(hour.cloudCoverMedium, 0);
+      assert.equal(hour.cloudCoverHigh, 0);
+      // Float-tolerant: the transmission-product recombination can land a
+      // hair off an exact integer (e.g. 57.99999999999999), same as the
+      // existing 1e-9 cross-check pattern used elsewhere in this suite.
+      const recombined = recombineEffectiveCloudCover(hour.cloudCoverLow!, hour.cloudCoverMedium!, hour.cloudCoverHigh!);
+      assert.ok(
+        Math.abs(recombined - hour.cloudCover) < 1e-9,
+        `expected recombined effective cloud cover ~${hour.cloudCover}, got ${recombined}`
+      );
     }
   });
 
-  test('a malformed MET payload falls back to a forecast whose layered fields are consistent with the aggregate', async () => {
+  test('a malformed MET payload falls back to a forecast whose recombined effective cloud cover is ' +
+    'exactly the aggregate (same conservative fallback guarantee, exercised via the MET-unreachable path)', async () => {
     globalThis.fetch = (async () => jsonResponse({ unexpected: 'shape' })) as typeof fetch;
 
     const { hourly, usingFallback } = await fetchSpotForecastWithQuality(testSpot);
 
     assert.equal(usingFallback, true);
     assert.equal(hourly[0].cloudCover, 72);
-    assert.equal(hourly[0].cloudCoverLow, 36);
-    assert.equal(hourly[0].cloudCoverMedium, Math.round(72 * 0.3));
-    assert.equal(hourly[0].cloudCoverHigh, Math.round(72 * 0.2));
+    assert.equal(hourly[0].cloudCoverLow, 72);
+    assert.equal(hourly[0].cloudCoverMedium, 0);
+    assert.equal(hourly[0].cloudCoverHigh, 0);
+    const recombined = recombineEffectiveCloudCover(
+      hourly[0].cloudCoverLow!,
+      hourly[0].cloudCoverMedium!,
+      hourly[0].cloudCoverHigh!
+    );
+    assert.ok(
+      Math.abs(recombined - hourly[0].cloudCover) < 1e-9,
+      `expected recombined effective cloud cover ~${hourly[0].cloudCover}, got ${recombined}`
+    );
   });
 });
 

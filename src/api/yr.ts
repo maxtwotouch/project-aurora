@@ -23,12 +23,22 @@ const getSpotKey = (spot: Spot) => `${spot.lat.toFixed(4)},${spot.lon.toFixed(4)
 const getPointKey = (lat: number, lon: number, hours: number) => `${lat.toFixed(4)},${lon.toFixed(4)},${hours}`;
 const getDaylightKey = (lat: number, lon: number, dayKey: string) => `${lat.toFixed(4)},${lon.toFixed(4)},${dayKey}`;
 
-// Deterministic, plausible layer split for the fallback forecast (no real
-// per-layer data is available here) -- mirrors backend/src/sources.ts's
+// Deterministic layer split for the fallback forecast (no real per-layer
+// data is available here). We deliberately attribute the ENTIRE aggregate to
+// the LOW (fully-blocking) layer rather than guessing a plausible mixed
+// split: when we don't know the real cloud composition, degraded data must
+// produce a conservative output, never an optimistic guess. A mixed split
+// would make the recombined effective cloud cover *lower* than the
+// aggregate (medium/high block less than low per-percent), which would make
+// a MET-unreachable night score more optimistically than it did before
+// layered clouds existed -- exactly backwards for a fallback path. With
+// low=1.0 and medium=high=0, the recombined effective cloud cover is exactly
+// `cloudCover`, so fallback scoring stays bit-identical to the
+// pre-layered-clouds behavior. Mirrors backend/src/sources.ts's
 // buildFallbackForecast. See docs/scoring-model.md ("Layered clouds").
-const FALLBACK_CLOUD_LOW_SHARE = 0.5;
-const FALLBACK_CLOUD_MEDIUM_SHARE = 0.3;
-const FALLBACK_CLOUD_HIGH_SHARE = 0.2;
+const FALLBACK_CLOUD_LOW_SHARE = 1;
+const FALLBACK_CLOUD_MEDIUM_SHARE = 0;
+const FALLBACK_CLOUD_HIGH_SHARE = 0;
 
 function buildFallbackForecast(): HourlyForecast[] {
   const start = new Date();
@@ -51,8 +61,12 @@ function buildFallbackForecast(): HourlyForecast[] {
 }
 
 // Optional per-layer cloud field parsing -- mirrors
-// backend/src/sources.ts's parseCloudLayer.
+// backend/src/sources.ts's parseCloudLayer. `null` is checked explicitly
+// before the `Number(...)` coercion: `Number(null) === 0` is a finite
+// number, so without this check an explicit `null` field would silently
+// parse as "0% cloud in this layer" instead of "field absent."
 function parseCloudLayer(value: unknown): number | undefined {
+  if (value === null) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }

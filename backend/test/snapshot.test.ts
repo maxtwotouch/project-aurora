@@ -197,9 +197,13 @@ describe('buildTomorrowScore: darkness gating', () => {
     const result = buildTomorrowScore(forecast, kp, TROMSO.lat, TROMSO.lon, now);
 
     assert.ok(result);
-    // (100-20)*0.7 + 5*15*0.3 - 10 = 56 + 22.5 - 10 = 68.5 -> rounds to 69,
-    // unaffected by the darkness gate since every hour's factor is 1.
-    assert.equal(result?.score, 69);
+    // (100-20)*0.7 + kpAuroraFactor(5)*0.3 - 10 = 56 + 127.5*0.3 - 10
+    // = 56 + 38.25 - 10 = 84.25 -> rounds to 84, unaffected by the darkness
+    // gate since every hour's factor is 1. (Was 69 under the old flat
+    // `tomorrowPeak * 15` term -- see docs/scoring-model.md, "Latitude-aware
+    // KP curve" -- now wired through kpAuroraFactor so "tonight" and
+    // "tomorrow" treat Kp consistently.)
+    assert.equal(result?.score, 84);
   });
 
   test('no evening hours in the forecast for "tomorrow" still returns null (unrelated to darkness)', () => {

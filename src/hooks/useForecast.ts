@@ -12,7 +12,7 @@ import spots from '../data/spots.json';
 // 'react-native's own entry point cannot be parsed). See
 // previewModeCore.ts's header comment for the full rationale.
 import { getPreviewModeState, subscribePreviewModeState } from '../preview/previewModeCore';
-import { rankSpots } from '../scoring/score';
+import { kpAuroraFactor, rankSpots } from '../scoring/score';
 import { computeDarknessSeasonState } from '../scoring/season';
 import { darknessFactor, solarElevationDeg } from '../scoring/solar';
 import type {
@@ -103,7 +103,15 @@ export function buildTomorrowScore(
   // sky actually is at that instant (Tromso center coordinates) before
   // averaging into the headline "tomorrow" score.
   const darknessAdjustedHourScores = eveningHours.map((hour) => {
-    const rawHourScore = (100 - hour.cloudCover) * 0.7 + tomorrowPeak * 15 * 0.3 - 10;
+    // kpAuroraFactor(tomorrowPeak) replaces the old flat `tomorrowPeak * 15`
+    // term -- see docs/scoring-model.md ("Latitude-aware KP curve"). Without
+    // this, "tonight" and "tomorrow" showed a visibly inconsistent Kp
+    // treatment on the same screen for identical conditions (tonight uses
+    // the curve via computeScore/scoreSpot; tomorrow didn't). The -10
+    // uncertainty haircut (this is a rougher, evening-average estimate, not
+    // a per-spot/per-hour score) is unchanged. Mirrors
+    // backend/src/snapshot.ts's buildTomorrowScore.
+    const rawHourScore = (100 - hour.cloudCover) * 0.7 + kpAuroraFactor(tomorrowPeak) * 0.3 - 10;
     const elevation = solarElevationDeg(new Date(hour.time).getTime(), lat, lon);
     return rawHourScore * darknessFactor(elevation);
   });

@@ -106,7 +106,10 @@ describe('computeScore', () => {
   });
 });
 
-// kpAuroraFactor itself isn't exported (module-private in scoring.ts), but
+// kpAuroraFactor is now exported (buildTomorrowScore in snapshot.ts also
+// calls it directly -- see docs/scoring-model.md, "Latitude-aware KP
+// curve"), but the tests below still isolate it through computeScore for
+// consistency with the rest of this file's cross-check style:
 // computeScore(cloudCover=100, kp, distanceKm=0, lightPollution=0) isolates
 // it exactly and without clamping: cloudFactor = 100 - 100 = 0, distance and
 // light penalties are both 0, so score = 0.3 * kpAuroraFactor(kp), and since
