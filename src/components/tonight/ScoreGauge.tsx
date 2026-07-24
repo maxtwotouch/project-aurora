@@ -1,14 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
-
-import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { palette } from '../../theme/palette';
-import { motion } from '../../theme/tokens';
-import { typography } from '../../theme/type';
-
-const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { ArcGauge } from '../../../design-system/components/ArcGauge';
 
 type Props = {
   /** 0-100. Values outside that range are clamped. */
@@ -20,135 +10,30 @@ type Props = {
   accessibilityLabel: string;
 };
 
-const VIEWBOX = 100;
-const CENTER = VIEWBOX / 2;
-const RADIUS = 38;
-const STROKE_WIDTH = 9;
-// A 260deg dial with a 100deg gap centered on the bottom (6 o'clock), so the
-// track reads as an instrument dial (direction B of the brand board) rather
-// than a full closed ring. Angles are in the SVG's own coordinate frame
-// (0deg = 3 o'clock, increasing clockwise since y grows downward).
-const START_ANGLE_DEG = 140;
-const SWEEP_DEG = 260;
-const ARC_LENGTH = RADIUS * (SWEEP_DEG * (Math.PI / 180));
-
-function pointOnArc(angleDeg: number) {
-  const rad = (angleDeg * Math.PI) / 180;
-  return {
-    x: CENTER + RADIUS * Math.cos(rad),
-    y: CENTER + RADIUS * Math.sin(rad)
-  };
-}
-
-const START_POINT = pointOnArc(START_ANGLE_DEG);
-const END_POINT = pointOnArc(START_ANGLE_DEG + SWEEP_DEG);
-// One fixed path for the full 260deg sweep -- both the dim track and the
-// bright fill render this same "d", the fill's dasharray/dashoffset is what
-// reveals a fraction of it (see the score effect below). This sidesteps
-// having to flip the large-arc-flag as the fill crosses the 180deg mark.
-const TRACK_PATH = `M ${START_POINT.x} ${START_POINT.y} A ${RADIUS} ${RADIUS} 0 1 1 ${END_POINT.x} ${END_POINT.y}`;
-
 /**
- * Arc score gauge -- the brand board's Direction B dial, redrawn in
- * Direction A's ground/aurora palette: deep green track, aurora-green fill,
- * Fraunces numeral centered, small tip dot at the fill's leading edge.
+ * Aurora score gauge -- the app's own 0-100 wrapper over the design
+ * system's `ArcGauge` (`design-system/components/ArcGauge.tsx`). Same
+ * props, same behavior, same accessibility contract as the app's original
+ * standalone gauge (nothing here changes what any caller sees): `score` is
+ * just `ArcGauge`'s `value` with `max` pinned to 100, and every color prop
+ * is left at `ArcGauge`'s own default (`palette.auroraGreen` fill,
+ * `palette.cardElevated` track, etc. -- see design-system/tokens.ts),
+ * which are the same values this component hardcoded before the move.
  *
- * Sweeps in on mount (reduced-motion: renders at the final value with no
- * animation, per the same convention as the rest of Tonight's entrance
- * choreography).
+ * Kept as its own file/name (rather than having callers reach for
+ * `ArcGauge` directly) so `HeroSection.tsx` and any future aurora-specific
+ * screen have one obvious, score-flavored import -- and so this is the one
+ * place aurora-specific gauge defaults (should they ever diverge from the
+ * design system's generic ones) would live.
+ *
+ * The native numeral-centering fix (full absolute-fill centering wrap,
+ * pinned lineHeight, includeFontPadding:false on Android -- see dev's
+ * "native preview-banner gap + gauge numeral centering" fix) now lives
+ * inside `ArcGauge` itself, not here: it's a canonical-component concern
+ * (every consumer of the dial needs correct iOS/Android numeral metrics,
+ * not just the aurora score), so this wrapper needed no changes to inherit
+ * it.
  */
-export function ScoreGauge({ score, size = 148, label, accessibilityLabel }: Props) {
-  const clamped = Math.max(0, Math.min(100, score));
-  const fraction = clamped / 100;
-  const reducedMotion = useReducedMotion();
-  const sweep = useRef(new Animated.Value(reducedMotion ? fraction : 0)).current;
-  const tipOpacity = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
-
-  useEffect(() => {
-    if (reducedMotion) {
-      sweep.setValue(fraction);
-      tipOpacity.setValue(1);
-      return;
-    }
-
-    sweep.setValue(0);
-    tipOpacity.setValue(0);
-    Animated.sequence([
-      Animated.timing(sweep, {
-        toValue: fraction,
-        duration: motion.duration.slow,
-        easing: motion.easing.out,
-        // strokeDashoffset isn't a transform/opacity property, so this
-        // animation runs on the JS thread rather than the native driver --
-        // acceptable here since it drives a single value once per mount.
-        useNativeDriver: false
-      }),
-      Animated.timing(tipOpacity, {
-        toValue: 1,
-        duration: motion.duration.fast,
-        easing: motion.easing.out,
-        useNativeDriver: false
-      })
-    ]).start();
-    // fraction intentionally omitted: re-running this effect on every score
-    // tick (e.g. a background refresh nudging the score by a point) would
-    // re-trigger the full sweep-in; it should only play once per mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reducedMotion, sweep, tipOpacity]);
-
-  const dashOffset = sweep.interpolate({
-    inputRange: [0, 1],
-    outputRange: [ARC_LENGTH, 0]
-  });
-
-  const tip = pointOnArc(START_ANGLE_DEG + SWEEP_DEG * fraction);
-
-  return (
-    <View
-      style={[styles.wrap, { width: size, height: size }]}
-      accessibilityRole="image"
-      accessibilityLabel={accessibilityLabel}
-    >
-      <Svg width={size} height={size} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
-        <Path d={TRACK_PATH} stroke={palette.cardElevated} strokeWidth={STROKE_WIDTH} strokeLinecap="round" fill="none" />
-        <AnimatedPath
-          d={TRACK_PATH}
-          stroke={palette.auroraGreen}
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={`${ARC_LENGTH} ${ARC_LENGTH}`}
-          strokeDashoffset={dashOffset}
-        />
-        <AnimatedCircle cx={tip.x} cy={tip.y} r={5.6} fill={palette.textPrimary} opacity={tipOpacity} />
-      </Svg>
-      <View style={styles.numeralWrap} pointerEvents="none">
-        <Text style={styles.numeral}>{Math.round(clamped)}</Text>
-        {label ? <Text style={styles.label}>{label}</Text> : null}
-      </View>
-    </View>
-  );
+export function ScoreGauge({ score, size, label, accessibilityLabel }: Props) {
+  return <ArcGauge value={score} max={100} size={size} label={label} accessibilityLabel={accessibilityLabel} />;
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  numeralWrap: {
-    position: 'absolute',
-    alignItems: 'center',
-    // Nudged down slightly from dead-center so it sits in the dial's open
-    // (unswept) lower region, matching the board's reference composition.
-    top: '4%'
-  },
-  numeral: {
-    ...typography.numeralLg,
-    color: palette.textPrimary
-  },
-  label: {
-    ...typography.eyebrow,
-    color: palette.textMuted,
-    marginTop: -2
-  }
-});

@@ -96,6 +96,24 @@ Google's FCM servers hold the device↔topic mapping, not ours.
   spotId, bestWindowStart }`) and let the client render localized text from
   the existing i18n catalogs at receive time. Keeps it to 2 topics total,
   not 2×5.
+  - **iOS gap found in PR β review, fixed:** a data-only message alone does
+    not wake a backgrounded/killed iOS app (Apple only guarantees wake for a
+    message carrying a native `aps.alert`) — Android and any foreground app
+    were unaffected. `backend/src/fcm.ts` now also attaches a
+    `apns.payload.aps.alert` block addressed by `title-loc-key`/`loc-key`/
+    `loc-args` (never literal text), so iOS renders it **natively from the
+    app bundle's own `Localizable.strings`** (five languages, written at
+    prebuild time by `plugins/withAlertLocalizableStrings.js`) rather than
+    needing the app process alive to do it. This keeps every property this
+    section cares about: still 2 topics (not 2×5), still device-language
+    localized (just resolved by iOS from the bundle instead of by the
+    client's JS from its i18n catalogs), still no new data leaves the
+    backend (`loc-args` reuses the same `spotName`/best-window fields
+    already in `data`). An `android: { priority: 'high' }` block is added
+    alongside for timely (not battery-deferred) delivery of the underlying
+    Android data message. See `docs/privacy-push-alerts.md`'s "iOS
+    background/killed delivery" section for the full payload and the
+    privacy-invariant coverage of these two new blocks.
 - **Cost:** requires routing through Firebase, not Expo's push service
   directly — a Firebase project, `google-services.json`/
   `GoogleService-Info.plist`, and an EAS config plugin or bare-workflow

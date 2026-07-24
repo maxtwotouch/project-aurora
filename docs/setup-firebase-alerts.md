@@ -56,6 +56,16 @@ So there's no rush and no risk in deploying the code before doing this.
    separate PR (see `docs/design-aurora-alerts.md` §6, "PR 4"'s client half)
    and needs `google-services.json` / `GoogleService-Info.plist`, which
    don't belong in this backend setup.
+   - One addition either way: `backend/src/fcm.ts` publishes now include a
+     native APNs alert block for iOS (see `docs/design-aurora-alerts.md` §2
+     / `docs/privacy-push-alerts.md`) -- this needs no new secret from you
+     here, but FCM cannot deliver *anything* to an iOS device (with or
+     without that block) until an APNs Authentication Key is uploaded under
+     **Project settings → Cloud Messaging → Apple app configuration**,
+     which itself needs the iOS app already registered in the project
+     (client-side PR, per the bullet above). Not a blocker for this backend
+     setup -- just don't be surprised if iOS delivery still doesn't work
+     until that separate, client-side prerequisite is also done.
 
 ## 3. Generate a service account key
 
