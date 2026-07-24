@@ -1,19 +1,145 @@
+import { moonAltitudeDeg, moonIlluminatedFraction } from './moon.js';
 import { darknessFactor, solarElevationDeg } from './solar.js';
 import type { HourlyForecast, Spot, SpotHourlyScore, SpotScoreResult } from './types.js';
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
+// Tromso sits at roughly 69.65 deg geographic latitude but only ~66.7 deg
+// *corrected geomagnetic* latitude -- the coordinate system the auroral oval
+// actually follows. That puts Tromso close enough to the oval's typical
+// quiet-time position that overhead displays are common even at low
+// planetary Kp, while very high Kp pushes the oval equatorward (south),
+// away from directly overhead here -- see kpAuroraFactor below. Hard-coded
+// as a single named constant, not derived per-request, because this app is
+// deliberately single-region (Tromso only) by product decision.
+const TROMSO_MAGNETIC_LATITUDE_DEG = 66.7;
+
+// Piecewise-linear Kp -> raw "aurora strength" points, replacing the old
+// flat `kp * 15` line. Expressed in the same units as that old curve (so it
+// plugs into the unchanged 0.7*cloudFactor + 0.3*kpFactor blend below) but
+// reshaped for Tromso's magnetic latitude specifically -- see
+// docs/scoring-model.md ("Latitude-aware KP curve") for the full rationale:
+//  - Kp 0-2 rises steeply: at Tromso's magnetic latitude, overhead aurora is
+//    genuinely common even on quiet nights, so low Kp is not "nothing
+//    happening" the way the old linear curve implied.
+//  - Kp 2-4 keeps climbing: this is the classic "good, active night" range.
+//  - Kp 6+ gently plateaus/rolls off rather than climbing further: at very
+//    high Kp the auroral oval's equatorward edge expands south past
+//    Tromso's latitude, so the *overhead* view can be no better (and by Kp
+//    8-9, slightly worse) than a moderate Kp 4-6 storm -- modeled as a soft
+//    rolloff, not a cliff, since this is a real but gradual effect.
+const KP_AURORA_CURVE: ReadonlyArray<readonly [kp: number, points: number]> = [
+  [0, 20],
+  [2, 80],
+  [4, 125],
+  [6, 130],
+  [9, 110]
+];
+
+// Exported so other Kp -> score consumers (e.g. snapshot.ts's
+// buildTomorrowScore) share this exact curve rather than keeping their own
+// separate linear approximation -- see docs/scoring-model.md ("Latitude-aware
+// KP curve").
+export function kpAuroraFactor(kp: number): number {
+  const clamped = clamp(kp, 0, 9);
+
+  for (let i = 0; i < KP_AURORA_CURVE.length - 1; i += 1) {
+    const [kpLow, pointsLow] = KP_AURORA_CURVE[i];
+    const [kpHigh, pointsHigh] = KP_AURORA_CURVE[i + 1];
+    if (clamped <= kpHigh) {
+      const t = (clamped - kpLow) / (kpHigh - kpLow);
+      return pointsLow + (pointsHigh - pointsLow) * t;
+    }
+  }
+
+  return KP_AURORA_CURVE[KP_AURORA_CURVE.length - 1][1];
+}
+
+type CloudLayers = { low?: number; medium?: number; high?: number };
+
+// Layer blocking weights -- see docs/scoring-model.md ("Layered clouds").
+// Low cloud is dense and close to the ground: treated as fully opaque to
+// aurora. Mid-level cloud mostly blocks but thinner patches can leak some
+// light through. High cloud is frequently thin cirrus, which is often
+// noticeably translucent -- a bright aurora can still show through it.
+const CLOUD_LOW_BLOCKING = 1.0;
+const CLOUD_MEDIUM_BLOCKING = 0.75;
+const CLOUD_HIGH_BLOCKING = 0.4;
+
+/**
+ * Combines the three MET cloud layers into a single effective 0-100 "cloud
+ * cover" for the existing cloudFactor formula, treating each layer as an
+ * independent, partially-transparent veil (their transmissions multiply).
+ * Falls back to the plain aggregate `cloudCover` whenever any layer is
+ * missing (older cached snapshot, or a source that never populated them) --
+ * see docs/scoring-model.md ("Layered clouds").
+ */
+function computeEffectiveCloudCover(cloudCover: number, cloudLayers?: CloudLayers): number {
+  if (
+    !cloudLayers ||
+    cloudLayers.low === undefined ||
+    cloudLayers.medium === undefined ||
+    cloudLayers.high === undefined
+  ) {
+    return cloudCover;
+  }
+
+  const lowTransmission = 1 - CLOUD_LOW_BLOCKING * (cloudLayers.low / 100);
+  const mediumTransmission = 1 - CLOUD_MEDIUM_BLOCKING * (cloudLayers.medium / 100);
+  const highTransmission = 1 - CLOUD_HIGH_BLOCKING * (cloudLayers.high / 100);
+  const totalTransmission = clamp(lowTransmission * mediumTransmission * highTransmission, 0, 1);
+
+  return 100 * (1 - totalTransmission);
+}
+
 // Every constant below is explained (including which are heuristics tuned by
 // feel vs. derived from something concrete) in ../../docs/scoring-model.md.
-export function computeScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
-  const cloudFactor = 100 - cloudCover;
-  const kpFactor = kp * 15; // KP weighting -- see docs/scoring-model.md ("KP weighting: kp * 15")
+export function computeScore(
+  cloudCover: number,
+  kp: number,
+  distanceKm: number,
+  lightPollution: number,
+  cloudLayers?: CloudLayers
+): number {
+  const effectiveCloudCover = computeEffectiveCloudCover(cloudCover, cloudLayers);
+  const cloudFactor = 100 - effectiveCloudCover;
+  const kpFactor = kpAuroraFactor(kp); // latitude-aware KP curve -- see docs/scoring-model.md ("Latitude-aware KP curve")
   const estimatedDriveMinutes = distanceKm * 1.15; // drive-time proxy -- see docs/scoring-model.md ("Distance penalty")
   const distancePenalty = estimatedDriveMinutes > 120 ? (estimatedDriveMinutes - 120) * 0.35 : 0;
   const lightPenalty = lightPollution * 5; // light-pollution penalty -- see docs/scoring-model.md ("Light pollution penalty")
 
   // 0.7/0.3 cloud/KP blend -- see docs/scoring-model.md ("Cloud/KP blend").
   return clamp(0.7 * cloudFactor + 0.3 * kpFactor - distancePenalty - lightPenalty, 0, 100);
+}
+
+// Moon factor -- see docs/scoring-model.md ("Moon factor"). Applied per-hour
+// (like darknessFactor) rather than inside computeScore, since it needs the
+// hour's own timestamp and the spot's own coordinates.
+const MOON_ILLUMINATION_RAMP_START = 0.5; // below half-illuminated, no washout modeled at all
+const MOON_ALTITUDE_RAMP_DEG = 30; // penalty ramps to full strength by ~30deg moon altitude
+const MOON_MAX_PENALTY_POINTS = 15; // heuristic cap: full moon, high up, on an otherwise-faint (low-Kp) night
+const KP_MOON_IRRELEVANT_AT = 7; // heuristic: by around Kp 7 the aurora is bright enough that moonlight stops mattering
+
+/**
+ * Points subtracted from an hourly score for moonlight washout: zero when
+ * the moon is below the horizon or too dim (< half-illuminated), ramping up
+ * with both illumination and altitude, and damped back toward zero as Kp
+ * rises (a bright aurora is visible through moonlight; a faint one isn't).
+ * Capped at MOON_MAX_PENALTY_POINTS so it can never be more than a mild
+ * penalty on its own.
+ */
+export function computeMoonPenaltyPoints(illuminatedFraction: number, altitudeDeg: number, kp: number): number {
+  if (altitudeDeg <= 0) return 0;
+
+  const illuminationWeight = clamp(
+    (illuminatedFraction - MOON_ILLUMINATION_RAMP_START) / (1 - MOON_ILLUMINATION_RAMP_START),
+    0,
+    1
+  );
+  const altitudeWeight = clamp(altitudeDeg / MOON_ALTITUDE_RAMP_DEG, 0, 1);
+  const kpDampening = clamp(1 - kp / KP_MOON_IRRELEVANT_AT, 0, 1);
+
+  return MOON_MAX_PENALTY_POINTS * illuminationWeight * altitudeWeight * kpDampening;
 }
 
 function computeColdScore(temperature: number, windSpeed: number): number {
@@ -116,20 +242,29 @@ function findBestWindow(hourlyScores: SpotHourlyScore[]) {
 
 function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): SpotScoreResult {
   const hourlyScores: SpotHourlyScore[] = forecast.map((hour, index) => {
-    const rawScore = computeScore(
-      hour.cloudCover,
-      kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0,
-      spot.distanceKm,
-      spot.lightPollution
-    );
+    const kp = kpByHour[index] ?? kpByHour[kpByHour.length - 1] ?? 0;
+    const rawScore = computeScore(hour.cloudCover, kp, spot.distanceKm, spot.lightPollution, {
+      low: hour.cloudCoverLow,
+      medium: hour.cloudCoverMedium,
+      high: hour.cloudCoverHigh
+    });
     // Aurora is physically invisible in a bright sky (e.g. Tromso's
     // midnight sun in summer) regardless of how clear/active the forecast
     // looks -- gate every hourly score by how dark the sky actually is at
     // that spot's own coordinates before window selection ever runs, so
     // "best window" naturally lands in genuinely dark hours (or collapses
     // to 0 when there are none tonight).
-    const elevation = solarElevationDeg(new Date(hour.time).getTime(), spot.lat, spot.lon);
-    const score = rawScore * darknessFactor(elevation);
+    const hourMs = new Date(hour.time).getTime();
+    const elevation = solarElevationDeg(hourMs, spot.lat, spot.lon);
+    // Moon washout penalty -- see computeMoonPenaltyPoints and
+    // docs/scoring-model.md ("Moon factor"). Computed from the same hour's
+    // timestamp and the spot's own coordinates, same as darkness above.
+    const moonPenalty = computeMoonPenaltyPoints(
+      moonIlluminatedFraction(hourMs),
+      moonAltitudeDeg(hourMs, spot.lat, spot.lon),
+      kp
+    );
+    const score = clamp(rawScore * darknessFactor(elevation) - moonPenalty, 0, 100);
 
     return {
       time: hour.time,
@@ -160,7 +295,12 @@ function scoreSpot(spot: Spot, forecast: HourlyForecast[], kpByHour: number[]): 
   };
 }
 
-// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate").
+// >80% cloud gate -- see ../../docs/scoring-model.md ("Cloud gate"). Known
+// conservative gap: this still gates on the raw aggregate `cloudCover`, not
+// the layered-clouds effective cover, so e.g. an 85%-aggregate thin-cirrus
+// night stays capped even though computeEffectiveCloudCover would treat it
+// as much more transparent -- see docs/scoring-model.md ("Layered clouds")
+// for the worked example. Left as-is pending validation-loop data.
 function applyCloudGate(result: SpotScoreResult): SpotScoreResult {
   if (result.cloudCoverAtBestHour <= 80) {
     return result;

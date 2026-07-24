@@ -46,6 +46,26 @@ export function clampKp(value: number): number {
   return Math.max(0, Math.min(9, value));
 }
 
+// Deterministic layer split for the fallback forecast (no real per-layer
+// data is available here). We deliberately attribute the ENTIRE aggregate
+// to the LOW (fully-blocking) layer rather than guessing a plausible mixed
+// split: when we don't know the real cloud composition, the resilience
+// discipline this codebase follows (see CLAUDE.md, "keep external-source
+// calls resilient") is degraded data -> conservative output, never an
+// optimistic guess. A mixed low/medium/high split would make
+// computeEffectiveCloudCover's recombined transmission *higher* than the
+// aggregate alone (since medium/high block less than low per-percent),
+// which would make a MET-unreachable ("we don't actually know tonight's
+// sky") night score more optimistically than the same aggregate value did
+// before layered clouds existed -- exactly backwards for a fallback path.
+// With low=1.0 and medium=high=0, computeEffectiveCloudCover recombines to
+// exactly `cloudCover` (transmission = 1 - 1.0*(cloudCover/100)), so
+// fallback scoring is bit-identical to the pre-layered-clouds behavior.
+// See docs/scoring-model.md ("Layered clouds").
+const FALLBACK_CLOUD_LOW_SHARE = 1;
+const FALLBACK_CLOUD_MEDIUM_SHARE = 0;
+const FALLBACK_CLOUD_HIGH_SHARE = 0;
+
 export function buildFallbackForecast(now: Clock = Date.now): HourlyForecast[] {
   const start = new Date(now());
   start.setMinutes(0, 0, 0);
@@ -58,7 +78,10 @@ export function buildFallbackForecast(now: Clock = Date.now): HourlyForecast[] {
       time: time.toISOString(),
       cloudCover,
       temperature: -4,
-      windSpeed: 4
+      windSpeed: 4,
+      cloudCoverLow: Math.round(cloudCover * FALLBACK_CLOUD_LOW_SHARE),
+      cloudCoverMedium: Math.round(cloudCover * FALLBACK_CLOUD_MEDIUM_SHARE),
+      cloudCoverHigh: Math.round(cloudCover * FALLBACK_CLOUD_HIGH_SHARE)
     };
   });
 }
@@ -216,6 +239,21 @@ export function parseKpEntry(entry: unknown): number | null {
     if (Number.isFinite(value)) return value;
   }
   return null;
+}
+
+// Optional per-layer cloud field parsing (MET's cloud_area_fraction_low/
+// _medium/_high) -- returns undefined (rather than throwing or defaulting to
+// 0) when the field is absent/non-numeric, so callers can gracefully fall
+// back to the aggregate cloud_area_fraction. See docs/scoring-model.md
+// ("Layered clouds"). `null` is checked explicitly before the `Number(...)`
+// coercion: `Number(null) === 0` is a finite number, so without this check
+// an explicit `null` field would silently parse as "0% cloud in this
+// layer" -- a treat-overcast-as-clear failure mode, and a contradiction of
+// this function's own "absent/non-numeric -> undefined" contract.
+export function parseCloudLayer(value: unknown): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 export function findLatestValidKp(payload: unknown[]): number | null {
@@ -430,12 +468,18 @@ export async function fetchSpotForecastWithQuality(
       throw new Error('Unexpected MET response format.');
     }
 
-    const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => ({
-      time: entry.time,
-      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
-      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
-      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
-    }));
+    const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => {
+      const details = entry?.data?.instant?.details ?? {};
+      return {
+        time: entry.time,
+        cloudCover: Number(details.cloud_area_fraction ?? 100),
+        temperature: Number(details.air_temperature ?? 0),
+        windSpeed: Number(details.wind_speed ?? 0),
+        cloudCoverLow: parseCloudLayer(details.cloud_area_fraction_low),
+        cloudCoverMedium: parseCloudLayer(details.cloud_area_fraction_medium),
+        cloudCoverHigh: parseCloudLayer(details.cloud_area_fraction_high)
+      };
+    });
 
     return { hourly, usingFallback: false };
   } catch {
@@ -467,12 +511,18 @@ export async function fetchPointForecastWithQuality(
       throw new Error('Unexpected MET response format.');
     }
 
-    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => ({
-      time: entry.time,
-      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
-      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
-      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
-    }));
+    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => {
+      const details = entry?.data?.instant?.details ?? {};
+      return {
+        time: entry.time,
+        cloudCover: Number(details.cloud_area_fraction ?? 100),
+        temperature: Number(details.air_temperature ?? 0),
+        windSpeed: Number(details.wind_speed ?? 0),
+        cloudCoverLow: parseCloudLayer(details.cloud_area_fraction_low),
+        cloudCoverMedium: parseCloudLayer(details.cloud_area_fraction_medium),
+        cloudCoverHigh: parseCloudLayer(details.cloud_area_fraction_high)
+      };
+    });
 
     return { hourly, usingFallback: false };
   } catch {
