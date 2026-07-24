@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test:app": "node --import tsx --test test/analytics-core.test.ts test/alertsClient.test.ts test/scoring.test.ts test/spots-data.test.ts test/expoGoDetection.test.ts",
+    "test:app": "node --import tsx --test test/analytics-core.test.ts test/alertsClient.test.ts test/scoring.test.ts test/spots-data.test.ts test/expoGoDetection.test.ts test/yr.test.ts",
     "test:kp": "node scripts/test-kp-fetch.mjs",
     "test:i18n": "node scripts/check-i18n.mjs",
     "backend:dev": "npm --prefix backend run dev",

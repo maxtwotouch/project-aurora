@@ -80,6 +80,11 @@ function hashSeed(id: string): number {
  * and light-pollution penalties) -- deliberately duplicated rather than
  * imported so this file has zero dependency on scoreSpot's darkness gate.
  * See ../../docs/scoring-model.md for the rationale behind each constant. */
+// Design-preview-only: deliberately kept on the old flat `kp * 15` line
+// rather than the production kpAuroraFactor curve (see
+// docs/scoring-model.md, "Latitude-aware KP curve") -- this generator is a
+// hand-tuned synthetic fixture for Settings > Design preview, not the
+// production formula, so it isn't wired up to track scoring-model changes.
 function computeSampleScore(cloudCover: number, kp: number, distanceKm: number, lightPollution: number): number {
   const cloudFactor = 100 - cloudCover;
   const kpFactor = kp * 15;

@@ -23,6 +23,23 @@ const getSpotKey = (spot: Spot) => `${spot.lat.toFixed(4)},${spot.lon.toFixed(4)
 const getPointKey = (lat: number, lon: number, hours: number) => `${lat.toFixed(4)},${lon.toFixed(4)},${hours}`;
 const getDaylightKey = (lat: number, lon: number, dayKey: string) => `${lat.toFixed(4)},${lon.toFixed(4)},${dayKey}`;
 
+// Deterministic layer split for the fallback forecast (no real per-layer
+// data is available here). We deliberately attribute the ENTIRE aggregate to
+// the LOW (fully-blocking) layer rather than guessing a plausible mixed
+// split: when we don't know the real cloud composition, degraded data must
+// produce a conservative output, never an optimistic guess. A mixed split
+// would make the recombined effective cloud cover *lower* than the
+// aggregate (medium/high block less than low per-percent), which would make
+// a MET-unreachable night score more optimistically than it did before
+// layered clouds existed -- exactly backwards for a fallback path. With
+// low=1.0 and medium=high=0, the recombined effective cloud cover is exactly
+// `cloudCover`, so fallback scoring stays bit-identical to the
+// pre-layered-clouds behavior. Mirrors backend/src/sources.ts's
+// buildFallbackForecast. See docs/scoring-model.md ("Layered clouds").
+const FALLBACK_CLOUD_LOW_SHARE = 1;
+const FALLBACK_CLOUD_MEDIUM_SHARE = 0;
+const FALLBACK_CLOUD_HIGH_SHARE = 0;
+
 function buildFallbackForecast(): HourlyForecast[] {
   const start = new Date();
   start.setMinutes(0, 0, 0);
@@ -35,9 +52,23 @@ function buildFallbackForecast(): HourlyForecast[] {
       time: time.toISOString(),
       cloudCover,
       temperature: -4,
-      windSpeed: 4
+      windSpeed: 4,
+      cloudCoverLow: Math.round(cloudCover * FALLBACK_CLOUD_LOW_SHARE),
+      cloudCoverMedium: Math.round(cloudCover * FALLBACK_CLOUD_MEDIUM_SHARE),
+      cloudCoverHigh: Math.round(cloudCover * FALLBACK_CLOUD_HIGH_SHARE)
     };
   });
+}
+
+// Optional per-layer cloud field parsing -- mirrors
+// backend/src/sources.ts's parseCloudLayer. `null` is checked explicitly
+// before the `Number(...)` coercion: `Number(null) === 0` is a finite
+// number, so without this check an explicit `null` field would silently
+// parse as "0% cloud in this layer" instead of "field absent."
+function parseCloudLayer(value: unknown): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function getOsloDayKey(date = new Date()): string {
@@ -158,12 +189,18 @@ export async function fetchSpotForecastDetailed(spot: Spot): Promise<ForecastFet
       throw new Error('Unexpected MET response format.');
     }
 
-    const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => ({
-      time: entry.time,
-      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
-      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
-      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
-    }));
+    const hourly: HourlyForecast[] = timeseries.slice(0, 12).map((entry: any) => {
+      const details = entry?.data?.instant?.details ?? {};
+      return {
+        time: entry.time,
+        cloudCover: Number(details.cloud_area_fraction ?? 100),
+        temperature: Number(details.air_temperature ?? 0),
+        windSpeed: Number(details.wind_speed ?? 0),
+        cloudCoverLow: parseCloudLayer(details.cloud_area_fraction_low),
+        cloudCoverMedium: parseCloudLayer(details.cloud_area_fraction_medium),
+        cloudCoverHigh: parseCloudLayer(details.cloud_area_fraction_high)
+      };
+    });
 
     forecastCache.set(key, {
       timestamp: Date.now(),
@@ -219,12 +256,18 @@ export async function fetchPointForecastDetailed(lat: number, lon: number, hours
       throw new Error('Unexpected MET response format.');
     }
 
-    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => ({
-      time: entry.time,
-      cloudCover: Number(entry?.data?.instant?.details?.cloud_area_fraction ?? 100),
-      temperature: Number(entry?.data?.instant?.details?.air_temperature ?? 0),
-      windSpeed: Number(entry?.data?.instant?.details?.wind_speed ?? 0)
-    }));
+    const hourly: HourlyForecast[] = timeseries.slice(0, hours).map((entry: any) => {
+      const details = entry?.data?.instant?.details ?? {};
+      return {
+        time: entry.time,
+        cloudCover: Number(details.cloud_area_fraction ?? 100),
+        temperature: Number(details.air_temperature ?? 0),
+        windSpeed: Number(details.wind_speed ?? 0),
+        cloudCoverLow: parseCloudLayer(details.cloud_area_fraction_low),
+        cloudCoverMedium: parseCloudLayer(details.cloud_area_fraction_medium),
+        cloudCoverHigh: parseCloudLayer(details.cloud_area_fraction_high)
+      };
+    });
 
     forecastCache.set(key, {
       timestamp: Date.now(),
