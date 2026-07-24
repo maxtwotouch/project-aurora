@@ -29,7 +29,15 @@ export function PreviewModeBanner() {
   if (!enabled) return null;
 
   return (
-    <View style={[styles.banner, { paddingTop: space.xs + insets.top }]} accessibilityRole="alert">
+    // marginBottom: -insets.top cancels the redundant top safe-area inset the
+    // navigator below already reserves for its own content -- without it, the
+    // banner's own insets.top and the navigator's stack a dead ~notch-height
+    // gap between this banner and the screen's header title. zIndex keeps the
+    // banner painted above the navigator content it now overlaps by that inset.
+    <View
+      style={[styles.banner, { paddingTop: space.xs + insets.top, marginBottom: -insets.top }]}
+      accessibilityRole="alert"
+    >
       <Ionicons name="flask-outline" size={14} color={palette.textOnAccentWarmSurface} />
       <Text style={styles.text}>{t('preview.banner')}</Text>
     </View>
@@ -38,6 +46,7 @@ export function PreviewModeBanner() {
 
 const styles = StyleSheet.create({
   banner: {
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

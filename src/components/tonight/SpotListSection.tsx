@@ -82,16 +82,17 @@ export function SpotListSection({
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    // SpotCard (../SpotCard.tsx) has its own `padding: space.md` on top of
-    // the screen's ScrollView content padding, so a card's *readable text*
-    // sits one `space.md` further right than the card's own left edge/
-    // border. This heading previously had no matching inset, so its text
-    // lined up with the card's outer edge instead of the card's inner text
-    // -- reading further left/flush than "Top aurora spots right now" and
-    // "Closer alternatives" ought to, relative to the spot names below
-    // them. Matching that same token here aligns the heading with what a
-    // reader's eye actually tracks as the content gutter.
-    paddingHorizontal: space.md,
+    // Flush with the card stack's left edge (the screen's ScrollView content
+    // padding), i.e. aligned with each SpotCard's outer border and the "Open
+    // all ranked spots" CTA below -- not indented to the card's inner text
+    // gutter. A section heading sitting proud of the cards it labels reads as
+    // a cleaner, more deliberate edge than one nudged 16px inward.
+    //
+    // marginTop separates a section from whatever precedes it (the previous
+    // section's "see all" CTA, the outlook card) so headings like "Closer
+    // alternatives" get clear breathing room instead of crowding the block
+    // above them.
+    marginTop: space.lg,
     marginBottom: space.sm
   },
   sectionTitle: {

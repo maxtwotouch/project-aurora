@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 
 import { DataQualityBanner } from '../components/DataQualityBanner';
 import { SpotCard } from '../components/SpotCard';
+import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import type { AppDataQuality, Spot, SpotScoreResult } from '../types';
@@ -18,6 +19,7 @@ type Props = {
 
 export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, refresh, onOpenSpot }: Props) {
   const { t } = useTranslation();
+  const tabBarSpace = useBottomTabBarSpace();
   const [sortMode, setSortMode] = useState<'top' | 'nearby'>('top');
 
   const sortedSpots = useMemo(() => {
@@ -38,7 +40,9 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      // Reserve room for the floating tab bar (see useBottomTabBarSpace); 28 is
+      // the on-web/no-tab-bar breathing-room floor.
+      contentContainerStyle={[styles.container, { paddingBottom: Math.max(28, tabBarSpace + 16) }]}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} />}
