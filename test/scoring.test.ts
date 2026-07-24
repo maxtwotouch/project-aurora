@@ -57,19 +57,26 @@ function hoursFrom(cloudCovers: number[], startHour = 0): HourlyForecast[] {
 }
 
 describe('computeScore: representative inputs', () => {
-  test('clear sky + high KP + short drive + low light pollution clamps to 100', () => {
-    // cloudFactor=100, kpFactor=135 -> raw = 0.7*100 + 0.3*135 - 0 - 5 = 105.5, clamped to 100
-    assert.equal(computeScore(0, 9, 10, 1), 100);
+  test('clear sky + high KP + short drive + low light pollution (no longer clamps to 100)', () => {
+    // cloudFactor=100, kpFactor=kpAuroraFactor(9)=110 (latitude-aware KP curve
+    // -- see docs/scoring-model.md, "Latitude-aware KP curve") ->
+    // raw = 0.7*100 + 0.3*110 - 0 - 5 = 70 + 33 - 5 = 98. The old flat kp*15
+    // curve gave kpFactor=135 here, which clamped this fixture to 100; the
+    // new curve's gentle Kp 6-9 rolloff means kp=9 alone no longer maxes out
+    // the score.
+    assert.equal(computeScore(0, 9, 10, 1), 98);
   });
 
   test('fully overcast + zero KP clamps to 0', () => {
-    // cloudFactor=0, kpFactor=0 -> raw = -15 (light penalty only), clamped to 0
+    // cloudFactor=0, kpFactor=kpAuroraFactor(0)=20 -> raw = 0.3*20 - 15 = 6 - 15 = -9, clamped to 0
     assert.equal(computeScore(100, 0, 10, 3), 0);
   });
 
   test('a mid-range input produces the exact expected weighted score (no clamping)', () => {
-    // cloudFactor=50, kpFactor=45 -> 0.7*50 + 0.3*45 - 0 - 10 = 35 + 13.5 - 10 = 38.5
-    assert.equal(computeScore(50, 3, 10, 2), 38.5);
+    // cloudFactor=50, kpFactor=kpAuroraFactor(3)=102.5 (interpolated between
+    // the kp=2/80 and kp=4/125 curve breakpoints -- see docs/scoring-model.md)
+    // -> 0.7*50 + 0.3*102.5 - 0 - 10 = 35 + 30.75 - 10 = 55.75
+    assert.equal(computeScore(50, 3, 10, 2), 55.75);
   });
 
   test('light pollution is a linear per-unit penalty (5 points per unit)', () => {
@@ -508,43 +515,54 @@ describe('buildTomorrowScore: darkness gating (mirrors backend/test/snapshot.tes
 describe('Cross-check: computeScore/rankSpots pinned values (matches backend twin)', () => {
   test('computeScore: 3 fixed fixtures match the backend twin to within 1e-9', () => {
     // fixture A: mid cloud, mid-low KP, short drive, light pollution 2
-    // cloudFactor=70, kpFactor=90, driveMin=57.5 (<120, no penalty), lightPenalty=10
-    // raw = 0.7*70 + 0.3*90 - 0 - 10 = 49 + 27 - 10 = 66
+    // cloudFactor=70, kpFactor=kpAuroraFactor(6)=130 (a curve breakpoint --
+    // see docs/scoring-model.md, "Latitude-aware KP curve"), driveMin=57.5
+    // (<120, no penalty), lightPenalty=10
+    // raw = 0.7*70 + 0.3*130 - 0 - 10 = 49 + 39 - 10 = 78
     const a = computeScore(30, 6, 50, 2);
-    assert.ok(Math.abs(a - 66) < 1e-9, `fixture A: expected ~66, got ${a}`);
+    assert.ok(Math.abs(a - 78) < 1e-9, `fixture A: expected ~78, got ${a}`);
 
     // fixture B: heavy cloud, low-mid KP, long drive (over threshold), light pollution 1
-    // cloudFactor=35, kpFactor=60, driveMin=207, penalty=(207-120)*0.35=30.45, lightPenalty=5
-    // raw = 0.7*35 + 0.3*60 - 30.45 - 5 = 24.5 + 18 - 30.45 - 5 = 7.05
+    // cloudFactor=35, kpFactor=kpAuroraFactor(4)=125 (a curve breakpoint),
+    // driveMin=207, penalty=(207-120)*0.35=30.45, lightPenalty=5
+    // raw = 0.7*35 + 0.3*125 - 30.45 - 5 = 24.5 + 37.5 - 30.45 - 5 = 26.55
     const b = computeScore(65, 4, 180, 1);
-    assert.ok(Math.abs(b - 7.05) < 1e-9, `fixture B: expected ~7.05, got ${b}`);
+    assert.ok(Math.abs(b - 26.55) < 1e-9, `fixture B: expected ~26.55, got ${b}`);
 
-    // fixture C: near-clear sky, max-ish KP, no drive/light penalty -> clamps to 100
-    // cloudFactor=90, kpFactor=135, raw = 0.7*90 + 0.3*135 = 63 + 40.5 = 103.5 -> clamp 100
+    // fixture C: near-clear sky, max-ish KP, no drive/light penalty
+    // cloudFactor=90, kpFactor=kpAuroraFactor(9)=110 (the Kp 6-9 rolloff --
+    // see docs/scoring-model.md -- means kp=9 no longer maxes out the curve)
+    // raw = 0.7*90 + 0.3*110 = 63 + 33 = 96 (no longer clamped to 100)
     const c = computeScore(10, 9, 0, 0);
-    assert.ok(Math.abs(c - 100) < 1e-9, `fixture C: expected ~100, got ${c}`);
+    assert.ok(Math.abs(c - 96) < 1e-9, `fixture C: expected ~96, got ${c}`);
   });
 
   test('rankSpots: one small fixture matches the backend twin\'s pinned result exactly', () => {
     // Equator coordinates (makeSpot() default lat=0, lon=0) at 00:00-02:00 UTC
     // in mid-July are deep solar night (darknessFactor 1 throughout -- see the
     // note above hoursFrom()), so this fixture isolates cloud/KP/distance/light
-    // scoring from the darkness gate entirely.
+    // scoring from the darkness gate entirely. At these particular
+    // instants/coordinates the moon factor also happens to land at exactly 0
+    // (moon below the horizon or too dim -- see computeMoonPenaltyPoints), so
+    // the per-hour scores below equal the raw cloud/KP/distance/light formula
+    // exactly, with no moon adjustment to account for.
     const spot = makeSpot({ distanceKm: 20, lightPollution: 1 });
     const forecast = hoursFrom([50, 20, 70]);
     const kpByHour = [4, 4, 4];
 
     const [result] = rankSpots([spot], { [spot.id]: forecast }, kpByHour);
 
-    // Per-hour raw scores (kp=4 -> kpFactor=60, driveMin=23 -> no penalty, lightPenalty=5):
-    // hour0 (cloud=50): 0.7*50 + 0.3*60 - 5 = 35 + 18 - 5 = 48
-    // hour1 (cloud=20): 0.7*80 + 0.3*60 - 5 = 56 + 18 - 5 = 69 <- best hour
-    // hour2 (cloud=70): 0.7*30 + 0.3*60 - 5 = 21 + 18 - 5 = 34
+    // Per-hour raw scores (kp=4 -> kpFactor=kpAuroraFactor(4)=125, driveMin=23
+    // -> no penalty, lightPenalty=5):
+    // hour0 (cloud=50): 0.7*50 + 0.3*125 - 5 = 35 + 37.5 - 5 = 67.5
+    // hour1 (cloud=20): 0.7*80 + 0.3*125 - 5 = 56 + 37.5 - 5 = 88.5 <- best hour
+    // hour2 (cloud=70): 0.7*30 + 0.3*125 - 5 = 21 + 37.5 - 5 = 53.5
     assert.deepEqual(
       result.hourlyScores.map((h) => h.score),
-      [48, 69, 34]
+      [67.5, 88.5, 53.5]
     );
-    assert.equal(result.score, 69);
+    // 88.5 rounds to 89 (JS Math.round rounds .5 up)
+    assert.equal(result.score, 89);
     assert.equal(result.cloudCoverAtBestHour, 20);
     assert.equal(result.bestWindowStart, forecast[0].time);
     assert.equal(result.bestWindowEnd, forecast[2].time);

@@ -17,6 +17,17 @@ export type HourlyForecast = {
   cloudCover: number;
   temperature: number;
   windSpeed: number;
+  /**
+   * Optional per-layer cloud fractions (0-100), from MET Norway's
+   * locationforecast compact API (`cloud_area_fraction_low` / `_medium` /
+   * `_high`). Additive and optional so older cached snapshots and any
+   * source that only ever produces the aggregate `cloudCover` keep parsing
+   * -- scoring gracefully falls back to `cloudCover` alone whenever any of
+   * these three is missing. See docs/scoring-model.md ("Layered clouds").
+   */
+  cloudCoverLow?: number;
+  cloudCoverMedium?: number;
+  cloudCoverHigh?: number;
 };
 
 export type SpotHourlyScore = {

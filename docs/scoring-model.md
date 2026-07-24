@@ -4,9 +4,10 @@ This documents every constant in the aurora-viewing scoring model, and why it
 has the value it does. The model is implemented in two independently
 maintained twins that must stay logically identical:
 
-- Backend: `backend/src/scoring.ts` (+ `backend/src/solar.ts` for darkness).
+- Backend: `backend/src/scoring.ts` (+ `backend/src/solar.ts` for darkness,
+  `backend/src/moon.ts` for the moon factor).
 - Frontend (direct-source path, used when `EXPO_PUBLIC_USE_BACKEND=false`):
-  `src/scoring/score.ts` (+ `src/scoring/solar.ts`).
+  `src/scoring/score.ts` (+ `src/scoring/solar.ts`, `src/scoring/moon.ts`).
 
 Where a constant below is marked **heuristic**, it was picked by feel during
 early development against a handful of real Tromsø nights, not derived from a
@@ -14,34 +15,128 @@ formula or external dataset. Moving it changes *how aggressively* the score
 reacts to that input, not the input's underlying meaning -- treat it as a
 dial, not as a fact worth defending.
 
-## `computeScore(cloudCover, kp, distanceKm, lightPollution)`
+## `computeScore(cloudCover, kp, distanceKm, lightPollution, cloudLayers?)`
 
 The core per-hour, per-spot score, 0-100.
 
-### KP weighting: `kp * 15`
+### Latitude-aware KP curve: `kpAuroraFactor(kp)`
 
-**Heuristic.** The planetary K-index (KP) ranges roughly 0-9 in practice
-(the scale technically tops out higher during extreme storms, hence the
-clamp below). `kp * 15` maps that range onto roughly 0-135 raw points before
-the 0.3 blend weight and the final 0-100 clamp are applied, so that KP alone
-is capable of carrying a spot from "not worth it" to "clamped at 100" when
-skies are clear. `kp * 15` was chosen because it makes KP feel like the
-dominant lever once skies are clear -- as it should be, since a bright aurora
-is visible through moderate cloud but a dim one (low KP) usually isn't
-visible at all. Increasing this multiplier makes the score more
-KP-sensitive (a jump from KP 3 to KP 5 swings the score more); decreasing it
-makes cloud cover dominate more.
+**Replaces the old flat `kp * 15` line with a piecewise-linear curve, hand-fit
+to Tromso's magnetic latitude specifically.** The planetary K-index (KP) is a
+*global* activity index; how far south the aurora is actually visible for a
+given KP depends on geomagnetic (not geographic) latitude. Tromso sits at
+roughly 69.65deg geographic latitude but only **~66.7deg corrected geomagnetic
+latitude** (hard-coded as `TROMSO_MAGNETIC_LATITUDE_DEG` in both twins -- a
+single named constant rather than a per-request calculation, because this app
+is deliberately single-region by product decision, not because the
+underlying physics only works for one place). That geomagnetic latitude sits
+close enough to the auroral oval's typical quiet-time position that overhead
+displays are genuinely common even at low planetary Kp.
+
+The old `kp * 15` line implied Kp 2 was "barely anything" and Kp 9 was
+"maximum, unambiguously the best possible night." Both are wrong for Tromso
+specifically:
+
+- **Kp 0-2 is not "nothing happening" here.** The curve rises steeply over
+  this range (20 points at Kp 0 up to 80 at Kp 2) because overhead aurora is
+  a realistic, common occurrence on quiet nights at this magnetic latitude --
+  a clear, dark Kp 2 night in Tromso is genuinely a good night, not a
+  marginal one, and the curve now says so (a clear-sky, Kp 2 hour scores
+  meaningfully higher than it did under the old linear curve -- see the
+  worked example below).
+- **Kp 2-4 keeps climbing** (80 -> 125 points): this is the classic "good,
+  active night" range, and remains the steepest part of the curve.
+- **Kp 6+ gently plateaus and slightly rolls off** (peaking at 130 points at
+  Kp 6, easing back to 110 by Kp 9) rather than climbing further, because
+  very high Kp pushes the auroral oval's equatorward edge *south* of
+  Tromso's latitude (the well-documented "equatorward expansion" of the oval
+  during geomagnetic storms). That means a Kp 8-9 night can genuinely put on
+  a *weaker* overhead show in Tromso specifically than a moderate Kp 4-6
+  night, even though Kp 8-9 is a bigger storm globally. This is modeled as a
+  soft, gentle rolloff -- not a cliff -- because it's a real but gradual
+  effect, and because a big storm can still produce spectacular (if
+  lower-overhead) displays even when the oval's core has moved on.
+
+The curve's control points (`KP_AURORA_CURVE` in both twins), each a
+`[kp, points]` pair connected by straight lines:
+
+| Kp  | Points | Note |
+| --- | ------ | ---- |
+| 0   | 20     | quiet, but overhead aurora is still plausible at this latitude |
+| 2   | 80     | "a good night in Tromso" -- boosted well above the old linear value (30) |
+| 4   | 125    | near-peak: strong, active night |
+| 6   | 130    | peak: the oval's edge is approaching Tromso's own latitude |
+| 9   | 110    | gentle rolloff: the oval has expanded south past Tromso |
+
+The output is expressed in the same units as the old `kp * 15` line (roughly
+0-135) so it plugs into the unchanged 0.7/0.3 blend below without any other
+formula changes. **Heuristic in its exact shape** (the control-point values
+themselves were picked by feel, the same as every other constant in this
+file) but **not heuristic in its premise**: that Tromso's magnetic latitude
+makes low-to-moderate Kp more valuable, and extreme Kp only mildly more
+valuable (or slightly less), than a naive linear scale suggests, reflects
+real auroral-oval geometry, not a stylistic preference. Moving a control
+point up/down changes how much that specific Kp range is worth; flattening
+the Kp 6-9 segment further would understate the real (if gradual)
+equatorward-expansion effect, while steepening it into a hard drop would
+overstate how quickly Tromso's own view degrades during a major storm.
+
+**Worked calibration example:** a clear (0% cloud), dark, Kp 2 night at a
+0-light-pollution, 0-distance spot now scores `0.7*100 + 0.3*80 = 94` before
+the darkness/moon factors, versus `0.7*100 + 0.3*30 = 79` under the old
+linear curve -- a deliberate, meaningful boost reflecting that this is
+genuinely a good night to go out in Tromso, not a marginal one.
 
 ### Cloud/KP blend: `0.7 * cloudFactor + 0.3 * kpFactor`
 
-**Heuristic.** `cloudFactor = 100 - cloudCover`, i.e. "how much clear sky is
-available." The 0.7/0.3 split says: clear sky matters roughly twice as much
-as KP activity for whether *anything* will be visible tonight, because no
-amount of geomagnetic activity is visible through solid overcast, whereas a
-merely-clear sky with low KP can still occasionally show a faint aurora.
-Raising the cloud weight (and lowering KP's) makes the model more
+**Heuristic.** `cloudFactor = 100 - effectiveCloudCover` (see "Layered
+clouds" below for how `effectiveCloudCover` is derived), i.e. "how much
+clear sky is available." The 0.7/0.3 split says: clear sky matters roughly
+twice as much as KP activity for whether *anything* will be visible tonight,
+because no amount of geomagnetic activity is visible through solid overcast,
+whereas a merely-clear sky with low KP can still occasionally show a faint
+aurora. Raising the cloud weight (and lowering KP's) makes the model more
 conservative about calling cloudy nights "good" even during a big storm;
 lowering it makes big-KP nights score well even through more cloud.
+
+### Layered clouds: `computeEffectiveCloudCover`
+
+**Upgrade from a single cloud-cover percentage to three independent
+layers.** MET Norway's locationforecast compact API also reports
+`cloud_area_fraction_low` / `_medium` / `_high` alongside the aggregate
+`cloud_area_fraction`. Not all cloud is equally aurora-blocking: low, dense
+cloud is opaque, while high, thin cirrus is often visibly translucent -- a
+bright aurora can punch through a hazy cirrus layer that would fully hide it
+behind low stratus.
+
+Each layer is treated as an independent, partially-transparent veil, with a
+named blocking weight (**heuristic, priors to be validated against real
+outcome data as it accumulates -- see docs/roadmap-2026-27.md's Phase 3 data
+iteration**):
+
+- `CLOUD_LOW_BLOCKING = 1.0` -- low cloud is dense and close to the ground;
+  treated as fully opaque.
+- `CLOUD_MEDIUM_BLOCKING = 0.75` -- mid-level cloud mostly blocks, but
+  thinner patches can leak some light through.
+- `CLOUD_HIGH_BLOCKING = 0.4` -- high cloud is frequently thin cirrus, which
+  is often noticeably translucent.
+
+The three layers' transmissions (`1 - weight * fraction`) multiply together
+into a single effective transmission, converted back to an effective 0-100
+"cloud cover" for the existing `cloudFactor` formula above -- so a sky that's
+80% covered in high cirrus alone is scored quite differently (transmission
+`1 - 0.4*0.8 = 0.68`, i.e. an *effective* cloud cover of 32) from the same
+80% covered in low stratus (transmission `1 - 1.0*0.8 = 0.2`, effective
+cloud cover of 80).
+
+**Graceful degradation is the point, not an afterthought:** whenever any of
+the three layer fields is missing -- an older cached snapshot from before
+this change, or any source that only ever populates the aggregate field --
+`computeEffectiveCloudCover` falls back to the plain `cloudCover` value
+untouched, exactly reproducing the pre-upgrade behavior. `sources.ts`'s
+deterministic fallback forecast (used when the MET API itself is
+unreachable) also emits a plausible layered split rather than omitting the
+fields, so even a fully-offline forecast exercises the same code path.
 
 ### Light pollution penalty: `lightPollution * 5`
 
@@ -99,6 +194,78 @@ based on solar elevation at the spot's own coordinates:
   model wait for darker skies before crediting any score; narrowing the gap
   to -6 makes the ramp shorter/steeper.
 - Between the two thresholds, `darknessFactor` ramps linearly from 0 to 1.
+
+## Moon factor: `computeMoonPenaltyPoints` (+ `moon.ts`)
+
+A bright moon high in the sky washes out faint aurora the same way a bright
+sky does, just less totally -- a strong substorm still punches through
+moonlight, but a faint, quiet-night glow can be lost in it. This is applied
+per-hour, alongside `darknessFactor`, using the hour's own timestamp and the
+spot's own coordinates (rather than inside `computeScore`, which has no
+notion of time or place).
+
+**Two independent astronomical approximations, implemented in the new
+`moon.ts` twin pair** (`backend/src/moon.ts` / `src/scoring/moon.ts`):
+
+- **`moonIlluminatedFraction`** -- moon phase (0 = new, 1 = full) via a
+  standard synodic approximation: elapsed time since a known reference new
+  moon, taken modulo the mean synodic month (29.530588861 days), mapped
+  through `(1 - cos(2*pi*phase)) / 2`. This ignores the small, real
+  month-to-month variation in synodic period, so it can be off by a percent
+  or two versus a precise ephemeris -- far more precision than a soft scoring
+  penalty needs.
+- **`moonAltitudeDeg`** -- a low-precision lunar position: the single largest
+  periodic correction term for the moon's ecliptic longitude and latitude
+  (the standard "few-line" truncation of Brown's lunar theory used for
+  casual/low-precision applications, good to roughly a few tenths of a
+  degree in the moon's own apparent position), converted to equatorial
+  RA/Dec with a fixed mean obliquity (ignoring nutation), then to local
+  altitude via a simplified Greenwich Mean Sidereal Time formula. Compounding
+  these simplifications, **expect altitude accuracy on the order of a degree
+  or two** -- this is explicitly a "few degrees is plenty" approximation, not
+  a precision ephemeris, because the penalty it feeds is a soft, gently-
+  ramping, capped multiplier rather than a hard threshold (a couple of
+  degrees of error near the ramp's edges shifts the penalty by a small
+  fraction of a point, not by whether the moon "counts" at all).
+
+**The penalty itself (`computeMoonPenaltyPoints`), all named constants,
+heuristic and capped:**
+
+- `MOON_ILLUMINATION_RAMP_START = 0.5` -- below half-illuminated, no washout
+  is modeled at all; only a moon that's at least half-full is bright enough
+  to matter here.
+- `MOON_ALTITUDE_RAMP_DEG = 30` -- the penalty ramps from 0 (at or below the
+  horizon) to full strength by roughly 30deg altitude; a moon low on the
+  horizon washes out far less sky than one high overhead.
+- `KP_MOON_IRRELEVANT_AT = 7` -- the penalty is damped by
+  `1 - kp / KP_MOON_IRRELEVANT_AT` (clamped to 0-1), so it fades out as Kp
+  rises and is fully zero by Kp 7 -- a bright aurora is visible through
+  moonlight; a faint one isn't, so the moon should only matter on the nights
+  it would otherwise be marginal.
+- `MOON_MAX_PENALTY_POINTS = 15` -- a hard cap on the total point deduction,
+  regardless of how bright/high the moon is or how low Kp is. This keeps the
+  moon a *mild* factor by construction, consistent with a full moon, high in
+  the sky, on an otherwise-faint (low-Kp) night costing "roughly 10-20 score
+  points" as intended, and never a swing large enough on its own to turn a
+  genuinely great night into a bad one.
+
+**Calibration examples:** a full moon (`illuminatedFraction = 1`) directly
+overhead (`altitudeDeg >= 30`) on a quiet night (`kp = 0`) costs the full
+`MOON_MAX_PENALTY_POINTS = 15` points. The same moon on a Kp 7+ night costs
+0 points (`kpDampening` reaches 0 at `KP_MOON_IRRELEVANT_AT`). A new moon, or
+a full moon still below the horizon, costs 0 points regardless of Kp.
+
+**Judgment call:** the cap is a flat point value rather than something tied
+to the app's alert-tier thresholds (see `alerts.ts`) -- deliberately, to
+avoid coupling the scoring model to alerting configuration it has no other
+reason to know about. In practice the Kp-dampening term already protects
+genuinely Kp-driven "great" nights (moonlight barely matters once Kp is
+high), but a great night driven mostly by exceptionally clear skies at low
+Kp could in principle still lose close to the full 15 points to a bright,
+high moon. This is an accepted, intentionally mild trade-off, not an
+oversight -- 15 points is small enough relative to a "great" (>=70) night
+that it should rarely, if ever, single-handedly cross a meaningfully lower
+tier.
 
 ## Cold-score dress thresholds: 80 / 60 / 40
 
