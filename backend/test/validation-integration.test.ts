@@ -55,6 +55,11 @@ afterEach(() => {
 async function resetDataFiles(): Promise<void> {
   await fs.rm(predictionsPath, { force: true });
   await fs.rm(observedPath, { force: true });
+  // validation.ts caches validation-state.json in module memory (see
+  // getValidationStateSnapshot/mutateValidationState) -- without resetting
+  // it too, a later test in this file would still see stale
+  // hasPrediction/observedStatus entries left over from an earlier test.
+  await validationModule.resetValidationStateForTests();
 }
 
 async function appendRawLine(filePath: string, record: unknown): Promise<void> {
@@ -77,7 +82,8 @@ function makePredictionRecordFixture(nightKey: string, score = 50): PredictionRe
     recordedAt: `${nightKey}T20:00:00.000Z`,
     nightKey,
     kp: { current: 3, tonightPeak: 4, peakNext12h: 4 },
-    spots: [{ spotId: 'ersfjordbotn', score, bestWindowStart: '2026-01-10T20:00:00.000Z', bestWindowEnd: '2026-01-10T23:00:00.000Z' }],
+    spots: [{ spotId: 'ersfjordbotn', score }],
+    bestWindow: { start: '2026-01-10T20:00:00.000Z', end: '2026-01-10T23:00:00.000Z' },
     dataQuality: { usingFallbackKp: false, fallbackWeatherSpotIds: [] },
     seasonClosed: false
   };
@@ -191,7 +197,7 @@ describe('recordPrediction / readPredictionRecords', () => {
 describe('maybeRecordObservedOutcome', () => {
   test('before 16:00 Oslo: does not fetch, records nothing', async () => {
     await resetDataFiles();
-    await appendRawLine(predictionsPath, makePredictionRecordFixture('2026-01-10'));
+    await validationModule.recordPrediction(makeSnapshot(50), () => osloLocalToMs('2026-01-10', 20));
 
     const calls: string[] = [];
     const result = await validationModule.maybeRecordObservedOutcome({
@@ -206,7 +212,10 @@ describe('maybeRecordObservedOutcome', () => {
 
   test('at/after 16:00 Oslo with a prediction present and no observed record yet: fetches and appends exactly one record', async () => {
     await resetDataFiles();
-    await appendRawLine(predictionsPath, makePredictionRecordFixture('2026-01-10'));
+    // Note: seeds via recordPrediction (not a raw appendRawLine), because
+    // "has a prediction" is now tracked in validation-state.json (updated by
+    // recordPrediction), not by reading predictions.jsonl -- see FIX 4.
+    await validationModule.recordPrediction(makeSnapshot(50), () => osloLocalToMs('2026-01-10', 20));
 
     const calls: string[] = [];
     const result = await validationModule.maybeRecordObservedOutcome({
@@ -233,7 +242,8 @@ describe('maybeRecordObservedOutcome', () => {
 
   test('a second call the same day (observed record already exists) does not fetch again or duplicate', async () => {
     // Continues directly from the previous test's on-disk state (one
-    // observed record for nightKey 2026-01-10 already exists).
+    // observed record for nightKey 2026-01-10 already exists, and its
+    // validation-state.json entry is now observedStatus: 'recorded').
     const calls: string[] = [];
     const result = await validationModule.maybeRecordObservedOutcome({
       now: () => osloLocalToMs('2026-01-11', 18, 0),
@@ -249,7 +259,8 @@ describe('maybeRecordObservedOutcome', () => {
 
   test('no prediction recorded for that night: does not fetch, records nothing', async () => {
     await resetDataFiles();
-    // predictions.jsonl deliberately left empty/absent.
+    // Neither predictions.jsonl nor validation-state.json have any entry for
+    // any night -- recordPrediction deliberately never called here.
 
     const calls: string[] = [];
     const result = await validationModule.maybeRecordObservedOutcome({
@@ -262,31 +273,94 @@ describe('maybeRecordObservedOutcome', () => {
     assert.deepEqual(await validationModule.readObservedRecords(), []);
   });
 
-  test('a fetch failure still records an outcome (maxKp null, source unknown), and never throws', async () => {
+  // FIX 1: a fetch failure must NOT immediately fall back to an
+  // {maxKp: null, source: 'unknown'} record anymore (the old, orphaning
+  // behavior) -- it must retry once per Oslo calendar day, and only give up
+  // permanently once the night is older than the 6-day backfill window
+  // (BACKFILL_MAX_AGE_DAYS), safely inside NOAA's ~7-day 3-hourly retention.
+  test('a fetch failure keeps the night pending (no record yet), retries at most once/day, and only gives up (maxKp: null) once the night is older than the 6-day backfill window', async () => {
     await resetDataFiles();
-    await appendRawLine(predictionsPath, makePredictionRecordFixture('2026-01-10'));
+    await validationModule.recordPrediction(makeSnapshot(50), () => osloLocalToMs('2026-01-10', 20));
 
-    const calls: string[] = [];
-    let result: { recorded: boolean; nightKey?: string } | undefined;
-    await assert.doesNotReject(async () => {
-      result = await validationModule.maybeRecordObservedOutcome({
-        now: () => osloLocalToMs('2026-01-11', 16, 0),
-        fetchImpl: failingFetchStub(calls)
-      });
+    // Day 1 (night is ~1 day old): attempts once, fails, stays pending.
+    const day1Calls: string[] = [];
+    const day1Result = await validationModule.maybeRecordObservedOutcome({
+      now: () => osloLocalToMs('2026-01-11', 16, 0),
+      fetchImpl: failingFetchStub(day1Calls)
     });
 
-    assert.deepEqual(result, { recorded: true, nightKey: '2026-01-10' });
-    assert.equal(calls.length, 1);
+    assert.deepEqual(day1Result, { recorded: false });
+    assert.equal(day1Calls.length, 1, 'attempts once on day 1');
+    assert.deepEqual(await validationModule.readObservedRecords(), [], 'still pending -- no record written yet');
+
+    // Later the same Oslo day: must not re-attempt (lastAttemptDayKey guard).
+    const day1AgainCalls: string[] = [];
+    const day1AgainResult = await validationModule.maybeRecordObservedOutcome({
+      now: () => osloLocalToMs('2026-01-11', 20, 0),
+      fetchImpl: failingFetchStub(day1AgainCalls)
+    });
+    assert.deepEqual(day1AgainResult, { recorded: false });
+    assert.equal(day1AgainCalls.length, 0, 'does not re-attempt the same Oslo day');
+
+    // Day 2 (still well within the 6-day window): a fresh attempt is made,
+    // still fails, still pending.
+    const day2Calls: string[] = [];
+    await validationModule.maybeRecordObservedOutcome({
+      now: () => osloLocalToMs('2026-01-12', 16, 0),
+      fetchImpl: failingFetchStub(day2Calls)
+    });
+    assert.equal(day2Calls.length, 1, 'retries on the next Oslo day');
+    assert.deepEqual(await validationModule.readObservedRecords(), [], 'still pending after a second failed day');
+
+    // Day 8 (the night is now >6 days old): gives up permanently WITHOUT even
+    // calling fetch, and records the permanent unknown outcome.
+    const day8Calls: string[] = [];
+    const day8Result = await validationModule.maybeRecordObservedOutcome({
+      now: () => osloLocalToMs('2026-01-18', 16, 0),
+      fetchImpl: failingFetchStub(day8Calls)
+    });
+
+    assert.deepEqual(day8Result, { recorded: true, nightKey: '2026-01-10' });
+    assert.equal(day8Calls.length, 0, 'an expired pending night gives up without a network call');
 
     const observed = await validationModule.readObservedRecords();
     assert.equal(observed.length, 1);
+    assert.equal(observed[0].nightKey, '2026-01-10');
     assert.equal(observed[0].maxKp, null);
     assert.equal(observed[0].source, 'unknown');
+
+    // A later call must not re-process the now-'recorded' night.
+    const afterCalls: string[] = [];
+    const afterResult = await validationModule.maybeRecordObservedOutcome({
+      now: () => osloLocalToMs('2026-01-19', 16, 0),
+      fetchImpl: noaaFetchStub([], afterCalls)
+    });
+    assert.deepEqual(afterResult, { recorded: false });
+    assert.equal(afterCalls.length, 0);
+    assert.equal((await validationModule.readObservedRecords()).length, 1, 'no duplicate record');
+  });
+
+  test('the current (still-open) night is never backfilled, even past 16:00 -- only strictly earlier nights are eligible', async () => {
+    await resetDataFiles();
+    // "Tonight" (2026-01-20) has a prediction, but it isn't over yet.
+    await validationModule.recordPrediction(makeSnapshot(50), () => osloLocalToMs('2026-01-20', 20));
+
+    const calls: string[] = [];
+    const result = await validationModule.maybeRecordObservedOutcome({
+      // Same calendar day, past 16:00 -- but 2026-01-20's dark hours (18:00
+      // that evening -> 06:00 the next day) have not elapsed yet.
+      now: () => osloLocalToMs('2026-01-20', 20, 0),
+      fetchImpl: noaaFetchStub([['2026-01-20 20:00:00.000', 5]], calls)
+    });
+
+    assert.deepEqual(result, { recorded: false });
+    assert.equal(calls.length, 0, 'must not fetch/backfill a night that has not finished yet');
+    assert.deepEqual(await validationModule.readObservedRecords(), []);
   });
 
   test('exactly at the trigger hour boundary (16:00) fires; 15:59 does not (already covered above) -- sanity re-check with a fresh night', async () => {
     await resetDataFiles();
-    await appendRawLine(predictionsPath, makePredictionRecordFixture('2026-02-01'));
+    await validationModule.recordPrediction(makeSnapshot(50), () => osloLocalToMs('2026-02-01', 20));
 
     const calls: string[] = [];
     const result = await validationModule.maybeRecordObservedOutcome({

@@ -33,8 +33,6 @@ function makeSpotRecord(overrides: Partial<PredictionSpotRecord> = {}): Predicti
   return {
     spotId: 'ersfjordbotn',
     score: 50,
-    bestWindowStart: '2026-01-10T20:00:00.000Z',
-    bestWindowEnd: '2026-01-10T23:00:00.000Z',
     ...overrides
   };
 }
@@ -45,6 +43,7 @@ function makePredictionRecord(nightKey: string, spotScores: number[], recordedAt
     nightKey,
     kp: { current: 3, tonightPeak: 4, peakNext12h: 4 },
     spots: spotScores.map((score, index) => makeSpotRecord({ spotId: `spot-${index}`, score })),
+    bestWindow: { start: '2026-01-10T20:00:00.000Z', end: '2026-01-10T23:00:00.000Z' },
     dataQuality: { usingFallbackKp: false, fallbackWeatherSpotIds: [] },
     seasonClosed: false
   };
@@ -112,9 +111,11 @@ describe('buildPredictionRecord', () => {
     assert.equal(record.spots.length, 1);
     assert.deepEqual(record.spots[0], {
       spotId: 'ersfjordbotn',
-      score: 63,
-      bestWindowStart: '2026-01-10T20:00:00.000Z',
-      bestWindowEnd: '2026-01-10T23:00:00.000Z'
+      score: 63
+    });
+    assert.deepEqual(record.bestWindow, {
+      start: '2026-01-10T20:00:00.000Z',
+      end: '2026-01-10T23:00:00.000Z'
     });
     assert.deepEqual(record.dataQuality, { usingFallbackKp: true, fallbackWeatherSpotIds: ['ersfjordbotn'] });
     assert.equal(record.seasonClosed, false);
@@ -204,13 +205,14 @@ describe('computeObservedMaxKp', () => {
     assert.equal(computeObservedMaxKp(entries, nightKey), 7);
   });
 
-  test('boundary hours 18 and 6 are included, 17 and 7 are not', () => {
+  test('boundary hours: 18:00 and just-under-06:00 are included; 17:00, exactly 06:00, and 07:00 are not (06:00 belongs to the NEXT night, matching getNightKey/alerts.ts\'s hour<6 rollback rule -- see FIX 2)', () => {
     const nightKey = '2026-01-10';
     const entries = [
-      { timeIso: osloLocalToIso('2026-01-10', 18), kp: 4 },
-      { timeIso: osloLocalToIso('2026-01-11', 6), kp: 4 },
-      { timeIso: osloLocalToIso('2026-01-10', 17), kp: 9 },
-      { timeIso: osloLocalToIso('2026-01-11', 7), kp: 9 }
+      { timeIso: osloLocalToIso('2026-01-10', 18), kp: 4 }, // in window (evening start)
+      { timeIso: osloLocalToIso('2026-01-11', 5, 59), kp: 4 }, // in window (just before 06:00)
+      { timeIso: osloLocalToIso('2026-01-10', 17), kp: 9 }, // excluded: before 18:00
+      { timeIso: osloLocalToIso('2026-01-11', 6), kp: 9 }, // excluded: exactly 06:00 -- belongs to the next night
+      { timeIso: osloLocalToIso('2026-01-11', 7), kp: 9 } // excluded: well after the cutoff
     ];
 
     assert.equal(computeObservedMaxKp(entries, nightKey), 4);
