@@ -3,11 +3,13 @@ import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } 
 import { Ionicons } from '@expo/vector-icons';
 
 import { liveCameras, type LiveCamera } from '../data/liveCameras';
+import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 
 export function LiveCamerasScreen() {
   const { t } = useTranslation();
+  const tabBarSpace = useBottomTabBarSpace();
   const [refreshToken, setRefreshToken] = useState<number>(Date.now());
   const [fullscreen, setFullscreen] = useState<{ uri: string; name: string } | null>(null);
   const [failedCameraIds, setFailedCameraIds] = useState<Record<string, boolean>>({});
@@ -36,7 +38,9 @@ export function LiveCamerasScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      // Reserve room for the floating tab bar (see useBottomTabBarSpace); 30 is
+      // the on-web/no-tab-bar breathing-room floor.
+      contentContainerStyle={[styles.container, { paddingBottom: Math.max(30, tabBarSpace + 16) }]}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
     >

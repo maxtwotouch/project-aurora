@@ -214,6 +214,14 @@ function TabsRoot({
         },
         headerTintColor: palette.textPrimary,
         headerShown: true,
+        // The native stack this navigator sits inside already insets its screen
+        // content by the top safe area, so the default headerStatusBarHeight
+        // (== insets.top) reserved it a *second* time -- a ~notch-height dead
+        // band above the title (the "empty space at the top" report). Pinning it
+        // to 0 leaves the single stack-provided inset, so the title clears the
+        // status bar without the double count. (The preview banner cancels that
+        // same stack inset with its own negative margin -- see PreviewModeBanner.)
+        headerStatusBarHeight: 0,
         headerTitle: ({ children }) => (
           <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
         ),
@@ -446,7 +454,7 @@ const styles = StyleSheet.create({
   },
   headerTitleText: {
     fontFamily: fraunces.bold,
-    fontSize: 18,
+    fontSize: 20,
     // Explicit lineHeight, close to fontSize: without one, iOS falls back
     // to Fraunces' own font-file line-height metrics for this Text's line
     // box, which (like a lot of display/editorial serif faces) are
@@ -458,8 +466,20 @@ const styles = StyleSheet.create({
     // device. Pinning it keeps the line box (and therefore the title's
     // vertical position) predictable regardless of which font is currently
     // loaded (system font pre-Fraunces-swap, then Fraunces after).
-    lineHeight: 23,
+    lineHeight: 25,
     fontWeight: '700',
+    // Floor the title's box width so numberOfLines={1} can't clip it to
+    // "Toni...". iOS sizes this Text to its measured intrinsic width on first
+    // paint -- and because Fraunces loads async (see HeaderTitleText / the
+    // useFonts comment), that first measurement is often the *narrower* system
+    // font's, after which the wider Fraunces glyphs swap in and overflow the
+    // already-fixed box. The fontsLoaded-keyed remount is meant to force a
+    // re-measure, but this floor makes the outcome robust regardless of
+    // measurement timing: every header title in the app ("Tonight",
+    // "Settings", "Aurora", ...) fits within 140pt in Fraunces bold 18, and
+    // 140pt still leaves room for the headerRight settings button / headerLeft
+    // back button on the narrowest supported phones.
+    minWidth: 140,
     color: palette.textPrimary
   },
   backButton: {

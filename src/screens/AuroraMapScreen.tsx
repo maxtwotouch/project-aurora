@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import type { KpTrend } from '../types';
@@ -20,6 +21,7 @@ function buildFrameUrl(hourOffset: number, refreshBucket: number) {
 
 export function AuroraMapScreen({ kp }: Props) {
   const { t } = useTranslation();
+  const tabBarSpace = useBottomTabBarSpace();
   const introAnim = useRef(new Animated.Value(0)).current;
   const [hourOffset, setHourOffset] = useState<number>(0);
   const [timelineWidth, setTimelineWidth] = useState<number>(1);
@@ -102,7 +104,9 @@ export function AuroraMapScreen({ kp }: Props) {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      // Reserve room for the floating tab bar (see useBottomTabBarSpace); 28 is
+      // the on-web/no-tab-bar breathing-room floor.
+      contentContainerStyle={[styles.container, { paddingBottom: Math.max(28, tabBarSpace + 16) }]}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
     >

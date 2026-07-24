@@ -139,6 +139,12 @@ export function ArcGauge({
 
   const tip = pointOnArc(START_ANGLE_DEG + SWEEP_DEG * fraction);
   const displayValue = formatValue ? formatValue(clamped) : String(Math.round(clamped));
+  // Scale the numeral to the dial rather than using a fixed token size: the
+  // arc's clear inner area is only ~0.67 * size wide, so a fixed 56pt numeral
+  // crowded the ring (and pushed the label out of it) at the default 148pt
+  // dial. 0.26 * size keeps the numeral + caption comfortably inside the arc at
+  // any size (148 -> ~38pt).
+  const numeralFontSize = Math.round(size * 0.26);
 
   return (
     <View
@@ -186,7 +192,9 @@ export function ArcGauge({
         not just the aurora score.
       */}
       <View style={[styles.numeralWrap, { transform: [{ translateY: size * 0.04 }] }]} pointerEvents="none">
-        <Text style={[styles.numeral, { color: valueColor }]}>{displayValue}</Text>
+        <Text style={[styles.numeral, { color: valueColor, fontSize: numeralFontSize, lineHeight: numeralFontSize }]}>
+          {displayValue}
+        </Text>
         {label ? <Text style={[styles.label, { color: labelColor }]}>{label}</Text> : null}
       </View>
     </View>

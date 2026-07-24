@@ -18,6 +18,7 @@ import { OutlookCard } from '../components/tonight/OutlookCard';
 import { QuickNavChips } from '../components/tonight/QuickNavChips';
 import { SpotListSection } from '../components/tonight/SpotListSection';
 import { decisionKey, isLikelyDaytime } from '../components/tonight/decision';
+import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
@@ -63,6 +64,7 @@ export function TonightScreen({
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const reducedMotion = useReducedMotion();
+  const tabBarSpace = useBottomTabBarSpace();
   const { width } = useWindowDimensions();
   const isWideWeb = Platform.OS === 'web' && width >= 860;
   const heroAnim = useRef(new Animated.Value(0)).current;
@@ -135,7 +137,13 @@ export function TonightScreen({
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.container, isWideWeb ? styles.containerWide : null]}
+      contentContainerStyle={[
+        styles.container,
+        isWideWeb ? styles.containerWide : null,
+        // Clear the floating tab bar (see useBottomTabBarSpace); space.xxl is
+        // the on-web/no-tab-bar breathing-room floor.
+        { paddingBottom: Math.max(space.xxl, tabBarSpace + space.md) }
+      ]}
       contentInsetAdjustmentBehavior="never"
       automaticallyAdjustContentInsets={false}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} />}
