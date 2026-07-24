@@ -1,4 +1,12 @@
+// `expo-constants` is pure JS and safe to import statically anywhere,
+// including Expo Go -- unlike `@react-native-firebase/*` below, it has no
+// native-module-not-found failure mode. Used only for the Expo Go
+// short-circuit in loadModules(); see expoGoDetection.ts for the "why".
+import Constants from 'expo-constants';
+
 import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+
+import { isExpoGoEnvironment } from './expoGoDetection';
 
 /**
  * The ONE seam between src/notifications/ and the native
@@ -44,6 +52,15 @@ let cachedModules: LoadedModules | null = null;
 let cachedAvailable: boolean | null = null;
 
 async function loadModules(): Promise<LoadedModules | null> {
+  // Expo Go can NEVER have these native modules linked in (see
+  // expoGoDetection.ts's header) -- short-circuit before the dynamic
+  // import below even runs, so RNFB's own module-resolution code never gets
+  // a chance to log its "Native module RNFBAppModule not found"
+  // console.error. This is a pure availability short-circuit, not a
+  // behavior change: loadModules() would already resolve to null/caught
+  // here anyway, just noisily.
+  if (isExpoGoEnvironment(Constants)) return null;
+
   if (cachedModules) return cachedModules;
 
   try {

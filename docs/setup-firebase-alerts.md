@@ -134,6 +134,13 @@ task brief refers to, and "PR 4"'s client half / "PR 5" in
 `docs/design-aurora-alerts.md` §6) -- this doc stops here on purpose. Do not
 add those files to this backend-only change.
 
+Whatever build you test this on, it can never be Expo Go: its prebuilt
+binary doesn't contain the `@react-native-firebase` native modules, and SDK
+53 removed remote push from Expo Go entirely -- `firebaseSeam.ts`
+short-circuits to "unavailable" there without attempting the import (see
+`src/notifications/expoGoDetection.ts`). Test on a dev build
+(`expo-dev-client`) or TestFlight instead.
+
 ## Rollback / disabling
 
 To stop sending alerts without touching code: `flyctl secrets unset
