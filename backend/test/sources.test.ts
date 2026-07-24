@@ -2,10 +2,12 @@ import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  buildFallbackForecast,
   fetchKpTrendWithQuality,
   fetchPointForecastWithQuality,
   fetchSightingPossibleFromWithQuality,
-  fetchSpotForecastWithQuality
+  fetchSpotForecastWithQuality,
+  parseCloudLayer
 } from '../src/sources.js';
 import type { Spot } from '../src/types.js';
 
@@ -254,6 +256,148 @@ describe('fetchSpotForecastWithQuality / fetchPointForecastWithQuality: MET pars
     assert.equal(usingFallback, true);
     assert.equal(hourly.length, 12);
     assert.equal(hourly[0].cloudCover, 72);
+  });
+});
+
+describe('parseCloudLayer: optional per-layer cloud field parsing', () => {
+  test('a finite numeric value (number or numeric string) is returned as a number', () => {
+    assert.equal(parseCloudLayer(42), 42);
+    assert.equal(parseCloudLayer('17.5'), 17.5);
+    assert.equal(parseCloudLayer(0), 0);
+  });
+
+  test('undefined and non-numeric values return undefined (not NaN)', () => {
+    assert.equal(parseCloudLayer(undefined), undefined);
+    assert.equal(parseCloudLayer('not-a-number'), undefined);
+    assert.equal(parseCloudLayer({}), undefined);
+  });
+
+  // Surprise: `null` does NOT return undefined here, because `Number(null)`
+  // coerces to 0 (a finite number) in JS -- so a `null` field is silently
+  // parsed as "0% cloud in this layer" rather than "field absent." This is
+  // an artifact of the `Number(value)` + `Number.isFinite` implementation,
+  // not something this test suite can safely change (source is out of
+  // scope), but it's worth pinning explicitly so it doesn't regress silently.
+  test('null coerces to 0 via Number(null), NOT undefined -- documents an implementation quirk', () => {
+    assert.equal(parseCloudLayer(null), 0);
+  });
+});
+
+describe('fetchSpotForecastWithQuality / fetchPointForecastWithQuality: layered cloud field parsing ' +
+  '(cloud_area_fraction_low/_medium/_high)', () => {
+  function timeseriesPayloadWithLayers(count: number) {
+    return {
+      properties: {
+        timeseries: Array.from({ length: count }, (_, i) => ({
+          time: `2026-07-16T${String(i).padStart(2, '0')}:00:00Z`,
+          data: {
+            instant: {
+              details: {
+                cloud_area_fraction: 50,
+                cloud_area_fraction_low: i * 10,
+                cloud_area_fraction_medium: i * 5,
+                cloud_area_fraction_high: i * 2,
+                air_temperature: -i,
+                wind_speed: i
+              }
+            }
+          }
+        }))
+      }
+    };
+  }
+
+  function timeseriesPayloadWithoutLayers(count: number) {
+    return {
+      properties: {
+        timeseries: Array.from({ length: count }, (_, i) => ({
+          time: `2026-07-16T${String(i).padStart(2, '0')}:00:00Z`,
+          data: {
+            instant: {
+              details: {
+                cloud_area_fraction: 50,
+                air_temperature: -i,
+                wind_speed: i
+              }
+            }
+          }
+        }))
+      }
+    };
+  }
+
+  test('a MET payload WITH per-layer cloud fields populates cloudCoverLow/Medium/High', async () => {
+    globalThis.fetch = (async () => jsonResponse(timeseriesPayloadWithLayers(3))) as typeof fetch;
+
+    const { hourly, usingFallback } = await fetchSpotForecastWithQuality(testSpot);
+
+    assert.equal(usingFallback, false);
+    assert.deepEqual(
+      hourly.map((h) => h.cloudCoverLow),
+      [0, 10, 20]
+    );
+    assert.deepEqual(
+      hourly.map((h) => h.cloudCoverMedium),
+      [0, 5, 10]
+    );
+    assert.deepEqual(
+      hourly.map((h) => h.cloudCoverHigh),
+      [0, 2, 4]
+    );
+    assert.deepEqual(
+      hourly.map((h) => h.cloudCover),
+      [50, 50, 50]
+    );
+  });
+
+  test('a MET payload WITHOUT per-layer cloud fields leaves cloudCoverLow/Medium/High undefined, ' +
+    'while the aggregate cloudCover is still populated (scoring still works via the aggregate fallback)', async () => {
+    globalThis.fetch = (async () => jsonResponse(timeseriesPayloadWithoutLayers(3))) as typeof fetch;
+
+    const { hourly, usingFallback } = await fetchSpotForecastWithQuality(testSpot);
+
+    assert.equal(usingFallback, false);
+    for (const hour of hourly) {
+      assert.equal(hour.cloudCoverLow, undefined);
+      assert.equal(hour.cloudCoverMedium, undefined);
+      assert.equal(hour.cloudCoverHigh, undefined);
+      assert.equal(hour.cloudCover, 50);
+    }
+  });
+
+  test('fetchPointForecastWithQuality also parses per-layer cloud fields', async () => {
+    globalThis.fetch = (async () => jsonResponse(timeseriesPayloadWithLayers(2))) as typeof fetch;
+
+    const { hourly, usingFallback } = await fetchPointForecastWithQuality(69.6, 18.9, 2);
+
+    assert.equal(usingFallback, false);
+    assert.equal(hourly[1].cloudCoverLow, 10);
+    assert.equal(hourly[1].cloudCoverMedium, 5);
+    assert.equal(hourly[1].cloudCoverHigh, 2);
+  });
+
+  test('the deterministic fallback forecast emits layered values consistent with its own aggregate ' +
+    '(50/30/20 low/medium/high split of cloudCover)', () => {
+    const fallback = buildFallbackForecast(() => new Date('2026-07-16T00:00:00Z').getTime());
+
+    assert.equal(fallback.length, 12);
+    for (const hour of fallback) {
+      assert.equal(hour.cloudCoverLow, Math.round(hour.cloudCover * 0.5));
+      assert.equal(hour.cloudCoverMedium, Math.round(hour.cloudCover * 0.3));
+      assert.equal(hour.cloudCoverHigh, Math.round(hour.cloudCover * 0.2));
+    }
+  });
+
+  test('a malformed MET payload falls back to a forecast whose layered fields are consistent with the aggregate', async () => {
+    globalThis.fetch = (async () => jsonResponse({ unexpected: 'shape' })) as typeof fetch;
+
+    const { hourly, usingFallback } = await fetchSpotForecastWithQuality(testSpot);
+
+    assert.equal(usingFallback, true);
+    assert.equal(hourly[0].cloudCover, 72);
+    assert.equal(hourly[0].cloudCoverLow, 36);
+    assert.equal(hourly[0].cloudCoverMedium, Math.round(72 * 0.3));
+    assert.equal(hourly[0].cloudCoverHigh, Math.round(72 * 0.2));
   });
 });
 

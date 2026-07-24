@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { computeScore, deriveTrend, dressLevelFromColdScore, rankSpots } from '../src/scoring/score.js';
+import { computeMoonPenaltyPoints, computeScore, deriveTrend, dressLevelFromColdScore, rankSpots } from '../src/scoring/score.js';
+import { moonAltitudeDeg, moonIlluminatedFraction } from '../src/scoring/moon.js';
 import { computeDarknessSeasonState } from '../src/scoring/season.js';
 import { darknessFactor, solarElevationDeg } from '../src/scoring/solar.js';
 import { buildTomorrowScore } from '../src/hooks/useForecast.js';
@@ -95,6 +96,147 @@ describe('computeScore: representative inputs', () => {
     const far = computeScore(30, 5, 200, 1);
     // estimatedDriveMinutes = 200*1.15=230; penalty=(230-120)*0.35=38.5
     assert.ok(Math.abs(near - far - 38.5) < 1e-9, `expected penalty ~38.5, got ${near - far}`);
+  });
+});
+
+// kpAuroraFactor itself isn't exported (module-private in score.ts), but
+// computeScore(cloudCover=100, kp, distanceKm=0, lightPollution=0) isolates
+// it exactly and without clamping: cloudFactor = 100 - 100 = 0, distance and
+// light penalties are both 0, so score = 0.3 * kpAuroraFactor(kp), and since
+// kpAuroraFactor's whole range [20, 130] keeps 0.3*kpFactor within [6, 39] --
+// comfortably inside computeScore's 0-100 clamp -- the clamp never engages
+// here. score / 0.3 == kpAuroraFactor(kp) exactly.
+// Mirrors backend/test/scoring.test.ts's identical describe block.
+describe('kpAuroraFactor: latitude-aware Kp curve (isolated via computeScore(100, kp, 0, 0))', () => {
+  test('exact values at every curve breakpoint (0->20, 2->80, 4->125, 6->130, 9->110)', () => {
+    const breakpoints: Array<[kp: number, points: number]> = [
+      [0, 20],
+      [2, 80],
+      [4, 125],
+      [6, 130],
+      [9, 110]
+    ];
+    for (const [kp, points] of breakpoints) {
+      const score = computeScore(100, kp, 0, 0);
+      assert.ok(
+        Math.abs(score - 0.3 * points) < 1e-9,
+        `kp=${kp}: expected kpAuroraFactor=${points} (score ${0.3 * points}), got score ${score}`
+      );
+    }
+  });
+
+  test('midpoint interpolation between breakpoints (kp=1, kp=3, kp=7.5)', () => {
+    // kp=1: midway between (0,20) and (2,80) -> 50
+    assert.ok(Math.abs(computeScore(100, 1, 0, 0) - 0.3 * 50) < 1e-9);
+    // kp=3: midway between (2,80) and (4,125) -> 102.5
+    assert.ok(Math.abs(computeScore(100, 3, 0, 0) - 0.3 * 102.5) < 1e-9);
+    // kp=7.5: midway between (6,130) and (9,110) -> 120
+    assert.ok(Math.abs(computeScore(100, 7.5, 0, 0) - 0.3 * 120) < 1e-9);
+  });
+
+  test('monotonically rises across Kp 0-6 and monotonically declines across Kp 6-9', () => {
+    const rising = [0, 1, 2, 3, 4, 5, 6].map((kp) => computeScore(100, kp, 0, 0));
+    for (let i = 1; i < rising.length; i += 1) {
+      assert.ok(rising[i] > rising[i - 1], `expected strictly increasing at index ${i}, got ${JSON.stringify(rising)}`);
+    }
+
+    const falling = [6, 7, 7.5, 8, 9].map((kp) => computeScore(100, kp, 0, 0));
+    for (let i = 1; i < falling.length; i += 1) {
+      assert.ok(falling[i] < falling[i - 1], `expected strictly decreasing at index ${i}, got ${JSON.stringify(falling)}`);
+    }
+  });
+
+  test('Kp below 0 clamps to kpAuroraFactor(0); Kp above 9 clamps to kpAuroraFactor(9)', () => {
+    assert.equal(computeScore(100, -5, 0, 0), computeScore(100, 0, 0, 0));
+    assert.equal(computeScore(100, 15, 0, 0), computeScore(100, 9, 0, 0));
+    assert.equal(computeScore(100, -0.0001, 0, 0), computeScore(100, 0, 0, 0));
+    assert.equal(computeScore(100, 9.0001, 0, 0), computeScore(100, 9, 0, 0));
+  });
+
+  // Cross-check: the same computeScore(100, kp, 0, 0) isolation and the same
+  // pinned expected values are asserted against the backend twin's
+  // backend/src/scoring.ts in backend/test/scoring.test.ts, to the same
+  // 1e-9 tolerance -- extends the solarElevationDeg/darknessFactor
+  // cross-check pattern above to kpAuroraFactor.
+  test('matches the backend twin\'s kpAuroraFactor to within 1e-9 at every breakpoint plus the three interpolated points', () => {
+    const pinned: Array<[kp: number, expectedScore: number]> = [
+      [0, 6],
+      [2, 24],
+      [4, 37.5],
+      [6, 39],
+      [9, 33],
+      [1, 15],
+      [3, 30.75],
+      [7.5, 36]
+    ];
+    for (const [kp, expected] of pinned) {
+      const score = computeScore(100, kp, 0, 0);
+      assert.ok(Math.abs(score - expected) < 1e-9, `kp=${kp}: expected ${expected}, got ${score}`);
+    }
+  });
+});
+
+// computeEffectiveCloudCover itself isn't exported either; computeScore(cloudCover,
+// kp=0, distanceKm=0, lightPollution=0, cloudLayers) isolates it: with kp=0,
+// kpFactor=kpAuroraFactor(0)=20 (a fixed constant, unaffected by clouds), so
+// score = 0.7*(100-effective) + 0.3*20 - 0 - 0 = 76 - 0.7*effective, which
+// never clamps across any effective value in 0-100 (score stays within [6,76]).
+// Mirrors backend/test/scoring.test.ts's identical describe block.
+describe('computeEffectiveCloudCover: layered clouds (isolated via computeScore(cloudCover, 0, 0, 0, layers))', () => {
+  test('80% high-only cloud is only lightly blocking (thin cirrus) -> effective 32', () => {
+    // transmission: low=1, medium=1, high=1-0.4*0.8=0.68 -> total=0.68 -> effective=100*(1-0.68)=32
+    // score = 76 - 0.7*32 = 53.6
+    const score = computeScore(80, 0, 0, 0, { low: 0, medium: 0, high: 80 });
+    assert.ok(Math.abs(score - 53.6) < 1e-9, `expected ~53.6, got ${score}`);
+  });
+
+  test('80% low-only cloud is fully opaque (dense low cloud) -> effective 80, matching the plain aggregate', () => {
+    // transmission: low=1-1.0*0.8=0.2, medium=1, high=1 -> total=0.2 -> effective=100*(1-0.2)=80
+    // score = 76 - 0.7*80 = 20
+    const score = computeScore(80, 0, 0, 0, { low: 80, medium: 0, high: 0 });
+    assert.equal(score, 20);
+  });
+
+  test('mixed layers (low=30, medium=40, high=50): hand-computed multiplied transmission', () => {
+    // low transmission=0.7; medium transmission=1-0.75*0.4=0.7; high transmission=1-0.4*0.5=0.8
+    // total = 0.7*0.7*0.8 = 0.392 -> effective = 100*(1-0.392) = 60.8
+    // score = 76 - 0.7*60.8 = 33.44
+    const score = computeScore(80, 0, 0, 0, { low: 30, medium: 40, high: 50 });
+    assert.ok(Math.abs(score - 33.44) < 1e-9, `expected ~33.44, got ${score}`);
+  });
+
+  test('any one layer missing falls back to the plain aggregate cloudCover, ignoring the other two layers', () => {
+    const withPartialLayers = computeScore(45, 0, 0, 0, { low: 50, medium: undefined, high: 30 });
+    const plainAggregate = computeScore(45, 0, 0, 0);
+    assert.equal(withPartialLayers, plainAggregate);
+  });
+
+  test('no cloudLayers argument at all falls back to the plain aggregate cloudCover', () => {
+    assert.equal(computeScore(45, 0, 0, 0, undefined), computeScore(45, 0, 0, 0));
+  });
+
+  test('all-zero layers produce 0% effective cloud cover (full transmission)', () => {
+    // score = 76 - 0.7*0 = 76
+    const score = computeScore(0, 0, 0, 0, { low: 0, medium: 0, high: 0 });
+    assert.equal(score, 76);
+  });
+
+  test('all-100 layers produce 100% effective cloud cover (the implementation\'s ceiling) -- ' +
+    '100% low cloud alone forces zero transmission regardless of medium/high, since transmissions multiply', () => {
+    // score = 76 - 0.7*100 = 6
+    const score = computeScore(100, 0, 0, 0, { low: 100, medium: 100, high: 100 });
+    assert.equal(score, 6);
+  });
+
+  // Cross-check: the same fixture inputs and pinned expected outputs are
+  // asserted against the backend twin's backend/src/scoring.ts in
+  // backend/test/scoring.test.ts, to the same 1e-9 tolerance.
+  test('matches the backend twin\'s computeEffectiveCloudCover to within 1e-9 across the fixtures above', () => {
+    assert.ok(Math.abs(computeScore(80, 0, 0, 0, { low: 0, medium: 0, high: 80 }) - 53.6) < 1e-9);
+    assert.equal(computeScore(80, 0, 0, 0, { low: 80, medium: 0, high: 0 }), 20);
+    assert.ok(Math.abs(computeScore(80, 0, 0, 0, { low: 30, medium: 40, high: 50 }) - 33.44) < 1e-9);
+    assert.equal(computeScore(0, 0, 0, 0, { low: 0, medium: 0, high: 0 }), 76);
+    assert.equal(computeScore(100, 0, 0, 0, { low: 100, medium: 100, high: 100 }), 6);
   });
 });
 
@@ -317,6 +459,139 @@ describe('darknessFactor: boundary behavior', () => {
   // backend/src/solar.ts's darknessFactor.
   test('the midpoint -8.5 ramps linearly to exactly 0.5 (cross-check constant, matches backend)', () => {
     assert.equal(darknessFactor(-8.5), 0.5);
+  });
+});
+
+// Real-world reference lunar phase times for Jan 2026, queried from the US
+// Naval Observatory's Astronomical Applications API
+// (https://aa.usno.navy.mil/api/moon/phases/date?date=2026-01-01&nump=5):
+//   Full Moon:     2026-01-03 10:03 UTC (100% illuminated)
+//   Last Quarter:  2026-01-10 15:48 UTC (~50% illuminated)
+//   New Moon:      2026-01-18 19:52 UTC (0% illuminated)
+//   First Quarter: 2026-01-26 04:47 UTC (~50% illuminated)
+// Tolerances below are generous, matching moon.ts's documented ~1-2%
+// synodic-approximation accuracy budget plus a margin for the exact
+// phase-time-vs-instant offset. Mirrors backend/test/scoring.test.ts's
+// identical describe block.
+describe('moonIlluminatedFraction: sanity vs real ephemeris (USNO phase times)', () => {
+  test('full moon (2026-01-03 10:03 UTC): illuminated fraction is close to 1', () => {
+    const fraction = moonIlluminatedFraction(new Date('2026-01-03T10:03:00.000Z').getTime());
+    assert.ok(Math.abs(fraction - 1) < 0.05, `expected ~1 (full moon), got ${fraction}`);
+  });
+
+  test('new moon (2026-01-18 19:52 UTC): illuminated fraction is close to 0', () => {
+    const fraction = moonIlluminatedFraction(new Date('2026-01-18T19:52:00.000Z').getTime());
+    assert.ok(fraction < 0.05, `expected ~0 (new moon), got ${fraction}`);
+  });
+
+  test('last quarter (2026-01-10 15:48 UTC): illuminated fraction is close to half', () => {
+    const fraction = moonIlluminatedFraction(new Date('2026-01-10T15:48:00.000Z').getTime());
+    assert.ok(Math.abs(fraction - 0.5) < 0.1, `expected ~0.5 (last quarter), got ${fraction}`);
+  });
+
+  test('first quarter (2026-01-26 04:47 UTC): illuminated fraction is close to half', () => {
+    const fraction = moonIlluminatedFraction(new Date('2026-01-26T04:47:00.000Z').getTime());
+    assert.ok(Math.abs(fraction - 0.5) < 0.1, `expected ~0.5 (first quarter), got ${fraction}`);
+  });
+});
+
+describe('moonAltitudeDeg: sanity for real Tromso cases (USNO rise/set/transit data)', () => {
+  // https://aa.usno.navy.mil/api/rstt/oneday?date=2026-01-15&coords=69.6492,18.9553&tz=0
+  // reports the Moon "continuously below the Horizon" for all of 2026-01-15
+  // at Tromso (waning crescent, ~10% illuminated) -- picking instants spread
+  // across that whole day is robust to moon.ts's documented ~1-2deg error
+  // budget, unlike a near-horizon case would be.
+  test('2026-01-15 (moon reported continuously below horizon all day at Tromso): altitude stays negative', () => {
+    const times = ['2026-01-15T00:00:00.000Z', '2026-01-15T12:00:00.000Z', '2026-01-15T23:00:00.000Z'];
+    for (const time of times) {
+      const alt = moonAltitudeDeg(new Date(time).getTime(), TROMSO.lat, TROMSO.lon);
+      assert.ok(alt < -5, `expected a comfortably-below-horizon altitude at ${time}, got ${alt}`);
+    }
+  });
+
+  // https://aa.usno.navy.mil/api/rstt/oneday?date=2026-01-03&coords=69.6492,18.9553&tz=0
+  // reports the Moon "continuously above the Horizon" all day (full moon,
+  // upper transit 23:24 UTC) -- near that transit the Moon is well clear of
+  // the horizon, again robust to the module's degree-or-two error budget.
+  test('2026-01-03 near upper transit (moon reported continuously above horizon all day at Tromso): well above the horizon', () => {
+    const alt = moonAltitudeDeg(new Date('2026-01-03T23:24:00.000Z').getTime(), TROMSO.lat, TROMSO.lon);
+    assert.ok(alt > 20, `expected a comfortably-above-horizon altitude, got ${alt}`);
+  });
+});
+
+describe('computeMoonPenaltyPoints: penalty shape', () => {
+  test('altitude at or below the horizon is always 0, regardless of illumination/Kp', () => {
+    assert.equal(computeMoonPenaltyPoints(1, 0, 0), 0);
+    assert.equal(computeMoonPenaltyPoints(1, -1, 0), 0);
+    assert.equal(computeMoonPenaltyPoints(1, -45, 9), 0);
+  });
+
+  test('illumination below the 0.5 ramp start is always 0, regardless of altitude/Kp', () => {
+    assert.equal(computeMoonPenaltyPoints(0.5, 30, 0), 0);
+    assert.equal(computeMoonPenaltyPoints(0.49, 30, 0), 0);
+    assert.equal(computeMoonPenaltyPoints(0, 45, 0), 0);
+  });
+
+  test('damped to exactly 0 at Kp >= 7 (KP_MOON_IRRELEVANT_AT), even at full illumination/altitude', () => {
+    assert.equal(computeMoonPenaltyPoints(1, 45, 7), 0);
+    assert.equal(computeMoonPenaltyPoints(1, 45, 8), 0);
+    assert.equal(computeMoonPenaltyPoints(1, 45, 9), 0);
+  });
+
+  test('capped at 15 (MOON_MAX_PENALTY_POINTS), never exceeded across a grid sweep, and the cap is reached', () => {
+    const illuminations = [0, 0.3, 0.5, 0.6, 0.75, 0.9, 1];
+    const altitudes = [-10, 0, 5, 15, 30, 45, 90];
+    const kps = [0, 1, 3, 5, 6, 6.9, 7, 8, 9];
+
+    let max = -Infinity;
+    for (const illum of illuminations) {
+      for (const alt of altitudes) {
+        for (const kp of kps) {
+          const penalty = computeMoonPenaltyPoints(illum, alt, kp);
+          assert.ok(penalty >= 0, `penalty should never be negative: illum=${illum} alt=${alt} kp=${kp} -> ${penalty}`);
+          assert.ok(penalty <= 15 + 1e-9, `penalty exceeded cap: illum=${illum} alt=${alt} kp=${kp} -> ${penalty}`);
+          max = Math.max(max, penalty);
+        }
+      }
+    }
+    // full illumination, high altitude, kp=0 should actually reach the cap
+    assert.ok(Math.abs(max - 15) < 1e-9, `expected the grid to reach the 15-point cap, got max ${max}`);
+  });
+
+  test('monotonically non-decreasing in illumination at a fixed altitude/Kp (strictly increasing here)', () => {
+    const illuminations = [0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    const penalties = illuminations.map((illum) => computeMoonPenaltyPoints(illum, 30, 2));
+    for (let i = 1; i < penalties.length; i += 1) {
+      assert.ok(penalties[i] >= penalties[i - 1], `expected non-decreasing, got ${JSON.stringify(penalties)}`);
+    }
+    assert.ok(penalties[penalties.length - 1] > penalties[0]);
+  });
+});
+
+// Twin-drift guard for moon.ts: the same fixed timestamps and the same
+// pinned float outputs (to 1e-9) are asserted against the backend twin's
+// backend/src/moon.ts in backend/test/scoring.test.ts -- extends the
+// solarElevationDeg cross-check pattern above to src/scoring/moon.ts vs
+// backend/src/moon.ts. Editing either moon.ts twin without updating the
+// other now breaks *that twin's own* test suite, not just the other one's.
+describe('Cross-check: moon.ts pinned outputs (matches backend twin)', () => {
+  test('moonIlluminatedFraction and moonAltitudeDeg match the backend twin to within 1e-9 at fixed timestamps', () => {
+    const fixtures: Array<{ time: string; illum: number; alt: number }> = [
+      { time: '2026-01-03T10:03:00.000Z', illum: 0.999202016122652, alt: 7.3648672874543974 },
+      { time: '2026-01-18T19:52:00.000Z', illum: 0.0016176434761858705, alt: -36.951566661406495 },
+      { time: '2026-01-10T15:48:00.000Z', illum: 0.5434173764815082, alt: -30.265210533248556 },
+      { time: '2026-01-26T04:47:00.000Z', illum: 0.5390081764588218, alt: -2.189435785175375 },
+      { time: '2026-01-15T12:00:00.000Z', illum: 0.09527615143829854, alt: -15.936446006429419 },
+      { time: '2026-01-03T23:24:00.000Z', illum: 0.9990440152950687, alt: 46.18276237489254 }
+    ];
+
+    for (const { time, illum, alt } of fixtures) {
+      const ms = new Date(time).getTime();
+      const gotIllum = moonIlluminatedFraction(ms);
+      const gotAlt = moonAltitudeDeg(ms, TROMSO.lat, TROMSO.lon);
+      assert.ok(Math.abs(gotIllum - illum) < 1e-9, `${time}: illum expected ${illum}, got ${gotIllum}`);
+      assert.ok(Math.abs(gotAlt - alt) < 1e-9, `${time}: alt expected ${alt}, got ${gotAlt}`);
+    }
   });
 });
 
