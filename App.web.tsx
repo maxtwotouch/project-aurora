@@ -161,6 +161,15 @@ function TabsRoot({
           fontSize: 18,
           fontWeight: '700'
         },
+        // See App.tsx's screenOptions for the fuller rationale (same
+        // component/library on both platforms): the library's own default
+        // (16px) only matches the *screen's* content padding, not a card's
+        // actual text gutter (screen padding + the card's own space.md
+        // padding). Doubling the token here lines the title up with that
+        // card-text gutter instead of the card's outer edge.
+        headerTitleContainerStyle: {
+          marginHorizontal: space.md * 2
+        },
         headerRight: () => (
           <SettingsButton accessibilityLabel={t('nav.settingsA11yLabel')} onPress={onOpenSettings} />
         )
