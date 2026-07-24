@@ -300,5 +300,23 @@
   },
   "preview": {
     "banner": "Sample data — not a real forecast"
+  },
+  "alerts": {
+    "sectionTitle": "Aurora alerts",
+    "toggleLabel": "Aurora alerts",
+    "toggleHelperOff": "Get a push notification when tonight looks good.",
+    "toggleHelperOn": "You'll get a push when tonight crosses your chosen threshold (at most once per night).",
+    "tierPickerLabel": "Alert me for",
+    "tierOff": "Off",
+    "tierGe45": "Any decent chance (45+)",
+    "tierGe70": "Only great nights (70+)",
+    "unavailableHelper": "Aurora alerts aren't in this build yet — available in a future update.",
+    "webUnsupportedHelper": "Aurora alerts are available on the iOS and Android app, not on web.",
+    "permissionDeniedHelper": "Notifications are turned off for this app in system settings. Enable them there to receive aurora alerts.",
+    "notification": {
+      "titleGe70": "Great aurora chance tonight",
+      "titleGe45": "Aurora chance tonight",
+      "body": "{{spotName}} is scoring {{score}}/100 — best window {{start}}–{{end}}."
+    }
   }
 }

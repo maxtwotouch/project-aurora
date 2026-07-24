@@ -300,5 +300,23 @@
   },
   "preview": {
     "banner": "Données d'exemple — pas une prévision réelle"
+  },
+  "alerts": {
+    "sectionTitle": "Alertes aurores",
+    "toggleLabel": "Alertes aurores",
+    "toggleHelperOff": "Recevez une notification push quand les conditions sont bonnes ce soir.",
+    "toggleHelperOn": "Vous recevrez une notification dès que le seuil choisi est atteint (au plus une fois par nuit).",
+    "tierPickerLabel": "M'alerter pour",
+    "tierOff": "Désactivé",
+    "tierGe45": "Toute chance correcte (45+)",
+    "tierGe70": "Seulement les très bonnes nuits (70+)",
+    "unavailableHelper": "Les alertes aurores ne sont pas encore disponibles dans cette version — à venir dans une prochaine mise à jour.",
+    "webUnsupportedHelper": "Les alertes aurores sont disponibles sur l'application iOS et Android, pas sur le web.",
+    "permissionDeniedHelper": "Les notifications sont désactivées pour cette application dans les réglages système. Activez-les pour recevoir les alertes aurores.",
+    "notification": {
+      "titleGe70": "Très bonne chance d'aurore ce soir",
+      "titleGe45": "Chance d'aurore ce soir",
+      "body": "{{spotName}} affiche {{score}}/100 — meilleure fenêtre {{start}}–{{end}}."
+    }
   }
 }

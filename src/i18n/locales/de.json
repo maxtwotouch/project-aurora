@@ -300,5 +300,23 @@
   },
   "preview": {
     "banner": "Beispieldaten — keine echte Prognose"
+  },
+  "alerts": {
+    "sectionTitle": "Aurora-Benachrichtigungen",
+    "toggleLabel": "Aurora-Benachrichtigungen",
+    "toggleHelperOff": "Erhalte eine Push-Benachrichtigung, wenn die Aussichten heute Abend gut sind.",
+    "toggleHelperOn": "Du erhältst eine Push-Benachrichtigung, sobald dein gewählter Schwellenwert erreicht wird (höchstens einmal pro Nacht).",
+    "tierPickerLabel": "Benachrichtige mich bei",
+    "tierOff": "Aus",
+    "tierGe45": "Jede realistische Chance (45+)",
+    "tierGe70": "Nur bei sehr guten Nächten (70+)",
+    "unavailableHelper": "Aurora-Benachrichtigungen sind in dieser Version noch nicht verfügbar — folgen in einem zukünftigen Update.",
+    "webUnsupportedHelper": "Aurora-Benachrichtigungen sind in der iOS- und Android-App verfügbar, nicht im Web.",
+    "permissionDeniedHelper": "Benachrichtigungen sind für diese App in den Systemeinstellungen deaktiviert. Aktiviere sie dort, um Aurora-Benachrichtigungen zu erhalten.",
+    "notification": {
+      "titleGe70": "Sehr gute Aurora-Chance heute Nacht",
+      "titleGe45": "Aurora-Chance heute Nacht",
+      "body": "{{spotName}} erreicht {{score}}/100 — bestes Zeitfenster {{start}}–{{end}}."
+    }
   }
 }
