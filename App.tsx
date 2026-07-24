@@ -30,6 +30,7 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
+import { space } from './src/theme/tokens';
 import { fraunces } from './src/theme/type';
 import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
 
@@ -167,9 +168,20 @@ function TabsRoot({
           // system bar with no clearance. Growing both by insets.bottom (0
           // on web/older devices, so this is a no-op there) reserves exactly
           // that much extra space instead.
-          height: 70 + insets.bottom,
+          //
+          // Height 70->74 and paddingTop 6->8 (+4 each, in lockstep) fix a
+          // second, separate crowding bug reported on device: the active
+          // tab's icon chip (tabIconWrapActive below) sat only ~6px under
+          // the bar's top border (paddingTop 6 + tabBarItemStyle's
+          // paddingTop 2, cancelled back down by tabIconWrap's own
+          // marginTop: -2). Bumping paddingTop by the same +4 the height
+          // grows by keeps the icon/label row's own share of the bar
+          // unchanged (so labels don't get newly cramped) while giving the
+          // chip ~10px of clearance above it (still comfortably >= the 6px
+          // floor) instead of ~6px.
+          height: 74 + insets.bottom,
           paddingHorizontal: 10,
-          paddingTop: 6,
+          paddingTop: 8,
           paddingBottom: 8 + Math.max(insets.bottom, 0)
         },
         tabBarItemStyle: {
@@ -183,6 +195,20 @@ function TabsRoot({
           fontWeight: '700',
           letterSpacing: 0.2
         },
+        // Deliberately NOT setting an explicit `height` here to fix the
+        // "excessive empty space above the header title" report. Traced
+        // through @react-navigation/elements' Header component (the version
+        // pinned by this project's package-lock, 1.3.31): it already detects
+        // Dynamic Island devices (insets.top > 50) and shaves 5pt off the
+        // status-bar spacer it reserves above the fixed 44pt iOS title row,
+        // specifically to avoid over-reserving space on exactly this class
+        // of device -- i.e. there's no inset double-count to fix at the
+        // headerStyle/height level. A hardcoded `insets.top + 52` override
+        // would in fact make the header *taller* than that already-corrected
+        // default (e.g. ~111pt vs ~98pt on a 59pt-inset Dynamic Island
+        // phone), the opposite of what's needed. The more likely real
+        // contributor is the custom title Text's own line box -- see
+        // headerTitleText's `lineHeight` below.
         headerStyle: {
           backgroundColor: palette.night
         },
@@ -193,6 +219,22 @@ function TabsRoot({
         ),
         headerShadowVisible: false,
         headerTitleAlign: 'left',
+        // @react-navigation/elements' Header defaults this title container to
+        // marginHorizontal: 16 (Header.js `styles.title`), which is where
+        // "Tonight"/"Spots" sat before this change -- flush with the
+        // *screen's own* content padding (space.md, e.g. TonightScreen's
+        // ScrollView `container`), but not with what a card actually reads
+        // as its content gutter: every SpotCard (src/components/SpotCard.
+        // tsx) adds its own `padding: space.md` on top of that screen
+        // padding, so a card's spot-name text sits a further space.md to
+        // the right of the card's edge. That's the same gap SpotListSection
+        // (src/components/tonight/SpotListSection.tsx) needed closing for
+        // its own headings -- see that file's `sectionHeader` comment.
+        // Doubling the token here (space.md * 2) lines the header title up
+        // with that same card-text gutter instead of the card's outer edge.
+        headerTitleContainerStyle: {
+          marginHorizontal: space.md * 2
+        },
         headerBackground: () => <View style={styles.headerBackground} />,
         headerRight: () => (
           <SettingsButton accessibilityLabel={t('nav.settingsA11yLabel')} onPress={onOpenSettings} />
@@ -405,6 +447,18 @@ const styles = StyleSheet.create({
   headerTitleText: {
     fontFamily: fraunces.bold,
     fontSize: 18,
+    // Explicit lineHeight, close to fontSize: without one, iOS falls back
+    // to Fraunces' own font-file line-height metrics for this Text's line
+    // box, which (like a lot of display/editorial serif faces) are
+    // noticeably taller than its fontSize suggests. The header's title row
+    // centers this Text via justifyContent: 'center' (Header.js, `styles.
+    // title`), so an oversized, font-driven line box reads as extra dead
+    // space padding the title away from the header's actual content edges
+    // -- part of what read as "excessive empty space above the title" on
+    // device. Pinning it keeps the line box (and therefore the title's
+    // vertical position) predictable regardless of which font is currently
+    // loaded (system font pre-Fraunces-swap, then Fraunces after).
+    lineHeight: 23,
     fontWeight: '700',
     color: palette.textPrimary
   },
@@ -424,7 +478,12 @@ const styles = StyleSheet.create({
   tabIconWrap: {
     minWidth: 34,
     minHeight: 28,
-    marginTop: -2,
+    // Was -2, which existed purely to cancel tabBarItemStyle's paddingTop: 2
+    // back out (net clearance above this chip == tabBarStyle.paddingTop
+    // alone, 6px pre-fix) -- see the tabBarStyle comment above for why that
+    // was too tight. Dropping the cancellation lets the bar's own +4px
+    // paddingTop bump actually reach this chip instead of being absorbed.
+    marginTop: 0,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999
