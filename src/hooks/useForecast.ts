@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { fetchTonightSnapshotFromBackend, shouldUseBackend } from '../api/backend';
 import { fetchKpTrendDetailed } from '../api/kp';
+import { fetchNowcastSummary } from '../api/swpc';
 import { fetchPointForecastDetailed, fetchSightingPossibleFrom, fetchSpotForecastDetailed } from '../api/yr';
 import { getSampleForecastSnapshot } from '../data/sampleForecast';
 import spots from '../data/spots.json';
@@ -22,6 +23,7 @@ import type {
   GeneralForecastScore,
   HourlyForecast,
   KpTrend,
+  NowcastSummary,
   Spot,
   SpotScoreResult
 } from '../types';
@@ -43,6 +45,11 @@ type UseForecastResult = {
   darkness: DarknessSeasonState | null;
   recommendation: string;
   level: AuroraLevel;
+  /** Real-time "is it happening right now" signal -- see docs/nowcast.md.
+   * `undefined` whenever every upstream nowcast source failed (backend mode)
+   * or every direct-mode fetch failed (see src/api/swpc.ts), so the rest of
+   * the screen renders exactly as it did before nowcast existed. */
+  nowcast: NowcastSummary | undefined;
   refresh: () => Promise<void>;
 };
 
@@ -165,6 +172,7 @@ export function useForecast(): UseForecastResult {
   const [tomorrowScore, setTomorrowScore] = useState<GeneralForecastScore | null>(null);
   const [sightingPossibleFrom, setSightingPossibleFrom] = useState<string | null>(null);
   const [darkness, setDarkness] = useState<DarknessSeasonState | null>(null);
+  const [nowcast, setNowcast] = useState<NowcastSummary | undefined>(undefined);
 
   const spotsById = useMemo(
     () => typedSpots.reduce<Record<string, Spot>>((acc, spot) => ({ ...acc, [spot.id]: spot }), {}),
@@ -196,12 +204,16 @@ export function useForecast(): UseForecastResult {
             backendRequested: true,
             backendUnavailable: false,
             usingFallbackKp: snapshot.dataQuality.usingFallbackKp,
-            fallbackWeatherSpotIds: snapshot.dataQuality.fallbackWeatherSpotIds
+            fallbackWeatherSpotIds: snapshot.dataQuality.fallbackWeatherSpotIds,
+            usingFallbackNowcast: snapshot.dataQuality.usingFallbackNowcast
           });
           setTonightScore(snapshot.tonightScore);
           setTomorrowScore(snapshot.tomorrowScore);
           setSightingPossibleFrom(snapshot.sightingPossibleFrom);
           setDarkness(snapshot.darkness);
+          // Backend mode reads the nowcast straight off the snapshot -- no
+          // separate direct-source fetch (see src/api/swpc.ts's header).
+          setNowcast(snapshot.nowcast);
           return;
         } catch {
           // Graceful fallback for beta reliability if backend is temporarily unavailable.
@@ -215,6 +227,12 @@ export function useForecast(): UseForecastResult {
       setTomorrowScore(buildTomorrowScore(tromsoForecastResult.hourly, kpTrend, TROMSO_CENTER.lat, TROMSO_CENTER.lon));
       setSightingPossibleFrom(await fetchSightingPossibleFrom(TROMSO_CENTER.lat, TROMSO_CENTER.lon));
       setDarkness(computeDarknessSeasonState(Date.now(), TROMSO_CENTER.lat, TROMSO_CENTER.lon));
+      // Direct-mode nowcast (src/api/swpc.ts, only reached when the backend
+      // is unavailable/unused) -- never lets a nowcast-source failure break
+      // the rest of this refresh cycle, matching that module's own
+      // never-throws contract with an extra defensive `.catch` here anyway.
+      const nowcastResult = await fetchNowcastSummary().catch((): NowcastSummary | undefined => undefined);
+      setNowcast(nowcastResult);
 
       const forecastPairs = await Promise.allSettled(
         typedSpots.map(async (spot) => ({
@@ -260,7 +278,8 @@ export function useForecast(): UseForecastResult {
         backendRequested,
         backendUnavailable: backendRequested,
         usingFallbackKp: kpResult.usingFallback,
-        fallbackWeatherSpotIds
+        fallbackWeatherSpotIds,
+        usingFallbackNowcast: nowcastResult === undefined
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load forecast.';
@@ -304,6 +323,7 @@ export function useForecast(): UseForecastResult {
       darkness: sample.darkness,
       recommendation: recommendationFromLevel(sampleLevel),
       level: sampleLevel,
+      nowcast: sample.nowcast,
       refresh
     };
   }
@@ -331,6 +351,7 @@ export function useForecast(): UseForecastResult {
     darkness,
     recommendation,
     level,
+    nowcast,
     refresh
   };
 }

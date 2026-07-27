@@ -6,6 +6,7 @@ import type {
   GeneralForecastScore,
   HourlyForecast,
   KpTrend,
+  NowcastSummary,
   Spot,
   SpotHourlyScore,
   SpotScoreResult
@@ -218,6 +219,7 @@ export type SampleForecastSnapshot = {
   tomorrowScore: GeneralForecastScore;
   sightingPossibleFrom: string;
   darkness: DarknessSeasonState;
+  nowcast: NowcastSummary;
 };
 
 /**
@@ -284,7 +286,31 @@ export function getSampleForecastSnapshot(now: () => number = Date.now): SampleF
     backendRequested: false,
     backendUnavailable: false,
     usingFallbackKp: false,
-    fallbackWeatherSpotIds: []
+    fallbackWeatherSpotIds: [],
+    usingFallbackNowcast: false
+  };
+
+  // Hand-picked "active" nowcast (see docs/nowcast.md's threshold table --
+  // Bz -6.2 clears BZ_ACTIVE_THRESHOLD_NT, OVATION 22 clears
+  // OVATION_ACTIVE_THRESHOLD) so Settings > Design preview shows
+  // src/components/tonight/NowcastPanel.tsx populated rather than hidden.
+  // This is sample data covered by the existing preview-mode honesty banner
+  // (src/preview/), same as every other field in this snapshot -- not a
+  // second, separate "is this real" mechanism.
+  const nowcastNow = now();
+  const nowcast: NowcastSummary = {
+    updatedAt: new Date(nowcastNow).toISOString(),
+    level: 'active',
+    bz: -6.2,
+    solarWindSpeed: 480,
+    solarWindDensity: 6.5,
+    leadTimeMinutes: 52,
+    ovationProbability: 22,
+    ovationForecastTime: new Date(nowcastNow + 68 * 60 * 1000).toISOString(),
+    tgoDisturbanceNt: null,
+    sourcesAvailable: ['solar_wind', 'ovation'],
+    bzReadingAt: new Date(nowcastNow - 4 * 60 * 1000).toISOString(),
+    plasmaReadingAt: new Date(nowcastNow - 5 * 60 * 1000).toISOString()
   };
 
   return {
@@ -298,6 +324,7 @@ export function getSampleForecastSnapshot(now: () => number = Date.now): SampleF
     // Hand-picked per the design brief: sunset-based "aurora could be
     // visible from" time on a plausible early-autumn Tromso evening.
     sightingPossibleFrom: '20:30',
-    darkness
+    darkness,
+    nowcast
   };
 }

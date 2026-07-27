@@ -9,6 +9,7 @@ import { PolarDayNotice } from './PolarDayNotice';
 import { ScoreGauge } from './ScoreGauge';
 import { DataQualityBanner } from '../DataQualityBanner';
 import { useTranslation } from '../../i18n/useTranslation';
+import { formatClockTime } from '../../lib/formatClockTime';
 import { palette } from '../../theme/palette';
 import { elevation, radius, space } from '../../theme/tokens';
 import { typography } from '../../theme/type';
@@ -57,13 +58,12 @@ function toneColor(score: number): string {
   return palette.danger;
 }
 
-const formatUpdatedAt = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    hourCycle: 'h23'
-  });
+// Extracted to src/lib/formatClockTime.ts (see that file's header) so
+// NowcastPanel's bzReadingAt line can reuse the exact same "HH:MM, 24-hour"
+// formatting instead of growing its own copy. Local alias kept so every
+// existing call site below (`formatUpdatedAt(lastUpdatedAt)`) reads
+// unchanged.
+const formatUpdatedAt = formatClockTime;
 
 /**
  * The one dominant recommendation block: go / when / where, readable
