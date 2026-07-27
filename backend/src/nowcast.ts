@@ -96,6 +96,36 @@ function parseTimeTagMs(value: unknown): number {
 }
 
 /**
+ * Parses `value` to a finite number, with an explicit `null` guard --
+ * `Number(null) === 0` is a finite number, so without this guard an
+ * explicit `bz_gsm: null` / `proton_speed: null` row would be silently
+ * treated as a genuine "0" reading rather than "no reading here", masking
+ * a real (possibly strongly southward) row behind a fabricated zero. Same
+ * contract as sources.ts's `parseCloudLayer`: `null` -> `undefined`,
+ * everything else goes through `Number(...)`, and non-finite results
+ * (`NaN`/`Infinity` from garbage strings, missing fields, etc.) also ->
+ * `undefined`. Kept local to this module (rather than importing
+ * `parseCloudLayer` from sources.ts) since the two have no shared caller
+ * and the contract, not the implementation, is what needs to match.
+ */
+function parseFiniteNumber(value: unknown): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+// RTSW rows tick at roughly 1-minute cadence under normal upstream
+// conditions, but SWPC's real-time feed occasionally stalls (spacecraft
+// dropout, ground-station gaps) while continuing to serve its last
+// successfully ingested row as "the latest". Past this age, treat the
+// source as unavailable for the current refresh cycle rather than quietly
+// presenting a stale Bz/speed/density as "right now" -- a nowcast that
+// silently shows a 3-hour-old reading as live is worse than one that
+// degrades to "unavailable" and lets the rest of the summary (or the other
+// source) carry the level.
+const RTSW_MAX_ROW_AGE_MS = 30 * 60 * 1000;
+
+/**
  * From an rtsw-style array (entries can be inactive/stale, out of strict
  * time order, or missing the fields we need), picks the newest entry that
  * satisfies `isComplete`, preferring `active: true` entries but falling back
@@ -103,16 +133,35 @@ function parseTimeTagMs(value: unknown): number {
  * than returning nothing just because the upstream's own "active" bookkeeping
  * is momentarily empty). Exported for reuse/testing by both the mag and
  * plasma parsers below.
+ *
+ * `nowMs`, when provided, additionally rejects any candidate whose
+ * `time_tag` is older than `RTSW_MAX_ROW_AGE_MS` relative to `nowMs` --
+ * applied BEFORE the active/inactive preference above, so a stale `active`
+ * row can never win over a fresher one just because of the `active` flag,
+ * and so that "everything left is too old" degrades to `null` (source
+ * unavailable) rather than returning a stale reading. Omitting `nowMs`
+ * (as most direct unit tests of this function do) skips the staleness
+ * check entirely -- callers that care about freshness (the `fetch*`
+ * functions below) always pass a real clock value.
  */
 export function pickLatestComplete<T extends { time_tag?: unknown; active?: unknown }>(
   payload: unknown,
-  isComplete: (entry: T) => boolean
+  isComplete: (entry: T) => boolean,
+  nowMs?: number
 ): T | null {
   if (!Array.isArray(payload)) return null;
 
-  const candidates = payload.filter(
+  let candidates = payload.filter(
     (entry): entry is T => !!entry && typeof entry === 'object' && isComplete(entry as T)
   );
+
+  if (nowMs !== undefined) {
+    candidates = candidates.filter((entry) => {
+      const ms = parseTimeTagMs(entry.time_tag);
+      return Number.isFinite(ms) && nowMs - ms <= RTSW_MAX_ROW_AGE_MS;
+    });
+  }
+
   if (candidates.length === 0) return null;
 
   const active = candidates.filter((entry) => (entry as { active?: unknown }).active === true);
@@ -127,28 +176,63 @@ export function pickLatestComplete<T extends { time_tag?: unknown; active?: unkn
   });
 }
 
-export function extractLatestBz(payload: unknown): number | null {
-  const entry = pickLatestComplete<RtswMagEntry>(payload, (candidate) =>
-    Number.isFinite(Number(candidate.bz_gsm))
+function selectMagEntry(payload: unknown, nowMs?: number): RtswMagEntry | null {
+  return pickLatestComplete<RtswMagEntry>(
+    payload,
+    (candidate) => parseFiniteNumber(candidate.bz_gsm) !== undefined,
+    nowMs
   );
-  if (!entry) return null;
-  const value = Number(entry.bz_gsm);
-  return Number.isFinite(value) ? value : null;
 }
 
-export function extractLatestPlasma(payload: unknown): { speed: number | null; density: number | null } {
-  const entry = pickLatestComplete<RtswPlasmaEntry>(
+function selectPlasmaEntry(payload: unknown, nowMs?: number): RtswPlasmaEntry | null {
+  return pickLatestComplete<RtswPlasmaEntry>(
     payload,
-    (candidate) => Number.isFinite(Number(candidate.proton_speed)) && Number.isFinite(Number(candidate.proton_density))
+    (candidate) =>
+      parseFiniteNumber(candidate.proton_speed) !== undefined && parseFiniteNumber(candidate.proton_density) !== undefined,
+    nowMs
   );
+}
+
+/**
+ * `nowMs`, when provided, rejects rows older than `RTSW_MAX_ROW_AGE_MS` --
+ * see `pickLatestComplete`. Omitted by most direct unit tests of this
+ * function (no staleness check); always supplied by `fetchSolarWindWithQuality`.
+ */
+export function extractLatestBz(payload: unknown, nowMs?: number): number | null {
+  const entry = selectMagEntry(payload, nowMs);
+  if (!entry) return null;
+  return parseFiniteNumber(entry.bz_gsm) ?? null;
+}
+
+/** The selected row's own `time_tag` (verbatim, NOT normalized to a `Z`
+ * suffix), or `null` if no row was selected -- lets callers surface "how
+ * old is this Bz reading" (see `NowcastSummary.bzReadingAt`) independently
+ * of `extractLatestBz`'s plain-number return. */
+export function extractLatestBzTimestamp(payload: unknown, nowMs?: number): string | null {
+  const entry = selectMagEntry(payload, nowMs);
+  return entry && typeof entry.time_tag === 'string' ? entry.time_tag : null;
+}
+
+/**
+ * `nowMs`, when provided, rejects rows older than `RTSW_MAX_ROW_AGE_MS` --
+ * see `pickLatestComplete`. Omitted by most direct unit tests of this
+ * function (no staleness check); always supplied by `fetchSolarWindWithQuality`.
+ */
+export function extractLatestPlasma(payload: unknown, nowMs?: number): { speed: number | null; density: number | null } {
+  const entry = selectPlasmaEntry(payload, nowMs);
   if (!entry) return { speed: null, density: null };
 
-  const speed = Number(entry.proton_speed);
-  const density = Number(entry.proton_density);
   return {
-    speed: Number.isFinite(speed) ? speed : null,
-    density: Number.isFinite(density) ? density : null
+    speed: parseFiniteNumber(entry.proton_speed) ?? null,
+    density: parseFiniteNumber(entry.proton_density) ?? null
   };
+}
+
+/** The selected row's own `time_tag` (verbatim), or `null` if no row was
+ * selected -- see `NowcastSummary.plasmaReadingAt`. */
+export function extractLatestPlasmaTimestamp(payload: unknown, nowMs?: number): string | null {
+  const entry = selectPlasmaEntry(payload, nowMs);
+  return entry && typeof entry.time_tag === 'string' ? entry.time_tag : null;
 }
 
 /**
@@ -177,6 +261,11 @@ export type SolarWindReading = {
   solarWindDensity: number | null;
   leadTimeMinutes: number | null;
   usingFallback: boolean;
+  /** `time_tag` of the row `bz` was read from, or `null` if `bz` is null. */
+  bzReadingAt: string | null;
+  /** `time_tag` of the row `solarWindSpeed`/`solarWindDensity` were read
+   * from (both come from the same plasma row), or `null` if unavailable. */
+  plasmaReadingAt: string | null;
 };
 
 /**
@@ -184,35 +273,50 @@ export type SolarWindReading = {
  * sources.ts's resilience discipline, a failure in one never blocks the
  * other. `usingFallback` is true only when BOTH come back empty; a partial
  * result (e.g. Bz present, speed/density missing) is still "using real data"
- * for whichever field succeeded.
+ * for whichever field succeeded. Rows older than `RTSW_MAX_ROW_AGE_MS`
+ * relative to `now()` are rejected before selection (see
+ * `pickLatestComplete`) -- an upstream stall degrades that field to `null`
+ * exactly like a fetch failure would, rather than surfacing a stale reading
+ * as "right now".
  */
 export async function fetchSolarWindWithQuality(
-  fetchImpl: FetchLike = globalThis.fetch
+  fetchImpl: FetchLike = globalThis.fetch,
+  now: Clock = Date.now
 ): Promise<SolarWindReading> {
+  const nowMs = now();
+
   const [magResult, plasmaResult] = await Promise.allSettled([
     fetchWithTimeout(fetchImpl, SOLAR_WIND_MAG_URL),
     fetchWithTimeout(fetchImpl, SOLAR_WIND_PLASMA_URL)
   ]);
 
   let bz: number | null = null;
+  let bzReadingAt: string | null = null;
   if (magResult.status === 'fulfilled' && magResult.value.ok) {
     try {
-      bz = extractLatestBz(await magResult.value.json());
+      const payload = await magResult.value.json();
+      bz = extractLatestBz(payload, nowMs);
+      bzReadingAt = extractLatestBzTimestamp(payload, nowMs);
     } catch {
       bz = null;
+      bzReadingAt = null;
     }
   }
 
   let solarWindSpeed: number | null = null;
   let solarWindDensity: number | null = null;
+  let plasmaReadingAt: string | null = null;
   if (plasmaResult.status === 'fulfilled' && plasmaResult.value.ok) {
     try {
-      const latest = extractLatestPlasma(await plasmaResult.value.json());
+      const payload = await plasmaResult.value.json();
+      const latest = extractLatestPlasma(payload, nowMs);
       solarWindSpeed = latest.speed;
       solarWindDensity = latest.density;
+      plasmaReadingAt = extractLatestPlasmaTimestamp(payload, nowMs);
     } catch {
       solarWindSpeed = null;
       solarWindDensity = null;
+      plasmaReadingAt = null;
     }
   }
 
@@ -221,7 +325,9 @@ export async function fetchSolarWindWithQuality(
     solarWindSpeed,
     solarWindDensity,
     leadTimeMinutes: computeLeadTimeMinutes(solarWindSpeed),
-    usingFallback: bz === null && solarWindSpeed === null && solarWindDensity === null
+    usingFallback: bz === null && solarWindSpeed === null && solarWindDensity === null,
+    bzReadingAt,
+    plasmaReadingAt
   };
 }
 
@@ -263,6 +369,11 @@ export function extractOvationProbability(
       continue;
     }
 
+    // NOTE for future reuse with a different `lon`: this is a plain
+    // Euclidean `abs` difference, with no 0/359 wraparound handling (e.g. a
+    // window centered at lon 1 would NOT consider lon 359 "2 degrees away").
+    // Fine for Tromso (~18.9E, nowhere near the 0/359 seam), but a future
+    // caller near the prime meridian would need wraparound-aware distance.
     if (Math.abs(gridLon - lon) <= OVATION_LON_WINDOW_DEG && Math.abs(gridLat - lat) <= OVATION_LAT_WINDOW_DEG) {
       if (max === null || value > max) max = value;
     }
@@ -358,6 +469,26 @@ export const BZ_STORMING_THRESHOLD_NT = -10;
 /** Any southward Bz at all is a departure from "quiet" -- see docs/nowcast.md. */
 export const BZ_STIRRING_THRESHOLD_NT = 0;
 
+/**
+ * Standalone `storming` escape: a Bz THIS negative is unambiguous evidence
+ * of strong coupling on its own, regardless of what OVATION says. Product
+ * decision (see docs/nowcast.md): OVATION's modeled probability in the
+ * Tromso window has been observed running low/lagged in this codebase's own
+ * live probes (single digits during genuinely disturbed-looking solar wind)
+ * -- almost certainly because OVATION is itself derived from recent solar
+ * wind history and lags a fresh, sharp Bz swing, plus Tromso sits near the
+ * oval's edge at quiet-to-moderate activity where the model is less
+ * confident. Requiring OVATION corroboration in that regime would make
+ * `storming` under-fire exactly when the Bz signal is loudest. -15 nT is set
+ * comfortably past `BZ_STORMING_THRESHOLD_NT` so this escape only fires for
+ * genuinely extreme single-source readings, not routine noise. Trade-off,
+ * accepted deliberately: Bz is spiky at 1-minute cadence, so this escape
+ * alone can promote the level on a brief single-minute spike with no
+ * corroboration at all -- acceptable for a *display-only* signal that
+ * doesn't feed the planning score or alerts, pending real validation data.
+ */
+export const STORMING_BZ_STANDALONE_NT = -15;
+
 /** OVATION probability/flux cut points in the Tromso window. Heuristic
  * priors picked to roughly track the Bz cut points above (a moderately
  * southward Bz and a moderately elevated OVATION reading should land in the
@@ -375,17 +506,22 @@ export type NowcastLevelInputs = {
 };
 
 /**
- * `storming` requires BOTH a strongly southward Bz AND a high OVATION
- * reading -- corroboration from both signals, so a single brief Bz spike
- * (solar wind Bz is spiky at 1-minute cadence) can't alone claim "storming".
- * `active` and `stirring` only need ONE signal at the matching threshold,
- * so a missing source degrades gracefully to relying on whichever source is
- * actually available, rather than collapsing to `quiet` just because one of
- * the two upstreams failed.
+ * `storming` is reached two ways: (1) a strongly southward Bz AND a high
+ * OVATION reading corroborating each other (so a single brief Bz spike --
+ * solar wind Bz is spiky at 1-minute cadence -- can't alone claim
+ * "storming" in the -10..-15 nT band), or (2) a standalone Bz reading past
+ * `STORMING_BZ_STANDALONE_NT`, unambiguous enough on its own that it
+ * doesn't need OVATION's (often low/lagged near Tromso) corroboration --
+ * see `STORMING_BZ_STANDALONE_NT`'s doc comment. `active` and `stirring`
+ * only need ONE signal at the matching threshold, so a missing source
+ * degrades gracefully to relying on whichever source is actually available,
+ * rather than collapsing to `quiet` just because one of the two upstreams
+ * failed.
  */
 export function deriveNowcastLevel(inputs: NowcastLevelInputs): NowcastLevel {
   const { bz, ovationProbability } = inputs;
 
+  const bzStandaloneStorming = typeof bz === 'number' && bz <= STORMING_BZ_STANDALONE_NT;
   const bzStorming = typeof bz === 'number' && bz <= BZ_STORMING_THRESHOLD_NT;
   const bzActive = typeof bz === 'number' && bz <= BZ_ACTIVE_THRESHOLD_NT;
   const bzStirring = typeof bz === 'number' && bz < BZ_STIRRING_THRESHOLD_NT;
@@ -394,7 +530,7 @@ export function deriveNowcastLevel(inputs: NowcastLevelInputs): NowcastLevel {
   const ovationActive = typeof ovationProbability === 'number' && ovationProbability >= OVATION_ACTIVE_THRESHOLD;
   const ovationStirring = typeof ovationProbability === 'number' && ovationProbability >= OVATION_STIRRING_THRESHOLD;
 
-  if (bzStorming && ovationStorming) return 'storming';
+  if (bzStandaloneStorming || (bzStorming && ovationStorming)) return 'storming';
   if (bzActive || ovationActive) return 'active';
   if (bzStirring || ovationStirring) return 'stirring';
   return 'quiet';
@@ -416,13 +552,15 @@ export async function fetchNowcastSummary(
   now: Clock = Date.now
 ): Promise<NowcastSummary | undefined> {
   const [solarWind, ovation, tgo] = await Promise.all([
-    fetchSolarWindWithQuality(fetchImpl).catch(
+    fetchSolarWindWithQuality(fetchImpl, now).catch(
       (): SolarWindReading => ({
         bz: null,
         solarWindSpeed: null,
         solarWindDensity: null,
         leadTimeMinutes: null,
-        usingFallback: true
+        usingFallback: true,
+        bzReadingAt: null,
+        plasmaReadingAt: null
       })
     ),
     fetchOvationWithQuality(fetchImpl).catch(
@@ -456,6 +594,8 @@ export async function fetchNowcastSummary(
     ovationProbability: ovation.ovationProbability,
     ovationForecastTime: ovation.ovationForecastTime,
     tgoDisturbanceNt: tgo.tgoDisturbanceNt,
-    sourcesAvailable
+    sourcesAvailable,
+    bzReadingAt: solarWind.bzReadingAt,
+    plasmaReadingAt: solarWind.plasmaReadingAt
   };
 }

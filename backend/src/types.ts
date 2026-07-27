@@ -141,6 +141,17 @@ export type NowcastSummary = {
   tgoDisturbanceNt: number | null;
   /** Which of the three sources above actually contributed data this refresh. */
   sourcesAvailable: NowcastSourceId[];
+  /** `time_tag` of the RTSW row `bz` was read from (verbatim, upstream-UTC,
+   * unmarked -- see nowcast.ts's parseTimeTagMs), letting the UI show "how
+   * old is this Bz reading" rather than implying it's exactly as fresh as
+   * `updatedAt` (which is fetch time, not reading time). `null`/absent when
+   * `bz` is null. Optional + additive so snapshots built before this field
+   * existed keep parsing. */
+  bzReadingAt?: string | null;
+  /** `time_tag` of the RTSW row `solarWindSpeed`/`solarWindDensity` were
+   * read from (both come from the same plasma row). Same rationale/contract
+   * as `bzReadingAt`. */
+  plasmaReadingAt?: string | null;
 };
 
 /**

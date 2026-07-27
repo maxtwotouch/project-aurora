@@ -8,10 +8,13 @@ import {
   OVATION_ACTIVE_THRESHOLD,
   OVATION_STIRRING_THRESHOLD,
   OVATION_STORMING_THRESHOLD,
+  STORMING_BZ_STANDALONE_NT,
   computeLeadTimeMinutes,
   deriveNowcastLevel,
   extractLatestBz,
+  extractLatestBzTimestamp,
   extractLatestPlasma,
+  extractLatestPlasmaTimestamp,
   extractOvationForecastTime,
   extractOvationProbability,
   fetchNowcastSummary,
@@ -91,8 +94,23 @@ describe('deriveNowcastLevel: threshold boundaries and AND/OR semantics', () => 
     );
   });
 
-  test('a strongly southward bz ALONE (low/zero ovation) is active, never storming -- AND not OR', () => {
-    assert.equal(deriveNowcastLevel({ bz: -25, ovationProbability: 0 }), 'active');
+  test('a southward bz in the AND-only band (-10..-15, exclusive of -15) ALONE (low/zero ovation) is ' +
+    'active, never storming -- AND not OR in that band', () => {
+    assert.equal(deriveNowcastLevel({ bz: -12, ovationProbability: 0 }), 'active');
+  });
+
+  // FIX 3 (product decision, see STORMING_BZ_STANDALONE_NT's doc comment):
+  // a Bz THIS negative is unambiguous on its own -- OVATION's Tromso-window
+  // probability has been observed running low/lagged in this codebase's own
+  // live probes, so requiring its corroboration at extreme Bz would make
+  // storming under-fire exactly when the signal is loudest.
+  test('standalone storming escape: bz <= STORMING_BZ_STANDALONE_NT (-15) is storming even with ovation 0', () => {
+    assert.equal(deriveNowcastLevel({ bz: STORMING_BZ_STANDALONE_NT, ovationProbability: 0 }), 'storming');
+    assert.equal(deriveNowcastLevel({ bz: -25, ovationProbability: 0 }), 'storming');
+  });
+
+  test('bz one hair short of the standalone escape (-14.99, with ovation 0) is NOT storming -- falls to active', () => {
+    assert.equal(deriveNowcastLevel({ bz: STORMING_BZ_STANDALONE_NT + 0.01, ovationProbability: 0 }), 'active');
   });
 
   test('a high ovation ALONE (bz unavailable) is active, never storming -- AND not OR', () => {
@@ -178,19 +196,30 @@ describe('pickLatestComplete / extractLatestBz: rtsw_mag_1m-shaped rows', () => 
     assert.equal(extractLatestBz(payload), 2.0);
   });
 
-  // CONTRACT SURPRISE (see report): isComplete's `Number.isFinite(Number(candidate.bz_gsm))`
-  // check does NOT special-case `null` the way sources.ts's parseCloudLayer
-  // does. `Number(null) === 0`, a finite number, so an explicit `bz_gsm: null`
-  // is treated as a genuine "0 nT" reading (complete, included), while a
-  // field that is entirely ABSENT (`Number(undefined) === NaN`) is correctly
-  // excluded. These two "missing data" shapes are handled asymmetrically.
-  test('CONTRACT NOTE: an explicit bz_gsm: null is coerced to 0 (a real reading), not excluded as missing -- ' +
-    'asymmetric with a field that is entirely absent, which IS excluded', () => {
+  // Fixed: isComplete's finiteness check now goes through `parseFiniteNumber`,
+  // which -- matching sources.ts's `parseCloudLayer` contract -- guards `null`
+  // BEFORE the `Number(...)` coercion. `Number(null) === 0` is a finite
+  // number, so without that guard an explicit `bz_gsm: null` row was
+  // previously (incorrectly) treated as a genuine "0 nT" reading instead of
+  // "no reading here", which could mask a real (possibly strongly southward)
+  // row sorted behind it. Both "missing data" shapes -- explicit `null` and
+  // entirely absent -- are now excluded identically.
+  test('an explicit bz_gsm: null is excluded as "no reading", NOT coerced to a real 0 nT reading -- ' +
+    'symmetric with a field that is entirely absent, which is also excluded', () => {
     const explicitNull = [{ time_tag: '2026-07-27T08:25:00', active: true, bz_gsm: null }];
-    assert.equal(extractLatestBz(explicitNull), 0);
+    assert.equal(extractLatestBz(explicitNull), null);
 
     const entirelyAbsent = [{ time_tag: '2026-07-27T08:25:00', active: true }];
     assert.equal(extractLatestBz(entirelyAbsent), null);
+  });
+
+  test('an explicit bz_gsm: null does not mask a real (genuinely southward) row sorted behind it -- ' +
+    'the null row is excluded from selection entirely, so the next-newest complete row wins', () => {
+    const payload = [
+      { time_tag: '2026-07-27T08:25:00', active: true, bz_gsm: null }, // newest overall, but excluded
+      { time_tag: '2026-07-27T08:20:00', active: true, bz_gsm: -8 } // real reading, now correctly selected
+    ];
+    assert.equal(extractLatestBz(payload), -8);
   });
 
   test('prefers an active row over a more recent inactive row', () => {
@@ -237,6 +266,50 @@ describe('pickLatestComplete / extractLatestBz: rtsw_mag_1m-shaped rows', () => 
     );
     assert.deepEqual(result, { time_tag: '2026-07-27T08:00:00', active: true, custom: 5 });
   });
+
+  // FIX 2(a): staleness gate. `nowMs` is optional -- all tests above omit it
+  // and get no staleness filtering (unchanged pre-fix behavior). These tests
+  // exercise the gate explicitly.
+  describe('staleness gate (nowMs param)', () => {
+    const nowMs = new Date('2026-07-27T08:30:00Z').getTime();
+
+    test('a fresh row (well within 30 min of nowMs) is accepted', () => {
+      const payload = [{ time_tag: '2026-07-27T08:27:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBz(payload, nowMs), -6);
+    });
+
+    test('a row exactly 30 minutes old is still accepted (boundary is inclusive)', () => {
+      const payload = [{ time_tag: '2026-07-27T08:00:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBz(payload, nowMs), -6);
+    });
+
+    test('a row 31 minutes old is rejected -> source unavailable (null), even though it is otherwise complete', () => {
+      const payload = [{ time_tag: '2026-07-27T07:59:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBz(payload, nowMs), null);
+    });
+
+    test('a stale active row does not win over a fresher inactive one -- staleness is filtered before the active preference', () => {
+      const payload = [
+        { time_tag: '2026-07-27T07:00:00', active: true, bz_gsm: -20 }, // active, but 90 min stale
+        { time_tag: '2026-07-27T08:15:00', active: false, bz_gsm: -3 } // inactive, but fresh
+      ];
+      assert.equal(extractLatestBz(payload, nowMs), -3);
+    });
+
+    test('extractLatestBzTimestamp surfaces the selected row\'s own time_tag, honoring the same staleness gate', () => {
+      const fresh = [{ time_tag: '2026-07-27T08:27:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBzTimestamp(fresh, nowMs), '2026-07-27T08:27:00');
+
+      const stale = [{ time_tag: '2026-07-27T07:59:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBzTimestamp(stale, nowMs), null);
+    });
+
+    test('extractLatestBzTimestamp with no nowMs (no staleness filtering) still surfaces the newest row\'s time_tag', () => {
+      const payload = [{ time_tag: '2026-07-27T08:27:00', active: true, bz_gsm: -6 }];
+      assert.equal(extractLatestBzTimestamp(payload), '2026-07-27T08:27:00');
+      assert.equal(extractLatestBzTimestamp([]), null);
+    });
+  });
 });
 
 describe('extractLatestPlasma: rtsw_wind_1m-shaped rows', () => {
@@ -255,13 +328,15 @@ describe('extractLatestPlasma: rtsw_wind_1m-shaped rows', () => {
     assert.deepEqual(extractLatestPlasma(payload), { speed: null, density: null });
   });
 
-  // Same Number(null)-is-finite quirk as extractLatestBz's CONTRACT NOTE above:
-  // an explicit `null` on either field is coerced to 0 (a real reading), not
-  // excluded, because isComplete's own finiteness check doesn't special-case
-  // null the way sources.ts's parseCloudLayer does.
-  test('CONTRACT NOTE: an explicit proton_speed: null is coerced to 0 (not excluded), matching extractLatestBz\'s quirk', () => {
+  // Fixed: same `parseFiniteNumber` null-guard as extractLatestBz's fix
+  // above -- an explicit `null` on either field is now excluded ("no
+  // reading") rather than coerced to 0. Since isComplete requires BOTH
+  // fields present+finite, a null proton_speed excludes the whole row (even
+  // though proton_density: 5 alone is a finite number).
+  test('an explicit proton_speed: null excludes the whole row (not coerced to a real 0 reading), ' +
+    'matching extractLatestBz\'s null-guard fix', () => {
     const payload = [{ time_tag: '2026-07-27T08:28:00', active: true, proton_speed: null, proton_density: 5 }];
-    assert.deepEqual(extractLatestPlasma(payload), { speed: 0, density: 5 });
+    assert.deepEqual(extractLatestPlasma(payload), { speed: null, density: null });
   });
 
   test('newest complete active row wins among several', () => {
@@ -275,6 +350,28 @@ describe('extractLatestPlasma: rtsw_wind_1m-shaped rows', () => {
 
   test('empty array yields nulls', () => {
     assert.deepEqual(extractLatestPlasma([]), { speed: null, density: null });
+  });
+
+  describe('staleness gate (nowMs param)', () => {
+    const nowMs = new Date('2026-07-27T08:30:00Z').getTime();
+
+    test('a fresh row is accepted', () => {
+      const payload = [{ time_tag: '2026-07-27T08:28:00', active: true, proton_speed: 400, proton_density: 2 }];
+      assert.deepEqual(extractLatestPlasma(payload, nowMs), { speed: 400, density: 2 });
+    });
+
+    test('a row 31 minutes old is rejected -> source unavailable (nulls)', () => {
+      const payload = [{ time_tag: '2026-07-27T07:59:00', active: true, proton_speed: 400, proton_density: 2 }];
+      assert.deepEqual(extractLatestPlasma(payload, nowMs), { speed: null, density: null });
+    });
+
+    test('extractLatestPlasmaTimestamp surfaces the selected row\'s own time_tag, honoring the same staleness gate', () => {
+      const fresh = [{ time_tag: '2026-07-27T08:28:00', active: true, proton_speed: 400, proton_density: 2 }];
+      assert.equal(extractLatestPlasmaTimestamp(fresh, nowMs), '2026-07-27T08:28:00');
+
+      const stale = [{ time_tag: '2026-07-27T07:59:00', active: true, proton_speed: 400, proton_density: 2 }];
+      assert.equal(extractLatestPlasmaTimestamp(stale, nowMs), null);
+    });
   });
 });
 
@@ -446,20 +543,28 @@ function ovationOkPayload(value: number) {
 }
 
 describe('fetchSolarWindWithQuality: mag + plasma independent resilience', () => {
-  test('both mag and plasma succeed -> full reading, usingFallback false', async () => {
+  // Fixed clock matching the mag/plasma fixture time_tags (08:27/08:28) so
+  // these tests are deterministic and independent of wall-clock time --
+  // without an explicit `now`, the 30-minute staleness gate (FIX 2) would
+  // make these tests flaky depending on exactly when the suite happens to run.
+  const fixedNow = () => new Date('2026-07-27T08:30:00Z').getTime();
+
+  test('both mag and plasma succeed -> full reading, usingFallback false, reading timestamps surfaced', async () => {
     globalThis.fetch = (async (url: string | URL) => {
       if (String(url).includes(MAG_URL_FRAGMENT)) return jsonResponse(magPayload(-6));
       if (String(url).includes(WIND_URL_FRAGMENT)) return jsonResponse(windPayload(400, 2));
       return jsonResponse({}, false, 500);
     }) as typeof fetch;
 
-    const reading = await fetchSolarWindWithQuality();
+    const reading = await fetchSolarWindWithQuality(globalThis.fetch, fixedNow);
 
     assert.equal(reading.bz, -6);
     assert.equal(reading.solarWindSpeed, 400);
     assert.equal(reading.solarWindDensity, 2);
     assert.equal(reading.leadTimeMinutes, computeLeadTimeMinutes(400));
     assert.equal(reading.usingFallback, false);
+    assert.equal(reading.bzReadingAt, '2026-07-27T08:27:00');
+    assert.equal(reading.plasmaReadingAt, '2026-07-27T08:28:00');
   });
 
   test('mag fails (thrown), plasma succeeds -> partial reading is still "not fallback"', async () => {
@@ -469,11 +574,13 @@ describe('fetchSolarWindWithQuality: mag + plasma independent resilience', () =>
       return jsonResponse({}, false, 500);
     }) as typeof fetch;
 
-    const reading = await fetchSolarWindWithQuality();
+    const reading = await fetchSolarWindWithQuality(globalThis.fetch, fixedNow);
 
     assert.equal(reading.bz, null);
     assert.equal(reading.solarWindSpeed, 500);
     assert.equal(reading.usingFallback, false);
+    assert.equal(reading.bzReadingAt, null);
+    assert.equal(reading.plasmaReadingAt, '2026-07-27T08:28:00');
   });
 
   test('both mag and plasma fail -> usingFallback true, everything null', async () => {
@@ -481,13 +588,15 @@ describe('fetchSolarWindWithQuality: mag + plasma independent resilience', () =>
       throw new Error('simulated network failure');
     }) as typeof fetch;
 
-    const reading = await fetchSolarWindWithQuality();
+    const reading = await fetchSolarWindWithQuality(globalThis.fetch, fixedNow);
 
     assert.equal(reading.bz, null);
     assert.equal(reading.solarWindSpeed, null);
     assert.equal(reading.solarWindDensity, null);
     assert.equal(reading.leadTimeMinutes, null);
     assert.equal(reading.usingFallback, true);
+    assert.equal(reading.bzReadingAt, null);
+    assert.equal(reading.plasmaReadingAt, null);
   });
 
   test('a non-ok mag response (but ok plasma) leaves bz null without touching plasma', async () => {
@@ -497,11 +606,32 @@ describe('fetchSolarWindWithQuality: mag + plasma independent resilience', () =>
       return jsonResponse({}, false, 500);
     }) as typeof fetch;
 
-    const reading = await fetchSolarWindWithQuality();
+    const reading = await fetchSolarWindWithQuality(globalThis.fetch, fixedNow);
 
     assert.equal(reading.bz, null);
     assert.equal(reading.solarWindSpeed, 450);
     assert.equal(reading.usingFallback, false);
+  });
+
+  // FIX 2(a): an upstream that keeps serving a stalled (>30 min old) "latest"
+  // row degrades that field to unavailable, exactly like a fetch failure.
+  test('a mag row older than the staleness threshold (31 min) degrades bz to null, ' +
+    'even though the fetch itself succeeded and the row is otherwise complete', async () => {
+    globalThis.fetch = (async (url: string | URL) => {
+      if (String(url).includes(MAG_URL_FRAGMENT)) return jsonResponse(magPayload(-9)); // time_tag 08:27, 31min from fixedNow below
+      if (String(url).includes(WIND_URL_FRAGMENT)) return jsonResponse(windPayload(400, 2));
+      return jsonResponse({}, false, 500);
+    }) as typeof fetch;
+
+    const farFuture = () => new Date('2026-07-27T08:59:00Z').getTime(); // mag row is now 32 min old
+    const reading = await fetchSolarWindWithQuality(globalThis.fetch, farFuture);
+
+    assert.equal(reading.bz, null);
+    assert.equal(reading.bzReadingAt, null);
+    // The plasma row (also 08:28, i.e. 31 min old relative to farFuture) is
+    // stale too, for the same reason -- both fields degrade independently.
+    assert.equal(reading.solarWindSpeed, null);
+    assert.equal(reading.usingFallback, true);
   });
 });
 
@@ -573,6 +703,9 @@ describe('fetchNowcastSummary', () => {
     // return non-null without a source change.
     assert.ok(!summary?.sourcesAvailable.includes('tgo_magnetometer'));
     assert.equal(summary?.tgoDisturbanceNt, null);
+    // FIX 2(b): reading timestamps threaded all the way into NowcastSummary.
+    assert.equal(summary?.bzReadingAt, '2026-07-27T08:27:00');
+    assert.equal(summary?.plasmaReadingAt, '2026-07-27T08:28:00');
   });
 
   test('mag fails but wind succeeds -> partial reading, "solar_wind" still credited in sourcesAvailable', async () => {
@@ -621,13 +754,20 @@ describe('fetchNowcastSummary', () => {
 // -----------------------------------------------------------------------------
 
 describe('buildTonightSnapshot: nowcast integration', () => {
+  // Fixed clock matching the mag/plasma fixture time_tags (08:27/08:28) --
+  // buildTonightSnapshot's `now` param defaults to the real Date.now(), which
+  // would make these tests flaky against the FIX 2 staleness gate (a fixture
+  // row fixed at "2026-07-27T08:27:00" ages past the 30-minute window purely
+  // because wall-clock time passes while the suite runs).
+  const fixedNow = () => new Date('2026-07-27T08:30:00Z').getTime();
+
   test('every upstream (including nowcast) failing still builds a full snapshot, with nowcast undefined ' +
     'and dataQuality.usingFallbackNowcast true', async () => {
     globalThis.fetch = (async () => {
       throw new Error('simulated total outage');
     }) as typeof fetch;
 
-    const snapshot = await buildTonightSnapshot();
+    const snapshot = await buildTonightSnapshot(fixedNow);
 
     assert.equal(snapshot.nowcast, undefined);
     assert.equal(snapshot.dataQuality.usingFallbackNowcast, true);
@@ -647,7 +787,7 @@ describe('buildTonightSnapshot: nowcast integration', () => {
       throw new Error('simulated non-nowcast outage');
     }) as typeof fetch;
 
-    const snapshot = await buildTonightSnapshot();
+    const snapshot = await buildTonightSnapshot(fixedNow);
 
     assert.ok(snapshot.nowcast);
     assert.equal(snapshot.nowcast?.bz, -12);

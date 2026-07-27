@@ -69,7 +69,20 @@ field we need; `nowcast.ts#pickLatestComplete` scans for the newest row
 (by parsed `time_tag`, not array position -- the array is not guaranteed
 strictly time-sorted) that has the field populated, preferring rows marked
 `active: true` but falling back to any complete row if none is marked
-active.
+active. An explicit `null` on the field we need (e.g. `bz_gsm: null`) is
+treated as "no reading", not coerced to a real `0` -- `nowcast.ts`'s
+`parseFiniteNumber` guards `null` before the `Number(...)` coercion, the
+same contract as `sources.ts`'s `parseCloudLayer`.
+
+**Staleness gate.** Rows older than `RTSW_MAX_ROW_AGE_MS` (30 minutes)
+relative to the refresh's own clock are rejected before selection --
+SWPC's real-time feed occasionally stalls while continuing to serve its
+last successfully ingested row as "the latest", and a nowcast silently
+showing a multi-hour-old Bz as "right now" would be worse than one that
+degrades that field to unavailable. `NowcastSummary.bzReadingAt` /
+`plasmaReadingAt` surface the selected row's own `time_tag`, so the UI can
+show "how old is this reading" independently of `updatedAt` (which is
+fetch time, not reading time).
 
 ### 2. OVATION aurora oval (NOAA SWPC) -- required
 
@@ -96,7 +109,11 @@ Tromso's ~18.9°E therefore maps directly onto the grid -- no
 
 **Window used:** max value over `|gridLon - 18.9| <= 2` AND
 `|gridLat - 69.6| <= 2` (a 5x5-cell neighbourhood on the 1-degree grid, not
-just the single nearest cell) -- see `OVATION_LON_WINDOW_DEG` /
+just the single nearest cell) -- plain Euclidean `abs` difference, with NO
+0/359 wraparound handling. Fine for Tromso (nowhere near the prime
+meridian seam); a future reuse of `extractOvationProbability` near lon 0
+would need wraparound-aware distance (see the inline comment at the
+window check). See `OVATION_LON_WINDOW_DEG` /
 `OVATION_LAT_WINDOW_DEG` in `nowcast.ts`. A window (rather than one cell)
 avoids silently missing the local peak if Tromso's true position sits near a
 grid boundary.
@@ -181,15 +198,15 @@ just because one upstream failed.
 
 | Level      | Condition                                                              |
 |------------|-------------------------------------------------------------------------|
-| `storming` | `Bz <= -10 nT` **AND** OVATION probability `>= 50` (both signals, corroborating) |
+| `storming` | `Bz <= -15 nT` alone (standalone escape) **OR** (`Bz <= -10 nT` **AND** OVATION probability `>= 50`) |
 | `active`   | `Bz <= -5 nT` **OR** OVATION probability `>= 20`                        |
 | `stirring` | `Bz < 0 nT` **OR** OVATION probability `>= 5`                           |
 | `quiet`    | none of the above (including: both sources unavailable)                 |
 
-Named constants: `BZ_STORMING_THRESHOLD_NT` (-10), `BZ_ACTIVE_THRESHOLD_NT`
-(-5), `BZ_STIRRING_THRESHOLD_NT` (0), `OVATION_STORMING_THRESHOLD` (50),
-`OVATION_ACTIVE_THRESHOLD` (20), `OVATION_STIRRING_THRESHOLD` (5) -- all in
-`nowcast.ts`.
+Named constants: `BZ_STORMING_THRESHOLD_NT` (-10), `STORMING_BZ_STANDALONE_NT`
+(-15), `BZ_ACTIVE_THRESHOLD_NT` (-5), `BZ_STIRRING_THRESHOLD_NT` (0),
+`OVATION_STORMING_THRESHOLD` (50), `OVATION_ACTIVE_THRESHOLD` (20),
+`OVATION_STIRRING_THRESHOLD` (5) -- all in `nowcast.ts`.
 
 These are **priors, not validated against real Tromso nowcast outcomes**
 (no ground-truth "was aurora actually visible at that moment" dataset was
@@ -198,10 +215,27 @@ used to fit them) -- same "heuristic, treat as a dial" caveat
 points are commonly-cited rough thresholds in space-weather write-ups
 ("geomagnetic activity likely" / "strong coupling"); the OVATION cut points
 were picked to roughly track the Bz ones, not derived from an OVATION-vs.
-visible-aurora study specific to Tromso. `storming` additionally requires
-**both** signals to agree, specifically so a single noisy one-minute Bz
-spike (solar wind Bz is genuinely spiky at 1-minute cadence) can't alone
-claim "storming" without OVATION corroborating it.
+visible-aurora study specific to Tromso. In the -10..-15 nT band, `storming`
+requires **both** signals to agree, specifically so a single noisy
+one-minute Bz spike (solar wind Bz is genuinely spiky at 1-minute cadence)
+can't alone claim "storming" without OVATION corroborating it.
+
+**Standalone storming escape (`STORMING_BZ_STANDALONE_NT`, product
+decision).** Past -15 nT, `storming` fires on Bz alone, without needing
+OVATION's agreement. Honest reason: this codebase's own live probes of the
+OVATION endpoint saw the Tromso-window probability sitting at single
+digits (2-3) even under solar wind conditions that looked meaningfully
+disturbed -- almost certainly because OVATION is itself derived from
+recent solar wind history and lags a sharp, fresh Bz swing, and because
+Tromso sits near the oval's edge at quiet-to-moderate activity where the
+model is least confident. Requiring OVATION's corroboration at an already-
+extreme Bz reading would make `storming` under-fire exactly when the
+strongest single-source signal is available. Trade-off accepted
+deliberately: because Bz is spiky at 1-minute cadence, this escape alone
+can promote the level briefly on a single noisy minute with zero
+corroboration from anywhere else -- judged acceptable for a *display-only*
+signal that never feeds the planning score or alerts, pending real
+validation data to tighten (or loosen) -15 nT.
 
 ## `NowcastSummary` shape
 
@@ -209,7 +243,15 @@ See `backend/src/types.ts` for the authoritative, commented definition.
 Field list: `updatedAt`, `level`, `bz`, `solarWindSpeed`,
 `solarWindDensity`, `leadTimeMinutes`, `ovationProbability`,
 `ovationForecastTime`, `tgoDisturbanceNt` (always `null` today),
-`sourcesAvailable` (`('solar_wind' | 'ovation' | 'tgo_magnetometer')[]`).
+`sourcesAvailable` (`('solar_wind' | 'ovation' | 'tgo_magnetometer')[]`),
+`bzReadingAt` (optional, nullable), `plasmaReadingAt` (optional, nullable).
+
+`bzReadingAt` / `plasmaReadingAt` are the selected RTSW row's own
+`time_tag` (see "Staleness gate" above) -- distinct from `updatedAt`, which
+is when this refresh cycle ran, not when the underlying reading was taken.
+They are optional/additive specifically so a `NowcastSummary` object built
+before this field existed (e.g. an old on-disk snapshot mirror) still type-
+checks and parses without them.
 
 `TonightSnapshot.nowcast` is optional; it is `undefined` whenever *every*
 source failed (`sourcesAvailable` would otherwise be empty), so a NOAA/UiT
@@ -232,8 +274,14 @@ to the existing `usingFallbackKp` / `usingFallbackSighting` flags.
 - **The Bz reading is effectively instantaneous**, not literally "sustained"
   over a trailing window -- we take the single latest valid 1-minute sample,
   not e.g. a trailing 30-minute average. A short-lived spike can therefore
-  briefly push the level up before reverting. A trailing-window average
-  would be a reasonable future refinement.
+  briefly push the level up before reverting -- this is most visible via the
+  standalone storming escape above, which is deliberately spike-sensitive.
+  A trailing-window average would be a reasonable future refinement.
+- **The staleness gate (30 min) is a floor, not a promise of freshness.** A
+  row 29 minutes old is accepted exactly like a 1-minute-old one -- there is
+  no in-between "somewhat stale" signal shown today beyond `bzReadingAt` /
+  `plasmaReadingAt` themselves, which the UI would need to diff against
+  `updatedAt` to surface an actual age.
 - **Nowcast != guarantee of visible aurora.** Even a `storming` reading
   still needs a dark, clear sky over Tromso (see the separate planning
   score / `sightingPossibleFrom` / darkness-season fields) to actually be
