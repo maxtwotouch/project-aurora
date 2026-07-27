@@ -267,18 +267,16 @@
     "eyebrow": "Gerade jetzt",
     "level": {
       "quiet": "Ruhig",
-      "stirring": "Regt sich",
+      "stirring": "Unruhig",
       "active": "Aktiv",
-      "storming": "Sturm"
+      "storming": "Sehr aktiv"
     },
     "bzCaption": {
       "southward": "Südwärts gerichtetes Magnetfeld — begünstigt Polarlicht-Aktivität.",
       "northward": "Nordwärts gerichtetes Magnetfeld — momentan weniger günstig für Polarlicht."
     },
     "leadTime": "~{{minutes}} Min. Vorlaufzeit, bevor es die Erde erreicht",
-    "dataAge_one": "Sonnenwind-Messung {{count}} Minute alt",
-    "dataAge_other": "Sonnenwind-Messung {{count}} Minuten alt",
-    "dataAgeJustNow": "Sonnenwind-Messung gerade eben"
+    "dataAge": "Sonnenwind-Messung von {{time}} Uhr"
   },
   "hourlyTimeline": {
     "defaultA11yLabel": "Stündliche Vorhersage-Zeitleiste",

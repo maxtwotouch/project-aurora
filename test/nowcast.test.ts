@@ -7,6 +7,9 @@
 // semantics for the canonical implementation. The point of this file is
 // narrower: if either copy's thresholds or branching ever drift from the
 // other, this grid should start failing on whichever side changed.
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -67,5 +70,67 @@ describe('deriveNowcastLevel (frontend twin): fixture grid pinned against backen
 
   test('a positive (northward) bz of any magnitude never counts as southward coupling', () => {
     assert.equal(deriveNowcastLevel({ bz: 20, ovationProbability: null }), 'quiet');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Textual-equivalence guard: the fixture grid above only exercises THIS
+// file's copy of the logic -- it would happily keep passing even if someone
+// edited backend/src/nowcast.ts's deriveNowcastLevel (or its thresholds) and
+// forgot this frontend twin entirely, or vice versa. This second guard reads
+// both source files directly (raw text, not imported/executed) and asserts
+// the marked `// TWIN-BLOCK-BEGIN deriveNowcastLevel` .. `// TWIN-BLOCK-END
+// deriveNowcastLevel` region is byte-identical (modulo trailing whitespace)
+// between them, so a one-sided edit to either copy fails loudly here instead
+// of silently drifting.
+// -----------------------------------------------------------------------------
+
+const TWIN_BLOCK_NAME = 'deriveNowcastLevel';
+const TWIN_BLOCK_BEGIN = `// TWIN-BLOCK-BEGIN ${TWIN_BLOCK_NAME}`;
+const TWIN_BLOCK_END = `// TWIN-BLOCK-END ${TWIN_BLOCK_NAME}`;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const FRONTEND_TWIN_PATH = path.join(__dirname, '..', 'src', 'scoring', 'nowcast.ts');
+const BACKEND_TWIN_PATH = path.join(__dirname, '..', 'backend', 'src', 'nowcast.ts');
+
+/**
+ * Extracts the text strictly between the begin/end marker comments
+ * (exclusive of the marker lines themselves), then normalizes ONLY trailing
+ * whitespace per line (never leading whitespace/indentation -- that's part
+ * of what "byte-identical" is meant to catch) so a stray end-of-line space
+ * introduced by one editor doesn't produce a false failure unrelated to the
+ * logic itself.
+ */
+function extractTwinBlock(filePath: string): string {
+  const content = readFileSync(filePath, 'utf8');
+  const beginIndex = content.indexOf(TWIN_BLOCK_BEGIN);
+  const endIndex = content.indexOf(TWIN_BLOCK_END);
+
+  assert.notEqual(beginIndex, -1, `${filePath} is missing the "${TWIN_BLOCK_BEGIN}" marker`);
+  assert.notEqual(endIndex, -1, `${filePath} is missing the "${TWIN_BLOCK_END}" marker`);
+  assert.ok(endIndex > beginIndex, `${filePath}'s TWIN-BLOCK-END appears before its TWIN-BLOCK-BEGIN`);
+
+  const rawBlock = content.slice(beginIndex + TWIN_BLOCK_BEGIN.length, endIndex);
+  return rawBlock
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+$/, ''))
+    .join('\n')
+    .trim();
+}
+
+describe('deriveNowcastLevel: frontend/backend TWIN-BLOCK textual equivalence', () => {
+  test('src/scoring/nowcast.ts and backend/src/nowcast.ts carry byte-identical marked twin blocks', () => {
+    const frontendBlock = extractTwinBlock(FRONTEND_TWIN_PATH);
+    const backendBlock = extractTwinBlock(BACKEND_TWIN_PATH);
+
+    // assert.equal's own diff output on mismatch already shows exactly which
+    // lines differ (node:assert prints a full string diff for unequal
+    // strings), which is the "helpful diff on divergence" this guard is for.
+    assert.equal(
+      frontendBlock,
+      backendBlock,
+      'src/scoring/nowcast.ts has drifted from backend/src/nowcast.ts within their marked ' +
+        `${TWIN_BLOCK_NAME} TWIN-BLOCK -- keep both copies in sync by hand (see nowcast.ts's own header comments).`
+    );
   });
 });

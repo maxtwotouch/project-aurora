@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useTranslation } from '../../i18n/useTranslation';
+import { formatClockTime } from '../../lib/formatClockTime';
 import { palette } from '../../theme/palette';
 import { radius, space } from '../../theme/tokens';
 import { typography } from '../../theme/type';
@@ -42,15 +43,21 @@ function levelLabelKey(level: NowcastLevel): string {
  * `bzReadingAt` (and `plasmaReadingAt`) are the upstream RTSW row's own
  * `time_tag`, verbatim -- UTC but unmarked (no trailing "Z"), same as
  * backend/src/nowcast.ts's `parseTimeTagMs` documents. Without appending
- * "Z", `Date.parse` would read a bare "YYYY-MM-DDTHH:MM:SS" as *local* time
- * on most JS engines, silently skewing "how old is this reading" by the
- * device's own UTC offset.
+ * "Z", `Date`/`toLocaleTimeString` would read a bare "YYYY-MM-DDTHH:MM:SS" as
+ * *local* time on most JS engines, silently skewing the displayed clock time
+ * by the device's own UTC offset.
+ *
+ * Deliberately an ABSOLUTE clock time ("Solar wind reading 09:16"), not a
+ * relative "N minutes old" -- a relative age computed once at render time
+ * would silently go stale (and eventually wrong) if the screen is left open
+ * without a re-render, which is exactly the kind of stale-reading failure
+ * the backend's own 30-minute staleness gate (see docs/nowcast.md) exists to
+ * prevent upstream of this component. An absolute time is correct for as
+ * long as it's on screen, with no refresh timer required to keep it honest.
  */
-function minutesSince(iso: string, nowMs: number): number | null {
+function formatReadingTime(iso: string): string {
   const normalized = iso.endsWith('Z') ? iso : `${iso}Z`;
-  const parsed = Date.parse(normalized);
-  if (!Number.isFinite(parsed)) return null;
-  return Math.max(0, Math.round((nowMs - parsed) / 60000));
+  return formatClockTime(normalized);
 }
 
 /**
@@ -72,7 +79,7 @@ export function NowcastPanel({ nowcast, seasonClosed }: Props) {
   const color = levelColor(nowcast.level);
   const hasBz = typeof nowcast.bz === 'number';
   const bzCaptionKey = hasBz && (nowcast.bz as number) < 0 ? 'nowcast.bzCaption.southward' : 'nowcast.bzCaption.northward';
-  const ageMinutes = nowcast.bzReadingAt ? minutesSince(nowcast.bzReadingAt, Date.now()) : null;
+  const readingTime = nowcast.bzReadingAt ? formatReadingTime(nowcast.bzReadingAt) : null;
 
   return (
     <View style={styles.card}>
@@ -94,11 +101,7 @@ export function NowcastPanel({ nowcast, seasonClosed }: Props) {
         <Text style={styles.caption}>{t('nowcast.leadTime', { minutes: nowcast.leadTimeMinutes })}</Text>
       ) : null}
 
-      {ageMinutes !== null ? (
-        <Text style={styles.caption}>
-          {ageMinutes < 1 ? t('nowcast.dataAgeJustNow') : t('nowcast.dataAge', { count: ageMinutes })}
-        </Text>
-      ) : null}
+      {readingTime !== null ? <Text style={styles.caption}>{t('nowcast.dataAge', { time: readingTime })}</Text> : null}
     </View>
   );
 }

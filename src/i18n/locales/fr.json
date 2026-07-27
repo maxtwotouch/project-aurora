@@ -267,18 +267,16 @@
     "eyebrow": "En ce moment",
     "level": {
       "quiet": "Calme",
-      "stirring": "En mouvement",
-      "active": "Actif",
-      "storming": "Tempête"
+      "stirring": "Agitée",
+      "active": "Active",
+      "storming": "Très active"
     },
     "bzCaption": {
       "southward": "Champ magnétique orienté vers le sud — favorable à l'activité aurorale.",
       "northward": "Champ magnétique orienté vers le nord — moins favorable pour l'instant."
     },
     "leadTime": "~{{minutes}} min d'avance avant d'atteindre la Terre",
-    "dataAge_one": "Mesure du vent solaire vieille de {{count}} minute",
-    "dataAge_other": "Mesure du vent solaire vieille de {{count}} minutes",
-    "dataAgeJustNow": "Mesure du vent solaire à l'instant"
+    "dataAge": "Mesure du vent solaire à {{time}}"
   },
   "hourlyTimeline": {
     "defaultA11yLabel": "Chronologie de prévision horaire",

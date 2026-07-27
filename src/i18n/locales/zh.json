@@ -267,7 +267,7 @@
     "eyebrow": "实时状态",
     "level": {
       "quiet": "平静",
-      "stirring": "转变中",
+      "stirring": "波动",
       "active": "活跃",
       "storming": "强烈"
     },
@@ -276,9 +276,7 @@
       "northward": "磁场朝北——目前不太有利于极光。"
     },
     "leadTime": "约 {{minutes}} 分钟后抵达地球",
-    "dataAge_one": "太阳风数据 {{count}} 分钟前",
-    "dataAge_other": "太阳风数据 {{count}} 分钟前",
-    "dataAgeJustNow": "太阳风数据刚刚更新"
+    "dataAge": "太阳风读数时间为 {{time}}"
   },
   "hourlyTimeline": {
     "defaultA11yLabel": "每小时预报时间轴",

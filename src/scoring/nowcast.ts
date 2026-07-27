@@ -13,6 +13,7 @@ import type { NowcastLevel } from '../types';
 // for the rationale behind every constant below.
 // -----------------------------------------------------------------------------
 
+// TWIN-BLOCK-BEGIN deriveNowcastLevel
 /** Southward (negative) Bz, nT, GSM -- the primary aurora-coupling driver.
  * Rationale for the two southward cut points: -5 nT is a commonly-cited
  * "geomagnetic activity likely" threshold in space-weather nowcasting
@@ -90,3 +91,4 @@ export function deriveNowcastLevel(inputs: NowcastLevelInputs): NowcastLevel {
   if (bzStirring || ovationStirring) return 'stirring';
   return 'quiet';
 }
+// TWIN-BLOCK-END deriveNowcastLevel

@@ -266,19 +266,17 @@
   "nowcast": {
     "eyebrow": "Ahora mismo",
     "level": {
-      "quiet": "Tranquilo",
-      "stirring": "Agitándose",
-      "active": "Activo",
-      "storming": "Tormenta"
+      "quiet": "Tranquila",
+      "stirring": "Agitada",
+      "active": "Activa",
+      "storming": "Muy activa"
     },
     "bzCaption": {
-      "southward": "Campo magnético orientado al sur: favorece la actividad auroral.",
-      "northward": "Campo magnético orientado al norte: menos favorable en este momento."
+      "southward": "Campo magnético orientado al sur — favorece la actividad auroral.",
+      "northward": "Campo magnético orientado al norte — menos favorable en este momento."
     },
     "leadTime": "~{{minutes}} min de margen antes de llegar a la Tierra",
-    "dataAge_one": "Lectura del viento solar de hace {{count}} minuto",
-    "dataAge_other": "Lectura del viento solar de hace {{count}} minutos",
-    "dataAgeJustNow": "Lectura del viento solar de ahora mismo"
+    "dataAge": "Lectura del viento solar a las {{time}}"
   },
   "hourlyTimeline": {
     "defaultA11yLabel": "Cronología de previsión horaria",

@@ -272,13 +272,11 @@
       "storming": "Storming"
     },
     "bzCaption": {
-      "southward": "Southward IMF — this favors aurora activity.",
-      "northward": "Northward IMF — less favorable for aurora right now."
+      "southward": "Southward magnetic field — this favors aurora activity.",
+      "northward": "Northward magnetic field — less favorable for aurora right now."
     },
     "leadTime": "~{{minutes}} min heads-up before it reaches Earth",
-    "dataAge_one": "Solar wind reading {{count}} minute old",
-    "dataAge_other": "Solar wind reading {{count}} minutes old",
-    "dataAgeJustNow": "Solar wind reading just now"
+    "dataAge": "Solar wind reading {{time}}"
   },
   "hourlyTimeline": {
     "defaultA11yLabel": "Hourly forecast timeline",
