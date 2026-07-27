@@ -15,6 +15,8 @@ formula or external dataset. Moving it changes *how aggressively* the score
 reacts to that input, not the input's underlying meaning -- treat it as a
 dial, not as a fact worth defending.
 
+This score is about **tonight's outlook** (planning, 0-100, weather+Kp driven); it is separate from the **real-time nowcast** ("is it happening right now" -- solar wind/OVATION/ground magnetometer, see `docs/nowcast.md`), which never feeds back into this score.
+
 ## `computeScore(cloudCover, kp, distanceKm, lightPollution, cloudLayers?)`
 
 The core per-hour, per-spot score, 0-100.
