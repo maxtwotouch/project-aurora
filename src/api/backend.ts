@@ -1,4 +1,4 @@
-import type { DarknessSeasonState, GeneralForecastScore, HourlyForecast, KpTrend, SpotScoreResult } from '../types';
+import type { DarknessSeasonState, GeneralForecastScore, HourlyForecast, KpTrend, NowcastSummary, SpotScoreResult } from '../types';
 
 type BackendTonightSnapshot = {
   updatedAt: string;
@@ -12,8 +12,15 @@ type BackendTonightSnapshot = {
   dataQuality: {
     usingFallbackKp: boolean;
     fallbackWeatherSpotIds: string[];
+    /** See backend/src/types.ts's DataQuality.usingFallbackNowcast -- optional/additive
+     * so older cached backend snapshots (built before nowcast existed) keep parsing. */
+    usingFallbackNowcast?: boolean;
   };
   darkness: DarknessSeasonState;
+  /** Real-time "is it happening right now" signal -- see docs/nowcast.md.
+   * Optional/additive: absent whenever every upstream nowcast source fails or
+   * the backend snapshot predates the nowcast feature. */
+  nowcast?: NowcastSummary;
 };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;

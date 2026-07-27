@@ -263,6 +263,23 @@
     "weatherFallback_one": "Los datos meteorológicos se estiman para {{count}} lugar porque la obtención de la previsión falló.",
     "weatherFallback_other": "Los datos meteorológicos se estiman para {{count}} lugares porque la obtención de la previsión falló."
   },
+  "nowcast": {
+    "eyebrow": "Ahora mismo",
+    "level": {
+      "quiet": "Tranquilo",
+      "stirring": "Agitándose",
+      "active": "Activo",
+      "storming": "Tormenta"
+    },
+    "bzCaption": {
+      "southward": "Campo magnético orientado al sur: favorece la actividad auroral.",
+      "northward": "Campo magnético orientado al norte: menos favorable en este momento."
+    },
+    "leadTime": "~{{minutes}} min de margen antes de llegar a la Tierra",
+    "dataAge_one": "Lectura del viento solar de hace {{count}} minuto",
+    "dataAge_other": "Lectura del viento solar de hace {{count}} minutos",
+    "dataAgeJustNow": "Lectura del viento solar de ahora mismo"
+  },
   "hourlyTimeline": {
     "defaultA11yLabel": "Cronología de previsión horaria",
     "barLabelPlain": "{{hour}}, {{percent}} por ciento",

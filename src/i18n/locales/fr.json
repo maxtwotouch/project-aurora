@@ -263,6 +263,23 @@
     "weatherFallback_one": "Les données météo sont estimées pour {{count}} site car la récupération des prévisions a échoué.",
     "weatherFallback_other": "Les données météo sont estimées pour {{count}} sites car la récupération des prévisions a échoué."
   },
+  "nowcast": {
+    "eyebrow": "En ce moment",
+    "level": {
+      "quiet": "Calme",
+      "stirring": "En mouvement",
+      "active": "Actif",
+      "storming": "Tempête"
+    },
+    "bzCaption": {
+      "southward": "Champ magnétique orienté vers le sud — favorable à l'activité aurorale.",
+      "northward": "Champ magnétique orienté vers le nord — moins favorable pour l'instant."
+    },
+    "leadTime": "~{{minutes}} min d'avance avant d'atteindre la Terre",
+    "dataAge_one": "Mesure du vent solaire vieille de {{count}} minute",
+    "dataAge_other": "Mesure du vent solaire vieille de {{count}} minutes",
+    "dataAgeJustNow": "Mesure du vent solaire à l'instant"
+  },
   "hourlyTimeline": {
     "defaultA11yLabel": "Chronologie de prévision horaire",
     "barLabelPlain": "{{hour}}, {{percent}} pour cent",

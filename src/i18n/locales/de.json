@@ -263,6 +263,23 @@
     "weatherFallback_one": "Die Wetterdaten für {{count}} Ort sind geschätzt, da der Vorhersageabruf fehlgeschlagen ist.",
     "weatherFallback_other": "Die Wetterdaten für {{count}} Orte sind geschätzt, da der Vorhersageabruf fehlgeschlagen ist."
   },
+  "nowcast": {
+    "eyebrow": "Gerade jetzt",
+    "level": {
+      "quiet": "Ruhig",
+      "stirring": "Regt sich",
+      "active": "Aktiv",
+      "storming": "Sturm"
+    },
+    "bzCaption": {
+      "southward": "Südwärts gerichtetes Magnetfeld — begünstigt Polarlicht-Aktivität.",
+      "northward": "Nordwärts gerichtetes Magnetfeld — momentan weniger günstig für Polarlicht."
+    },
+    "leadTime": "~{{minutes}} Min. Vorlaufzeit, bevor es die Erde erreicht",
+    "dataAge_one": "Sonnenwind-Messung {{count}} Minute alt",
+    "dataAge_other": "Sonnenwind-Messung {{count}} Minuten alt",
+    "dataAgeJustNow": "Sonnenwind-Messung gerade eben"
+  },
   "hourlyTimeline": {
     "defaultA11yLabel": "Stündliche Vorhersage-Zeitleiste",
     "barLabelPlain": "{{hour}} Uhr, {{percent}} Prozent",
