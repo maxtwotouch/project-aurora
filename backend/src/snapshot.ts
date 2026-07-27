@@ -1,5 +1,6 @@
 import spots from '../../src/data/spots.json' with { type: 'json' };
 
+import { fetchNowcastSummary } from './nowcast.js';
 import { computeDarknessSeasonState } from './season.js';
 import { computeScore, kpAuroraFactor, rankSpots } from './scoring.js';
 import { darknessFactor, solarElevationDeg } from './solar.js';
@@ -10,7 +11,7 @@ import {
   fetchSightingPossibleFromWithQuality,
   fetchSpotForecastWithQuality
 } from './sources.js';
-import type { GeneralForecastScore, HourlyForecast, KpTrend, Spot, TonightSnapshot } from './types.js';
+import type { GeneralForecastScore, HourlyForecast, KpTrend, NowcastSummary, Spot, TonightSnapshot } from './types.js';
 
 const typedSpots = spots as Spot[];
 const TROMSO_CENTER = { lat: 69.6492, lon: 18.9553 };
@@ -90,14 +91,20 @@ export function buildTomorrowScore(
 }
 
 export async function buildTonightSnapshot(now: Clock = Date.now): Promise<TonightSnapshot> {
-  // These three each resolve to a deterministic fallback (never reject) on
+  // These each resolve to a deterministic fallback (never reject) on
   // failure -- see their try/catch bodies in sources.ts -- so it's safe to run
   // them concurrently rather than sequentially (avoiding up to ~3x
   // SOURCE_TIMEOUT_MS of added latency if an upstream is hung).
-  const [kpResponse, tromsoForecast, daylightHint] = await Promise.all([
+  // fetchNowcastSummary follows the same never-reject discipline internally
+  // (nowcast.ts), but gets an extra `.catch` here as defense-in-depth: a bug
+  // in the nowcast module must never be able to take down the rest of the
+  // snapshot (weather/KP planning, spot rankings) -- see the "additive
+  // optional field" contract on TonightSnapshot.nowcast.
+  const [kpResponse, tromsoForecast, daylightHint, nowcast] = await Promise.all([
     fetchKpTrendWithQuality(globalThis.fetch, now),
     fetchPointForecastWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, 48, globalThis.fetch, now),
-    fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, globalThis.fetch, now)
+    fetchSightingPossibleFromWithQuality(TROMSO_CENTER.lat, TROMSO_CENTER.lon, globalThis.fetch, now),
+    fetchNowcastSummary(globalThis.fetch, now).catch((): NowcastSummary | undefined => undefined)
   ]);
 
   const forecastsBySpotId: Record<string, HourlyForecast[]> = {};
@@ -143,9 +150,11 @@ export async function buildTonightSnapshot(now: Clock = Date.now): Promise<Tonig
       fallbackWeatherSpotIds: tromsoForecast.usingFallback
         ? [...fallbackWeatherSpotIds, 'tromso_center']
         : fallbackWeatherSpotIds,
-      usingFallbackSighting: daylightHint.usingFallback
+      usingFallbackSighting: daylightHint.usingFallback,
+      usingFallbackNowcast: nowcast === undefined
     },
-    darkness
+    darkness,
+    nowcast
   };
 }
 
