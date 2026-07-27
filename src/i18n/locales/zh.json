@@ -263,6 +263,21 @@
     "weatherFallback_one": "由于预报获取失败，{{count}} 个地点的天气数据为估算值。",
     "weatherFallback_other": "由于预报获取失败，{{count}} 个地点的天气数据为估算值。"
   },
+  "nowcast": {
+    "eyebrow": "实时状态",
+    "level": {
+      "quiet": "平静",
+      "stirring": "波动",
+      "active": "活跃",
+      "storming": "强烈"
+    },
+    "bzCaption": {
+      "southward": "磁场朝南——有利于极光活动。",
+      "northward": "磁场朝北——目前不太有利于极光。"
+    },
+    "leadTime": "约 {{minutes}} 分钟后抵达地球",
+    "dataAge": "太阳风读数时间为 {{time}}"
+  },
   "hourlyTimeline": {
     "defaultA11yLabel": "每小时预报时间轴",
     "barLabelPlain": "{{hour}}，{{percent}}%",

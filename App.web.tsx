@@ -31,7 +31,16 @@ import { TonightScreen } from './src/screens/TonightScreen';
 import { palette } from './src/theme/palette';
 import { radius, space, type WebPressableState } from './src/theme/tokens';
 import { fraunces } from './src/theme/type';
-import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from './src/types';
+import type {
+  AppDataQuality,
+  AuroraLevel,
+  DarknessSeasonState,
+  GeneralForecastScore,
+  KpTrend,
+  NowcastSummary,
+  Spot,
+  SpotScoreResult
+} from './src/types';
 
 // Desktop web should not read as a phone screen inside a browser: full-bleed
 // scroll surfaces are capped and centered so line lengths and layout stay
@@ -91,6 +100,7 @@ type TabsRootProps = {
   sightingPossibleFrom: string | null;
   darkness: DarknessSeasonState | null;
   level: AuroraLevel;
+  nowcast: NowcastSummary | undefined;
   refresh: () => Promise<void>;
   onOpenSettings: () => void;
 };
@@ -111,6 +121,7 @@ function TabsRoot({
   sightingPossibleFrom,
   darkness,
   level,
+  nowcast,
   refresh,
   onOpenSettings
 }: TabsRootProps) {
@@ -193,6 +204,7 @@ function TabsRoot({
               sightingPossibleFrom={sightingPossibleFrom}
               darkness={darkness}
               level={level}
+              nowcast={nowcast}
               refresh={refresh}
             />
           </WebPage>
@@ -294,6 +306,7 @@ export default function App() {
                 sightingPossibleFrom={forecast.sightingPossibleFrom}
                 darkness={forecast.darkness}
                 level={forecast.level}
+                nowcast={forecast.nowcast}
                 refresh={forecast.refresh}
               />
             )}

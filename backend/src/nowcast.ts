@@ -458,6 +458,7 @@ export async function fetchTgoDisturbanceWithQuality(): Promise<TgoReading> {
 // docs/nowcast.md's threshold table (marked as priors pending validation).
 // -----------------------------------------------------------------------------
 
+// TWIN-BLOCK-BEGIN deriveNowcastLevel
 /** Southward (negative) Bz, nT, GSM -- the primary aurora-coupling driver.
  * Rationale for the two southward cut points: -5 nT is a commonly-cited
  * "geomagnetic activity likely" threshold in space-weather nowcasting
@@ -535,6 +536,7 @@ export function deriveNowcastLevel(inputs: NowcastLevelInputs): NowcastLevel {
   if (bzStirring || ovationStirring) return 'stirring';
   return 'quiet';
 }
+// TWIN-BLOCK-END deriveNowcastLevel
 
 // -----------------------------------------------------------------------------
 // Combine everything into the snapshot-facing NowcastSummary.

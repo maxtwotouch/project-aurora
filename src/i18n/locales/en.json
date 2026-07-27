@@ -263,6 +263,21 @@
     "weatherFallback_one": "Weather data is estimated for {{count}} spot because forecast fetches failed.",
     "weatherFallback_other": "Weather data is estimated for {{count}} spots because forecast fetches failed."
   },
+  "nowcast": {
+    "eyebrow": "Right now",
+    "level": {
+      "quiet": "Quiet",
+      "stirring": "Stirring",
+      "active": "Active",
+      "storming": "Storming"
+    },
+    "bzCaption": {
+      "southward": "Southward magnetic field — this favors aurora activity.",
+      "northward": "Northward magnetic field — less favorable for aurora right now."
+    },
+    "leadTime": "~{{minutes}} min heads-up before it reaches Earth",
+    "dataAge": "Solar wind reading {{time}}"
+  },
   "hourlyTimeline": {
     "defaultA11yLabel": "Hourly forecast timeline",
     "barLabelPlain": "{{hour}}, {{percent}} percent",

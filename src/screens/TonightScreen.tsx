@@ -14,6 +14,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 
 import { HeroSection } from '../components/tonight/HeroSection';
+import { NowcastPanel } from '../components/tonight/NowcastPanel';
 import { OutlookCard } from '../components/tonight/OutlookCard';
 import { QuickNavChips } from '../components/tonight/QuickNavChips';
 import { SpotListSection } from '../components/tonight/SpotListSection';
@@ -24,7 +25,16 @@ import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
 import { motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
-import type { AppDataQuality, AuroraLevel, DarknessSeasonState, GeneralForecastScore, KpTrend, Spot, SpotScoreResult } from '../types';
+import type {
+  AppDataQuality,
+  AuroraLevel,
+  DarknessSeasonState,
+  GeneralForecastScore,
+  KpTrend,
+  NowcastSummary,
+  Spot,
+  SpotScoreResult
+} from '../types';
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
@@ -41,6 +51,7 @@ type Props = {
   sightingPossibleFrom: string | null;
   darkness: DarknessSeasonState | null;
   level: AuroraLevel;
+  nowcast: NowcastSummary | undefined;
   refresh: () => Promise<void>;
 };
 
@@ -59,6 +70,7 @@ export function TonightScreen({
   sightingPossibleFrom,
   darkness,
   level,
+  nowcast,
   refresh
 }: Props) {
   const { t } = useTranslation();
@@ -171,6 +183,13 @@ export function TonightScreen({
         bestSpotData={bestSpotData}
         onOpenSpot={onOpenSpot}
       />
+
+      {/* "Right now" (live solar wind + OVATION) sits alongside -- never
+          inside -- the hero's own "tonight" planning recommendation; see
+          docs/nowcast.md for why the two signals are deliberately
+          independent. Renders nothing when there's no nowcast to show or
+          while the season is closed -- see NowcastPanel's own header comment. */}
+      <NowcastPanel nowcast={nowcast} seasonClosed={seasonClosed} />
 
       <QuickNavChips opacity={secondaryAnim} />
 
