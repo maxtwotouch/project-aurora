@@ -144,3 +144,52 @@ test('recordRefreshOutcome(false) with no error argument falls back to a default
   assert.equal(status.lastRefreshSucceeded, false);
   assert.equal(status.lastRefreshError, 'Unknown error');
 });
+
+test('a nowcast-bearing snapshot round-trips through setLatestSnapshot -> disk -> loadSnapshotFromDisk intact', async () => {
+  const updatedAt = '2026-07-27T08:30:00.000Z';
+  const snapshotWithNowcast: TonightSnapshot = {
+    ...makeSnapshot(updatedAt),
+    dataQuality: { usingFallbackKp: false, fallbackWeatherSpotIds: [], usingFallbackNowcast: false },
+    nowcast: {
+      updatedAt,
+      level: 'active',
+      bz: -6,
+      solarWindSpeed: 400,
+      solarWindDensity: 2,
+      leadTimeMinutes: 62,
+      ovationProbability: 25,
+      ovationForecastTime: '2026-07-27T09:35:00Z',
+      tgoDisturbanceNt: null,
+      sourcesAvailable: ['solar_wind', 'ovation']
+    }
+  };
+
+  await store.setLatestSnapshot(snapshotWithNowcast);
+
+  // A few minutes after updatedAt: well under the default staleness threshold.
+  const now = new Date('2026-07-27T08:35:00.000Z').getTime();
+  await store.loadSnapshotFromDisk(now);
+
+  const loaded = store.getLatestSnapshot();
+  assert.notEqual(loaded, null);
+  assert.deepEqual(loaded?.nowcast, snapshotWithNowcast.nowcast);
+  assert.equal(loaded?.dataQuality.usingFallbackNowcast, false);
+  assert.equal(loaded?.dataQuality.staleSnapshot, false);
+});
+
+test('an old (pre-nowcast) snapshot on disk -- with no `nowcast` field and no `usingFallbackNowcast` flag ' +
+  '-- still parses through loadSnapshotFromDisk with nowcast simply absent (additive/optional field contract)', async () => {
+  const updatedAt = '2026-01-01T00:00:00.000Z';
+  await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
+  // makeSnapshot()'s dataQuality has no usingFallbackNowcast key at all,
+  // simulating a snapshot written by a pre-nowcast build of this backend.
+  await fs.writeFile(snapshotPath, JSON.stringify(makeSnapshot(updatedAt)), 'utf8');
+
+  const now = new Date('2026-01-01T00:05:00.000Z').getTime();
+  await store.loadSnapshotFromDisk(now);
+
+  const loaded = store.getLatestSnapshot();
+  assert.notEqual(loaded, null);
+  assert.equal(loaded?.nowcast, undefined);
+  assert.equal(loaded?.dataQuality.usingFallbackNowcast, undefined);
+});
