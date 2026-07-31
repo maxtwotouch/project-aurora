@@ -19,6 +19,15 @@ backend/data/usage-stats.json
 # firedTiers, totalFired}, see alerts.ts's PersistedAlertState.
 backend/data/alerts-state.json
 
+# Scoring-validation loop prediction/observed-outcome logs
+# (backend/src/validation.ts). Same reasoning as usage-stats.json /
+# alerts-state.json above: locally-regenerated, ever-growing logs (pruned by
+# VALIDATION_RETENTION_DAYS), not seed files worth tracking. Contains no user
+# data -- only our own model's predicted scores/windows and NOAA's publicly
+# published measured Kp, see validation.ts's PredictionRecord/ObservedNightRecord.
+backend/data/predictions.jsonl
+backend/data/observed.jsonl
+
 .worktrees/.worktrees/
 .worktrees/
 
