@@ -18,6 +18,7 @@ import { registerEventRoutes } from './events.js';
 import { registerStatsRoutes } from './stats.js';
 import { usageCounterStore } from './usageStore.js';
 import { checkAlertTriggers, loadAlertStateFromDisk } from './alerts.js';
+import { recordValidationTick, registerValidationRoutes } from './validation.js';
 
 export type BuildAppOptions = {
   adminToken?: string;
@@ -68,6 +69,19 @@ export async function refreshSnapshot(): Promise<void> {
       console.warn(
         '[alerts] checkAlertTriggers failed; snapshot refresh still succeeded.',
         alertError instanceof Error ? alertError.message : alertError
+      );
+    }
+
+    // Scoring-validation loop (backend/src/validation.ts): records this
+    // tick's predictions and, once a night is over, NOAA's measured outcome
+    // for it. Same fail-safe shape as the alerts call above -- a validation
+    // failure must never fail the refresh itself.
+    try {
+      await recordValidationTick(snapshot);
+    } catch (validationError) {
+      console.warn(
+        '[validation] recordValidationTick failed; snapshot refresh still succeeded.',
+        validationError instanceof Error ? validationError.message : validationError
       );
     }
   } catch (error) {
@@ -182,6 +196,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   // same wiring as the real server.
   registerEventRoutes(app);
   registerStatsRoutes(app, adminToken);
+  registerValidationRoutes(app, adminToken);
 
   return app;
 }
