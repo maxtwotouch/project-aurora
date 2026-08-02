@@ -5,20 +5,23 @@ a single static landing page (`public/go.html`) that every QR code, ad, and outr
 link points at, with a per-channel `?src=` tag so we *could* measure conversion later
 — before any marketing budget is actually spent.
 
-`public/go.html` is served from the same GitHub Pages deploy as the app (Expo's web
-export copies the repo's `public/` directory into `dist/` verbatim), so it needs no
-separate hosting, build step, or deploy workflow change.
+`public/go.html` is served by the app's live deploy — **Cloudflare Pages, built from
+`main`** (owner-managed hosting; earlier drafts of this doc assumed GitHub Pages, which
+is not what's actually live — see "Custom domain" below), so it needs no separate
+hosting, build step, or deploy workflow change beyond what's already wired up.
+
+One consequence worth knowing when printing/embedding a URL: Cloudflare Pages serves
+**pretty URLs**, so `go.html` is reachable at the extensionless path `/go`. Requesting
+`/go.html` directly still works but 308-redirects to `/go` first (query string
+preserved across the hop) — always link the pretty `/go` form directly rather than
+`/go.html`, to avoid that extra redirect on every printed/shared link.
 
 ## Full landing URL pattern
 
-```
-https://<owner>.github.io/project-aurora/go.html?src=<channel>
-```
-
-Today that resolves to (owner/repo taken from the existing Pages deploy):
+Live-verified (curl) form — use this exact pattern for every channel:
 
 ```
-https://maxtwotouch.github.io/project-aurora/go.html?src=<channel>
+https://aurora.hovding.dev/go?src=<channel>
 ```
 
 The page reads `?src=` and appends it unchanged to the "Open the app" link
@@ -40,6 +43,7 @@ are added; keep this list as the source of truth for which slugs exist):
 | `search` | Geo-fenced search ads ("northern lights tromsø tonight" family) |
 | `social` | Meta/TikTok geo+interest campaigns |
 | `listicle` | Blogger/listicle outreach ("best aurora apps") |
+| `share` | In-app "send tonight to a friend" share action (ShareButton, `src/share/shareMessage.ts`) |
 
 When a new placement is added, pick a new slug following the same pattern
 (`<context>-<medium>`, e.g. `airport-poster`, `hostel-front-desk`) and add it to this
@@ -51,10 +55,10 @@ with what's actually printed/published.
 No QR-generation tooling is checked into this repo (there's nothing to build — a QR
 code is just an encoding of the URL string above). To produce one for a channel:
 
-1. Build the URL: `https://maxtwotouch.github.io/project-aurora/go.html?src=hotel-qr`
+1. Build the URL: `https://aurora.hovding.dev/go?src=hotel-qr`
    (substitute the channel's slug from the table above).
 2. Generate the QR image with any standard QR tool, e.g.:
-   - `qrencode -o hotel-qr.png "https://maxtwotouch.github.io/project-aurora/go.html?src=hotel-qr"`
+   - `qrencode -o hotel-qr.png "https://aurora.hovding.dev/go?src=hotel-qr"`
      (the `qrencode` CLI, or any equivalent generator/website).
    - Prefer a generator that supports error-correction level M or higher and lets you
      export SVG/PNG at print resolution (physical QR placements, e.g. hotel table
@@ -75,11 +79,11 @@ silently" guidance — flagging rather than deciding them:
   *any* such snippet is privacy-sensitive per `CLAUDE.md`'s guardrails: it requires a
   `docs/privacy-usage-events.md`-style write-up of exactly what's collected and human
   review before merge — never an agentic merge.
-- **Custom domain.** The URL pattern above uses the default
-  `github.io/project-aurora/` path. A custom domain (e.g. something shorter for
-  print/QR use) is a separate owner decision (registration, DNS, HTTPS, and whether
-  GitHub Pages' custom-domain support is used or a redirect layer is added) and is out
-  of scope here.
+- **Custom domain.** Already resolved, correcting an earlier assumption in this doc:
+  the app is live on Cloudflare Pages under the custom domain `aurora.hovding.dev`
+  (built from `main`, owner-managed), not GitHub Pages under a `github.io` path. No
+  further decision needed here — the "Full landing URL pattern" above reflects the
+  real, live-verified URL.
 
 ## Explicitly out of scope (this doc/PR)
 
