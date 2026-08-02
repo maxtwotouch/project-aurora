@@ -333,5 +333,22 @@
       "titleGe45": "Aurora-Chance heute Nacht",
       "body": "{{spotName}} erreicht {{score}}/100 — bestes Zeitfenster {{start}}–{{end}}."
     }
+  },
+  "share": {
+    "button": {
+      "label": "Teilen",
+      "a11y": "Heutige Polarlicht-Vorhersage teilen",
+      "copied": "Link kopiert"
+    },
+    "message": {
+      "chanceGreat": "Heute Nacht sehr gute Chancen auf Polarlicht in Tromsø!",
+      "chancePossible": "Heute Nacht vielleicht Polarlicht in Tromsø!",
+      "chanceLow": "Heute Nacht geringe Polarlicht-Chancen in Tromsø, aber ein Blick lohnt sich.",
+      "bestSpotLine": "Bester Ort: {{spot}} ({{window}})",
+      "seasonClosedLine1": "Die Polarlicht-Saison in Tromsø ist gerade geschlossen.",
+      "seasonClosedLine2": "Sie beginnt wieder um den {{date}} — plane deine Reise!",
+      "genericLine1": "Planst du eine Polarlicht-Reise nach Tromsø?",
+      "genericLine2": "Sieh dir die heutige Vorhersage und den besten Ort an."
+    }
   }
 }

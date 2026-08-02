@@ -40,6 +40,7 @@ are added; keep this list as the source of truth for which slugs exist):
 | `search` | Geo-fenced search ads ("northern lights tromsø tonight" family) |
 | `social` | Meta/TikTok geo+interest campaigns |
 | `listicle` | Blogger/listicle outreach ("best aurora apps") |
+| `share` | In-app "send tonight to a friend" share action (ShareButton, `src/share/shareMessage.ts`) |
 
 When a new placement is added, pick a new slug following the same pattern
 (`<context>-<medium>`, e.g. `airport-poster`, `hostel-front-desk`) and add it to this

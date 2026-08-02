@@ -19,9 +19,11 @@ import { OutlookCard } from '../components/tonight/OutlookCard';
 import { QuickNavChips } from '../components/tonight/QuickNavChips';
 import { SpotListSection } from '../components/tonight/SpotListSection';
 import { decisionKey, isLikelyDaytime } from '../components/tonight/decision';
+import { ShareButton } from '../components/ShareButton';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
+import type { ShareTonightState } from '../share/shareMessage';
 import { palette } from '../theme/palette';
 import { motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
@@ -105,6 +107,17 @@ export function TonightScreen({
   // tomorrowScore.score is non-zero and this stays true -- the card is
   // meant to show that "tomorrow it begins" case.
   const showTomorrowEvening = Boolean(tomorrowScore) && !(seasonClosed && tomorrowScore?.score === 0);
+  // Narrowed down to exactly what src/share/shareMessage.ts needs -- see
+  // that module for the "season closed" / "no data yet" fallback copy this
+  // feeds into.
+  const shareState: ShareTonightState = {
+    seasonClosed,
+    seasonReturns: darkness?.seasonReturns ?? null,
+    bestSpotName: bestSpot?.spotName ?? null,
+    score: bestSpot?.score ?? null,
+    bestWindowStart: bestSpot?.bestWindowStart ?? null,
+    bestWindowEnd: bestSpot?.bestWindowEnd ?? null
+  };
 
   useEffect(() => {
     if (reducedMotion) {
@@ -183,6 +196,15 @@ export function TonightScreen({
         bestSpotData={bestSpotData}
         onOpenSpot={onOpenSpot}
       />
+
+      {/* Compact, secondary "send tonight to a friend" action -- sits right
+          under the hero (the one dominant recommendation) rather than
+          inside it, so it never competes with BestSpotPanel's primary
+          Navigate CTA. See ShareButton.tsx's header for the web
+          share/clipboard-fallback behavior. */}
+      <View style={styles.shareRow}>
+        <ShareButton state={shareState} spotId={bestSpot?.spotId ?? null} />
+      </View>
 
       {/* "Right now" (live solar wind + OVATION) sits alongside -- never
           inside -- the hero's own "tonight" planning recommendation; see
@@ -264,6 +286,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: palette.night
+  },
+  shareRow: {
+    alignItems: 'flex-end',
+    marginBottom: space.lg
   },
   atmosphereTop: {
     position: 'absolute',
