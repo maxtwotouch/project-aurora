@@ -23,11 +23,11 @@ function makeState(overrides: Partial<ShareTonightState> = {}): ShareTonightStat
 
 describe('shareMessage: buildShareUrl', () => {
   test('defaults to the "share" channel slug', () => {
-    assert.equal(buildShareUrl(), 'https://aurora.hovding.dev/go.html?src=share');
+    assert.equal(buildShareUrl(), 'https://aurora.hovding.dev/go?src=share');
   });
 
   test('accepts a custom channel slug', () => {
-    assert.equal(buildShareUrl('hotel-qr'), 'https://aurora.hovding.dev/go.html?src=hotel-qr');
+    assert.equal(buildShareUrl('hotel-qr'), 'https://aurora.hovding.dev/go?src=hotel-qr');
   });
 });
 
@@ -35,8 +35,8 @@ describe('shareMessage: buildShareMessage (tonight has data)', () => {
   test('includes the best spot name, the link, and the share channel param', () => {
     const { text, url } = buildShareMessage(makeState(), { language: 'en' });
     assert.match(text, /Ersfjordbotn/);
-    assert.match(text, /https:\/\/aurora\.hovding\.dev\/go\.html\?src=share/);
-    assert.equal(url, 'https://aurora.hovding.dev/go.html?src=share');
+    assert.match(text, /https:\/\/aurora\.hovding\.dev\/go\?src=share/);
+    assert.equal(url, 'https://aurora.hovding.dev/go?src=share');
     assert.ok(text.includes(url));
   });
 
@@ -69,7 +69,7 @@ describe('shareMessage: buildShareMessage (tonight has data)', () => {
   test('respects a custom channel slug in the embedded link', () => {
     const { text, url } = buildShareMessage(makeState(), { language: 'en', channel: 'hotel-qr' });
     assert.match(text, /src=hotel-qr/);
-    assert.equal(url, 'https://aurora.hovding.dev/go.html?src=hotel-qr');
+    assert.equal(url, 'https://aurora.hovding.dev/go?src=hotel-qr');
   });
 });
 

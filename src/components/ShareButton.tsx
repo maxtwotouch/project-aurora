@@ -45,24 +45,36 @@ export function ShareButton({ state, spotId }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handlePress = async () => {
-    if (spotId) {
-      trackUnlessPreview('spot_shared', spotId);
-    }
-
     const { text } = buildShareMessage(state, { language: getCurrentLanguage() });
 
     try {
-      await Share.share({ message: text });
+      const result = await Share.share({ message: text });
+      // Fire the (optional) usage event only after the share sheet actually
+      // resolves, and only for an outcome that isn't a plain dismissal --
+      // firing on press (before the user has done anything) would count
+      // cancellations as shares.
+      //
+      // PLATFORM ASYMMETRY: iOS reports a real dismissal (`action:
+      // 'dismissedAction'`) when the user backs out of the native sheet
+      // without picking a target, so this check is an accurate "did they
+      // actually share" signal there. Android's Share module has no
+      // equivalent signal -- it always resolves with `sharedAction`
+      // regardless of what the user did in the OS sheet (an Android/RN
+      // limitation, not something this app can detect), so on Android this
+      // event really means "the share sheet was opened", not "content was
+      // actually sent" -- still a reasonable aggregate "share intent"
+      // signal, just a slightly looser one than iOS's.
+      if (spotId && result.action !== Share.dismissedAction) {
+        trackUnlessPreview('spot_shared', spotId);
+      }
       return;
     } catch {
-      // On iOS, the user dismissing the native sheet resolves the promise
-      // (action: 'dismissedAction') rather than rejecting it, so a catch
-      // here is a genuine failure -- most commonly react-native-web's
-      // Share.share rejecting with "Share is not supported in this
-      // browser" when `navigator.share` isn't available. Native failures
-      // (rare) have no further fallback and are dropped silently here,
-      // matching BestSpotPanel/SpotDetailScreen's fire-and-forget
-      // `Linking.openURL` calls elsewhere in this app.
+      // A genuine failure (not a cancellation -- see above) -- most
+      // commonly react-native-web's Share.share rejecting with "Share is
+      // not supported in this browser" when `navigator.share` isn't
+      // available. Native failures (rare) have no further fallback and are
+      // dropped silently here, matching BestSpotPanel/SpotDetailScreen's
+      // fire-and-forget `Linking.openURL` calls elsewhere in this app.
     }
 
     if (Platform.OS !== 'web') return;
@@ -71,9 +83,16 @@ export function ShareButton({ state, spotId }: Props) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      // Clipboard write succeeded -- the closest web equivalent to a
+      // completed share (there is no dismissal signal to check against on
+      // this path, unlike the native Share.share branch above).
+      if (spotId) {
+        trackUnlessPreview('spot_shared', spotId);
+      }
     } catch {
       // Clipboard permission denied/unavailable in this browser -- degrade
-      // to a silent no-op rather than throwing into the UI.
+      // to a silent no-op rather than throwing into the UI. No event is
+      // recorded since nothing was actually shared/copied.
     }
   };
 

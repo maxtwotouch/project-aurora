@@ -30,7 +30,13 @@ const CATALOGS: Record<SupportedLanguage, typeof en> = { en, de, fr, es, zh };
 // same host) -- see docs/marketing-channels.md for the `?src=<channel>`
 // convention this reuses. `share` is a new channel slug for this feature
 // (added to that doc's table in this same change).
-const LANDING_URL = 'https://aurora.hovding.dev/go.html';
+//
+// Deliberately `/go`, NOT `/go.html`: live-verified (curl) that the real
+// deployment is Cloudflare Pages from `main`, which serves pretty URLs and
+// 308-redirects `/go.html?src=share` -> `/go?src=share` (query string
+// preserved across the redirect). Using the final `/go` form directly here
+// avoids that extra redirect hop on every link a user actually shares.
+const LANDING_URL = 'https://aurora.hovding.dev/go';
 const DEFAULT_SHARE_CHANNEL = 'share';
 
 /** Mirrors alertsClient.ts's own `interpolate` -- same non-throwing,
