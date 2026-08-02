@@ -333,5 +333,22 @@
       "titleGe45": "Aurora chance tonight",
       "body": "{{spotName}} is scoring {{score}}/100 — best window {{start}}–{{end}}."
     }
+  },
+  "share": {
+    "button": {
+      "label": "Share",
+      "a11y": "Share tonight's aurora forecast",
+      "copied": "Link copied"
+    },
+    "message": {
+      "chanceGreat": "Great chance of northern lights tonight in Tromsø!",
+      "chancePossible": "Northern lights might be visible tonight in Tromsø!",
+      "chanceLow": "Aurora chances look low tonight in Tromsø, but worth a look.",
+      "bestSpotLine": "Best spot: {{spot}} ({{window}})",
+      "seasonClosedLine1": "Aurora season is closed in Tromsø right now.",
+      "seasonClosedLine2": "It returns around {{date}} — plan your trip!",
+      "genericLine1": "Thinking about the northern lights in Tromsø?",
+      "genericLine2": "Check tonight's forecast and the best viewing spot."
+    }
   }
 }

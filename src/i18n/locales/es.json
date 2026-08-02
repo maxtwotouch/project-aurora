@@ -333,5 +333,22 @@
       "titleGe45": "Posibilidad de aurora esta noche",
       "body": "{{spotName}} tiene {{score}}/100 — mejor ventana {{start}}–{{end}}."
     }
+  },
+  "share": {
+    "button": {
+      "label": "Compartir",
+      "a11y": "Compartir el pronóstico de auroras de esta noche",
+      "copied": "Enlace copiado"
+    },
+    "message": {
+      "chanceGreat": "¡Muy buenas probabilidades de auroras boreales esta noche en Tromsø!",
+      "chancePossible": "¡Esta noche podrían verse auroras boreales en Tromsø!",
+      "chanceLow": "Pocas probabilidades de auroras esta noche en Tromsø, pero vale la pena mirar.",
+      "bestSpotLine": "Mejor lugar: {{spot}} ({{window}})",
+      "seasonClosedLine1": "La temporada de auroras en Tromsø está cerrada por ahora.",
+      "seasonClosedLine2": "Vuelve alrededor del {{date}} — ¡planea tu viaje!",
+      "genericLine1": "¿Planeas un viaje para ver la aurora boreal en Tromsø?",
+      "genericLine2": "Consulta el pronóstico de esta noche y el mejor lugar."
+    }
   }
 }

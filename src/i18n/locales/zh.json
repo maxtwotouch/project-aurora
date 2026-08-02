@@ -333,5 +333,22 @@
       "titleGe45": "今晚有极光机会",
       "body": "{{spotName}} 评分 {{score}}/100 — 最佳时段 {{start}}–{{end}}。"
     }
+  },
+  "share": {
+    "button": {
+      "label": "分享",
+      "a11y": "分享今晚的极光预报",
+      "copied": "链接已复制"
+    },
+    "message": {
+      "chanceGreat": "今晚特罗姆瑟观赏极光的机会很大！",
+      "chancePossible": "今晚特罗姆瑟或许能看到极光！",
+      "chanceLow": "今晚特罗姆瑟观赏极光的机会较低，不过仍值得一看。",
+      "bestSpotLine": "最佳地点：{{spot}}（{{window}}）",
+      "seasonClosedLine1": "特罗姆瑟的极光季目前暂未开始。",
+      "seasonClosedLine2": "预计将于{{date}}左右回归——提前规划你的行程吧！",
+      "genericLine1": "计划去特罗姆瑟看极光吗？",
+      "genericLine2": "查看今晚的预报和最佳观赏地点吧。"
+    }
   }
 }
