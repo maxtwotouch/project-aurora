@@ -21,7 +21,7 @@ Goal: the full stack is running in production and installable by us.
 | # | Item | Who |
 |---|------|-----|
 | 0.1 | Enable GitHub Pages (Settings → Pages → GitHub Actions) → public web app | Owner (1 click) |
-| 0.2 | Fly.io account + `FLY_API_TOKEN` secret → backend live; set `ADMIN_TOKEN` | Owner (~15 min) |
+| 0.2 | ~~Fly.io account → backend live; set `ADMIN_TOKEN`~~ DONE 2026-08-18 (Fly GitHub integration, app `project-aurora`) | Owner |
 | 0.3 | Point a web build at the live backend (backend-mode Pages build or second env) | Agent |
 | 0.4 | Uptime monitoring on `/v1/health` (free tier checker) + alert to owner email | Owner acct, agent config |
 | 0.5 | Privacy policy page (drafted from docs/privacy-usage-events.md) — required by app stores | Agent drafts, owner approves |
