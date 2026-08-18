@@ -34,7 +34,7 @@ Verdicts: **OK** = on land with road access, unchanged. **FIXED** = pin was
 in water or clearly displaced; high-confidence correction applied to
 `spots.json`. **NEEDS-OWNER** = ambiguous; left unchanged, decision needed.
 
-**Result: 17 OK · 9 FIXED · 2 NEEDS-OWNER.**
+**Result: 17 OK · 9 FIXED · 2 NEEDS-OWNER — both since RESOLVED by owner (2026-08-19), see below.**
 
 The nine bad pins share a pattern: eight sit in the sea west/off of Kvaløya
 or in roadless terrain at longitudes ~18.13–18.37 / displaced 3–20 km from
@@ -56,12 +56,12 @@ Radius = recommended Trip-mode geofence radius (m). Evidence links open the
 | sandvika_beach | OK | — | House on Nordvegen 78 m; residential road + beach tracks. | 500 |
 | skulsfjord | **FIXED** | 69.7280, 18.2840 → **69.8006, 18.7525** | OSM parking named "Skulsfjord" with adjacent "Skulsfjord" bus stop on Skulsfjordvegen. Old pin: open sea. [map](https://www.openstreetmap.org/?mlat=69.8006&mlon=18.7525#map=16/69.8006/18.7525) | 500 |
 | tromvik | **FIXED** | 69.7766, 18.1322 → **69.7794, 18.3991** | Tromvik village centre (OSM place node), Tromtindvegen fv7768 24 m away; bus stop "Tromvik" 580 m. Old pin: ~10 km west, roadless shore/islet (0 roads within 1.5 km). [map](https://www.openstreetmap.org/?mlat=69.7794&mlon=18.3991#map=16/69.7794/18.3991) | 500 |
-| grunnfjord | **NEEDS-OWNER** | 69.7720, 18.1980 (unchanged) | Pin is in open sea west of Kvaløya. The only matching place in reach is Grunnfjorden hamlet on Ringvassøya (Karlsøy), proposed **69.9925, 19.5607** (road 23 m away, straight-line 32 km ≈ but ~70 km by road via Hansnes, vs `distanceKm: 45`). No Grunnfjord exists on Kvaløya near the other spots. Can't confirm intent. [proposed](https://www.openstreetmap.org/?mlat=69.9925&mlon=19.5607#map=15/69.9925/19.5607) | 500 |
+| grunnfjord | **RESOLVED** (owner: move to Grunnfjorden, Ringvassøya; now 69.9925, 19.5607, distanceKm 45→70 road via Hansnes) | was 69.7720, 18.1980 | Pin is in open sea west of Kvaløya. The only matching place in reach is Grunnfjorden hamlet on Ringvassøya (Karlsøy), proposed **69.9925, 19.5607** (road 23 m away, straight-line 32 km ≈ but ~70 km by road via Hansnes, vs `distanceKm: 45`). No Grunnfjord exists on Kvaløya near the other spots. Can't confirm intent. [proposed](https://www.openstreetmap.org/?mlat=69.9925&mlon=19.5607#map=15/69.9925/19.5607) | 500 |
 | telegrafbukta | OK | — | Parking 256 m (Folkeparken area), residential roads. | 500 |
 | prestvannet | OK | — | 75 m from Sommerlyst skole, at the lake's south side near listed parkings. | 500 |
 | fjellheisen_storsteinen | OK | — | ~100 m from OSM parking named "Fjellheisen" (Sollivegen); cable-car base 300 m. | 150 |
 | floya | OK | — | On "Langbakken" path at the Fløya/Sherpa-stairs trailhead in Tromsdalen (note: trailhead, not the 671 m summit — consistent with how visitors park and walk). | 150 |
-| vardentoppen | **NEEDS-OWNER** | 69.6650, 18.9350 (unchanged) | Pin sits on a private house (Workinntoppen 11, 31 m). On land with roads, but a "hilltop viewpoint" shouldn't pin a residence. Nearest mapped viewpoint on the Tromsøya lit-trail ridge is 490 m south at **69.6606, 18.9358** — likely the intended Varden viewpoint, but unnamed in OSM so intent unconfirmed. [proposed](https://www.openstreetmap.org/?mlat=69.6606&mlon=18.9358#map=16/69.6606/18.9358) | 500 |
+| vardentoppen | **RESOLVED** (owner: snap to ridge viewpoint; now 69.6606, 18.9358) | was 69.6650, 18.9350 | Pin sits on a private house (Workinntoppen 11, 31 m). On land with roads, but a "hilltop viewpoint" shouldn't pin a residence. Nearest mapped viewpoint on the Tromsøya lit-trail ridge is 490 m south at **69.6606, 18.9358** — likely the intended Varden viewpoint, but unnamed in OSM so intent unconfirmed. [proposed](https://www.openstreetmap.org/?mlat=69.6606&mlon=18.9358#map=16/69.6606/18.9358) | 500 |
 | breivikeidet_valley | **FIXED** | 69.6360, 19.6160 → **69.6566, 19.5716** | Parking named "Breivikeidet skole" (way 170825978) on fv91 at Breivikeidet hamlet, next to "Hov kryss"/"Breivikeidet skole" bus stops (spot's `parking`: "Breivikeidet"). Old pin: mid-valley terrain, nearest real road 1.2 km. [map](https://www.openstreetmap.org/?mlat=69.6566&mlon=19.5716#map=16/69.6566/19.5716) | 500 |
 | oldervik | **FIXED** | 69.7617, 19.5306 → **69.7568, 19.6758** | Oldervik hamlet centre on Oldervikvegen (5 m), "Oldervik" bus stop 190 m. Old pin: 5.6 km west on a roadless hillside ("Grønnheia"). [map](https://www.openstreetmap.org/?mlat=69.7568&mlon=19.6758#map=16/69.7568/19.6758) | 500 |
 | lyngseidet | OK | — | Lyngseidet centre, Kjosveien 7 m, fv91. | 500 |
@@ -129,7 +129,13 @@ the road-distance interpretation, with one caveat:
   distance (~70 km) to the proposed Ringvassøya Grunnfjorden — one more
   reason that spot is NEEDS-OWNER.
 
-## NEEDS-OWNER summary
+## Owner decisions (2026-08-19)
+
+1. **grunnfjord** → moved to Grunnfjorden, Ringvassøya (69.9925, 19.5607); `distanceKm` corrected 45 → 70 (road via Hansnes).
+2. **vardentoppen** → snapped to the Tromsøya ridge viewpoint (69.6606, 18.9358).
+3. **fjellheisen_storsteinen / floya** → kept as separate spots with 150 m Trip-mode geofence radii each (owner confirmed).
+
+## NEEDS-OWNER summary (historical, both resolved above)
 
 1. **grunnfjord** — pin is in the open sea; the only real "Grunnfjorden"
    in range is on north Ringvassøya (Karlsøy), proposed 69.9925, 19.5607,
