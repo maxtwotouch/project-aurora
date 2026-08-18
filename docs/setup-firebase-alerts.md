@@ -85,9 +85,9 @@ So there's no rush and no risk in deploying the code before doing this.
 
 ## 4. Set the secrets on Fly
 
-This app deploys to Fly (`fly.toml`, deployed automatically by Fly.io's
-GitHub integration on pushes to main). Secrets are set via `flyctl` or the
-Fly dashboard's Secrets tab, never in
+This app deploys to Fly (`fly.toml`, deployed by
+`.github/workflows/deploy.yml` on pushes to main). Secrets are set via
+`flyctl` or the Fly dashboard's Secrets tab, never in
 `fly.toml` or any committed file (see `fly.toml`'s own comment on this for
 `ADMIN_TOKEN`/`CORS_ORIGINS` -- same rule applies here).
 

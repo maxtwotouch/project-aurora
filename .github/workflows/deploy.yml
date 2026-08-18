@@ -1,0 +1,61 @@
+# Deploys the backend to Fly.io from GitHub Actions.
+#
+# Auth: the FLY_API_TOKEN repository secret — an app-scoped DEPLOY token for
+# the `project-aurora` Fly app (create via the app's Tokens tab or
+# `fly tokens create deploy -a project-aurora -x 8760h`), NOT a personal
+# access token. Rotate yearly.
+#
+# The Fly dashboard's GitHub integration is intentionally NOT used — this
+# workflow is the single deploy path, so every deploy is a visible run with
+# logs. The app and its `aurora_data` volume already exist; this workflow
+# only deploys, it never creates or destroys infrastructure.
+
+name: Deploy backend to Fly.io
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "src/data/spots.json"
+      - "fly.toml"
+      - ".github/workflows/deploy.yml"
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require deploy token
+        run: |
+          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
+            echo "::error::FLY_API_TOKEN secret is not set (app-scoped deploy token for the project-aurora Fly app)."
+            exit 1
+          fi
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Verify health
+        run: |
+          APP="$(grep '^app' fly.toml | cut -d'"' -f2)"
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            if curl -fsS "https://${APP}.fly.dev/v1/health" | grep -q '"ok":true'; then
+              echo "Backend healthy after deploy."
+              exit 0
+            fi
+            echo "Attempt ${i}: not healthy yet, retrying..."
+          done
+          echo "::error::Backend failed health check after deploy."
+          exit 1

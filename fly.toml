@@ -1,13 +1,14 @@
 # Fly.io configuration for the aurora backend.
 #
-# Deployed by Fly.io's GitHub integration: the app is connected to this
-# repository in the Fly dashboard and redeploys automatically on pushes to
-# main — no GitHub Actions workflow and no FLY_API_TOKEN repo secret are
-# involved. The Docker build context is the repo root because the backend
-# imports src/data/spots.json from outside backend/ — see backend/Dockerfile.
+# Deployed by .github/workflows/deploy.yml on pushes to main (needs the
+# FLY_API_TOKEN repo secret — an app-scoped deploy token). The Fly
+# dashboard's GitHub integration is intentionally disconnected; Actions is
+# the single deploy path. The Docker build context is the repo root because
+# the backend imports src/data/spots.json from outside backend/ — see
+# backend/Dockerfile.
 #
-# The app name below must match the app connected in the Fly dashboard
-# (created 2026-08-18 via the dashboard launch flow).
+# The app name below must match the existing Fly app (created 2026-08-18;
+# owns the aurora_data volume).
 
 app = "project-aurora"
 primary_region = "arn" # Stockholm — closest Fly region to Tromsø
