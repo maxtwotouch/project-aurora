@@ -303,7 +303,7 @@
     "toggleLabel": "Trip mode",
     "description": "A separate, optional way to help while you're heading out — spot-level only, never your exact coordinates. Off by default, and you can turn it off again anytime.",
     "whatLeaves": "What leaves your phone: only \"near <spot>\" and \"stayed 20+ min\" events, tied to the spot name and the hour — nothing more precise, and nothing at all while this is off.",
-    "toggleOnHelper": "Sharing spot-level presence while Trip mode is on.",
+    "toggleOnHelper": "Will share spot-level presence once Trip mode features launch.",
     "toggleOffHelper": "Off. Nothing is shared.",
     "comingSoonNote": "This toggle is ready ahead of time — Trip mode itself activates when its features arrive in an upcoming update."
   },

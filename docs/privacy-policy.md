@@ -83,14 +83,14 @@ processed entirely **on your device** — against the fixed coordinates of the a
 viewing spots, so it can show you an "arrived at this spot" card with tonight's score and
 best viewing window for that spot.
 
-**What leaves your device.** Only two kinds of small, anonymous events, and only while Trip
+**What leaves your device.** Only two kinds of small presence events, and only while Trip
 mode is on:
 
 - that your device is currently near one of the app's named viewing spots ("presence"), and
 - that your device stayed continuously near that same spot for 20 minutes or more ("long
   presence").
 
-Each event contains only the spot's name/id and the current UTC hour — nothing else. These
+Each event contains only a spot identifier and the current UTC hour — nothing else. These
 are aggregated immediately into hourly counts per spot, the same way the anonymous usage
 counters above are, and no individual event is ever stored.
 
@@ -104,10 +104,11 @@ counters above are, and no individual event is ever stored.
 - anything at all while Trip mode is off, or while the app is backgrounded or closed — Trip
   mode never runs, and never collects anything, outside the app being open in the
   foreground.
-- No IP address or other request-identifying information (request IDs, session IDs, device
-  metadata) is retained anywhere along the path your device's request travels to reach our
-  server, specifically so that individual presence events cannot be linked into a sequence
-  after the fact.
+- Before Trip mode launches, the path your device's request travels to reach our server is
+  designed and audited so that no IP address or other request-identifying information
+  (request IDs, session IDs, device metadata) capable of linking events together is
+  retained at any point along it — specifically so individual presence events cannot be
+  reassembled into a sequence after the fact.
 
 **On anonymity.** We take a deliberately conservative position here, because a single event
 like "near Grøtfjord at 22:00" is not automatically anonymous on its own — in combination

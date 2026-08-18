@@ -190,7 +190,7 @@
     window for that spot.
   </p>
   <p>
-    <strong>What leaves your device.</strong> Only two kinds of small, anonymous events, and
+    <strong>What leaves your device.</strong> Only two kinds of small presence events, and
     only while Trip mode is on:
   </p>
   <ul>
@@ -198,7 +198,7 @@
     <li>that your device stayed continuously near that same spot for 20 minutes or more (&ldquo;long presence&rdquo;).</li>
   </ul>
   <p>
-    Each event contains only the spot&rsquo;s name/id and the current UTC hour — nothing
+    Each event contains only a spot identifier and the current UTC hour — nothing
     else. These are aggregated immediately into hourly counts per spot, the same way the
     anonymous usage counters above are, and no individual event is ever stored.
   </p>
@@ -208,7 +208,7 @@
     <li>any route, path, or sequence of spots you visited — each event stands alone; the app does not send anything that could be reassembled into where you went before or after;</li>
     <li>any device or account identifier that could link two events together;</li>
     <li>anything at all while Trip mode is off, or while the app is backgrounded or closed — Trip mode never runs, and never collects anything, outside the app being open in the foreground;</li>
-    <li>no IP address or other request-identifying information (request IDs, session IDs, device metadata) is retained anywhere along the path your device&rsquo;s request travels to reach our server, specifically so that individual presence events cannot be linked into a sequence after the fact.</li>
+    <li>before Trip mode launches, the path your device&rsquo;s request travels to reach our server is designed and audited so that no IP address or other request-identifying information (request IDs, session IDs, device metadata) capable of linking events together is retained at any point along it — specifically so individual presence events cannot be reassembled into a sequence after the fact.</li>
   </ul>
   <p>
     <strong>On anonymity.</strong> We take a deliberately conservative position here,
