@@ -141,21 +141,29 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   // below means it's also a true one-shot across remounts/tab revisits and
   // app relaunches, not just this instance.
   //
-  // The flag is written BEFORE requestLocation() is called so a crash/kill
-  // mid-prompt can never leave it unset and cause a second auto-prompt on
-  // the next open. And it only fires from a clean 'idle' status -- if the
-  // user has already reached for the locate button themselves (granted,
-  // denied, requesting, or even a still-idle-but-in-flight retry) by the
-  // time the storage read resolves, this backs off and leaves that outcome
-  // alone; useUserLocation's reducer always starts 'idle' on mount and
-  // never inspects the OS's actual permission state up front, so gating on
-  // this hook's own status (rather than trying to ask the OS) is the only
-  // signal available here -- see useUserLocation.ts's header for why.
+  // The flag is written as soon as we know it's unset -- BEFORE
+  // requestLocation() is called -- so a crash/kill mid-prompt can never
+  // leave it unset and cause a second auto-prompt on the next open. That
+  // write happens UNCONDITIONALLY once resolved+absent, regardless of
+  // whether we then actually go on to call requestLocation(): if the user
+  // has already reached for the locate button themselves (granted, denied,
+  // requesting, or even a still-idle-but-in-flight retry) by the time the
+  // storage read resolves, this still marks the flag done and skips calling
+  // requestLocation() again -- harmless either way (the OS won't re-show
+  // its own permission sheet for a second call), but leaving the flag
+  // unset in that case would contradict this effect's once-ever intent.
+  // useUserLocation's reducer always starts 'idle' on mount and never
+  // inspects the OS's actual permission state up front, so gating on this
+  // hook's own status (rather than trying to ask the OS) is the only signal
+  // available here -- see useUserLocation.ts's header for why.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      // src/lib/storage.ts swallows read/write errors by design (see its
+      // header) -- a broken storage layer just means this flag never
+      // persists and the auto-prompt re-arms every session; accepted.
       const alreadyPrompted = await getStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY);
-      if (cancelled || alreadyPrompted || locationStatusRef.current !== 'idle') return;
+      if (cancelled || alreadyPrompted) return;
       await setStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY, '1');
       if (cancelled || locationStatusRef.current !== 'idle') return;
       void requestLocation();
