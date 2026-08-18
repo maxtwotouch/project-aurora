@@ -2,7 +2,7 @@
 # frontend has a free public URL that works standalone with no backend
 # (direct-API mode: the browser calls MET/NOAA directly, same as
 # EXPO_PUBLIC_USE_BACKEND being unset). This workflow does not touch the
-# Fly.io backend deploy (see deploy.yml).
+# Fly.io backend deploy (handled by Fly.io's GitHub integration).
 #
 # One-time setup required from a human: Settings -> Pages -> Source:
 # GitHub Actions (see README "Web deployment" section).
