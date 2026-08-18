@@ -17,6 +17,7 @@ import { ScoreBadge } from '../components/ScoreBadge';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useTranslation } from '../i18n/useTranslation';
+import { getStoredItem, setStoredItem } from '../lib/storage';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
@@ -42,6 +43,15 @@ const LOCATE_BUTTON_SIZE = 44;
 const LOCATE_BUTTON_GAP = 14;
 const LOCATE_NOTE_GAP = 8;
 
+// One-shot flag (see the auto-prompt effect below): set the FIRST time this
+// screen ever auto-triggers the location permission request, so it never
+// fires again on later visits/relaunches. Not location data itself -- just
+// a boolean "have we already asked" marker -- so it's fine to persist via
+// the shared storage helper (see src/lib/storage.ts's header) despite
+// useUserLocation.ts's on-device-only constraint on the coordinates
+// themselves.
+const LOCATION_AUTO_PROMPT_STORAGE_KEY = 'aurora.locationAutoPromptDone.v1';
+
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const { t } = useTranslation();
   const sheetAnim = useRef(new Animated.Value(0)).current;
@@ -49,6 +59,15 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUser = useRef(false);
   const { status: locationStatus, coords: userCoords, requestLocation } = useUserLocation();
+  // Mirrors locationStatus into a ref so the auto-prompt effect below (which
+  // intentionally runs only once, on mount) can read the LATEST status right
+  // before firing rather than a value captured at mount time -- guards
+  // against the rare race where the user taps the locate button themselves
+  // while the auto-prompt's storage read is still in flight.
+  const locationStatusRef = useRef(locationStatus);
+  useEffect(() => {
+    locationStatusRef.current = locationStatus;
+  }, [locationStatus]);
   const tabBarSpace = useBottomTabBarSpace();
   // Measured height of whichever bottom sheet (selected-spot or empty) is
   // currently rendered -- both share this handler via onLayout so the
@@ -113,6 +132,39 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
       600
     );
   }, [userCoords]);
+
+  // Auto-trigger the SAME requestLocation() flow the locate button uses,
+  // in-context, the first time the user ever opens this screen -- an
+  // explicit product decision to prompt where location is relevant (looking
+  // at the map) rather than at app launch or only via the button. Runs once
+  // per screen instance (empty deps -- mount only) and the persisted flag
+  // below means it's also a true one-shot across remounts/tab revisits and
+  // app relaunches, not just this instance.
+  //
+  // The flag is written BEFORE requestLocation() is called so a crash/kill
+  // mid-prompt can never leave it unset and cause a second auto-prompt on
+  // the next open. And it only fires from a clean 'idle' status -- if the
+  // user has already reached for the locate button themselves (granted,
+  // denied, requesting, or even a still-idle-but-in-flight retry) by the
+  // time the storage read resolves, this backs off and leaves that outcome
+  // alone; useUserLocation's reducer always starts 'idle' on mount and
+  // never inspects the OS's actual permission state up front, so gating on
+  // this hook's own status (rather than trying to ask the OS) is the only
+  // signal available here -- see useUserLocation.ts's header for why.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const alreadyPrompted = await getStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY);
+      if (cancelled || alreadyPrompted || locationStatusRef.current !== 'idle') return;
+      await setStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY, '1');
+      if (cancelled || locationStatusRef.current !== 'idle') return;
+      void requestLocation();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only, see comment above.
+  }, []);
 
   return (
     <View style={styles.container}>

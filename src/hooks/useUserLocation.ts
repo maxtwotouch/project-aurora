@@ -19,8 +19,12 @@ export type { UserLocationCoords, UserLocationEvent, UserLocationState, UserLoca
  *
  * Permission is requested lazily -- callers MUST only invoke
  * `requestLocation()` from an explicit user action (e.g. a tap on a
- * "locate me" button), never from a mount effect, so the OS prompt never
- * appears unprompted.
+ * "locate me" button) OR a one-shot, persisted-flag-gated "first time this
+ * screen is opened" effect (see MapScreen.native.tsx's auto-prompt effect).
+ * The latter is a deliberate, narrow exception: it still only ever fires
+ * once per install (never on every mount/tab revisit) and only from a
+ * clean 'idle' status, so it never nags or fires alongside/after a button
+ * press. Never call this from an unconditional mount effect.
  *
  * The pure status/coords transition table lives in ./userLocationReducer.ts
  * (no expo-location/react-native import there), so it's covered by
