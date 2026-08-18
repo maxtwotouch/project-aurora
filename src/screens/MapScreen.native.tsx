@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent
+} from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
+import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useTranslation } from '../i18n/useTranslation';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
@@ -24,6 +35,13 @@ const TROMSO_CENTER = {
   longitudeDelta: 0.45
 };
 
+const LOCATE_BUTTON_SIZE = 44;
+// Gap between the bottom sheet's top edge and the locate button above it,
+// and between the button's top edge and the denied/unavailable note above
+// that -- see this component's locateButtonBottom/locateNoteBottom below.
+const LOCATE_BUTTON_GAP = 14;
+const LOCATE_NOTE_GAP = 8;
+
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const { t } = useTranslation();
   const topLabelAnim = useRef(new Animated.Value(0)).current;
@@ -32,6 +50,22 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUser = useRef(false);
   const { status: locationStatus, coords: userCoords, requestLocation } = useUserLocation();
+  const tabBarSpace = useBottomTabBarSpace();
+  // Measured height of whichever bottom sheet (selected-spot or empty) is
+  // currently rendered -- both share this handler via onLayout so the
+  // locate button/notes below can float clear of it instead of overlapping
+  // it at a guessed fixed offset (see FIX 1 in this PR's review: the note
+  // used to be a top-anchored sibling of the always-on selectionNote, which
+  // collided with it once de/fr/es strings wrapped to 3+ lines).
+  const [sheetHeight, setSheetHeight] = useState(0);
+  const handleSheetLayout = (event: LayoutChangeEvent) => {
+    setSheetHeight(event.nativeEvent.layout.height);
+  };
+  // Bottom offset (from the screen's edge) clear of both the floating tab
+  // bar (tabBarSpace -- see useBottomTabBarSpace's header comment) and the
+  // bottom sheet's own 16px-from-edge placement + measured height.
+  const locateButtonBottom = tabBarSpace + 16 + sheetHeight + LOCATE_BUTTON_GAP;
+  const locateNoteBottom = locateButtonBottom + LOCATE_BUTTON_SIZE + LOCATE_NOTE_GAP;
 
   const scoreBySpot = useMemo(
     () => rankedSpots.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.spotId]: s.score }), {}),
@@ -138,28 +172,39 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('map.location.locateButtonA11y')}
-        style={styles.locateButton}
+        accessibilityState={{ busy: locationStatus === 'requesting' }}
+        disabled={locationStatus === 'requesting'}
+        style={[styles.locateButton, { bottom: locateButtonBottom }]}
         onPress={() => void requestLocation()}
       >
-        <Ionicons
-          name={locationStatus === 'granted' ? 'locate' : 'locate-outline'}
-          size={20}
-          color={palette.textPrimary}
-        />
+        {locationStatus === 'requesting' ? (
+          <ActivityIndicator size="small" color={palette.textPrimary} />
+        ) : (
+          <Ionicons
+            name={locationStatus === 'granted' ? 'locate' : 'locate-outline'}
+            size={20}
+            color={palette.textPrimary}
+          />
+        )}
       </Pressable>
 
-      {locationStatus === 'denied' ? (
-        <View style={styles.locationDeniedNote}>
+      {locationStatus === 'denied' || locationStatus === 'unavailable' ? (
+        <View style={[styles.locationNote, { bottom: locateNoteBottom }]}>
           <Ionicons name="information-circle" size={16} color={palette.auroraIce} />
-          <Text style={styles.locationDeniedNoteText}>{t('map.location.deniedNote')}</Text>
-          <Pressable onPress={() => void Linking.openSettings()}>
-            <Text style={styles.locationDeniedNoteLink}>{t('map.location.openSettings')}</Text>
-          </Pressable>
+          <Text style={styles.locationNoteText}>
+            {locationStatus === 'denied' ? t('map.location.deniedNote') : t('map.location.unavailableNote')}
+          </Text>
+          {locationStatus === 'denied' ? (
+            <Pressable onPress={() => void Linking.openSettings()}>
+              <Text style={styles.locationNoteLink}>{t('map.location.openSettings')}</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 
       {selected ? (
         <Animated.View
+          onLayout={handleSheetLayout}
           style={[
             styles.sheet,
             {
@@ -201,6 +246,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         </Animated.View>
       ) : (
         <Animated.View
+          onLayout={handleSheetLayout}
           style={[
             styles.emptySheet,
             {
@@ -267,22 +313,20 @@ const styles = StyleSheet.create({
   },
   locateButton: {
     position: 'absolute',
-    top: 152,
     right: 14,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: LOCATE_BUTTON_SIZE,
+    height: LOCATE_BUTTON_SIZE,
+    borderRadius: LOCATE_BUTTON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#12232fdc',
     borderWidth: 1,
     borderColor: palette.cardBorder
   },
-  locationDeniedNote: {
+  locationNote: {
     position: 'absolute',
-    top: 202,
     left: 14,
-    right: 66,
+    right: 14,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
@@ -294,14 +338,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2c5265'
   },
-  locationDeniedNoteText: {
+  locationNoteText: {
     flex: 1,
     minWidth: '60%',
     color: palette.textSecondary,
     fontSize: 12,
     lineHeight: 16
   },
-  locationDeniedNoteLink: {
+  locationNoteLink: {
     color: palette.auroraMint,
     fontSize: 12,
     fontWeight: '700',

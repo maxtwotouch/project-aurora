@@ -195,6 +195,7 @@
     "location": {
       "locateButtonA11y": "Meinen Standort auf der Karte anzeigen",
       "deniedNote": "Der Standortzugriff ist für diese App deaktiviert. Aktiviere ihn in den Einstellungen, um dich auf der Karte zu sehen.",
+      "unavailableNote": "Deine Position konnte nicht ermittelt werden — prüfe, ob der Standort aktiviert ist, und versuche es erneut.",
       "openSettings": "Einstellungen öffnen"
     }
   },

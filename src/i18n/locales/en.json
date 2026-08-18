@@ -195,6 +195,7 @@
     "location": {
       "locateButtonA11y": "Show my location on the map",
       "deniedNote": "Location access is off for this app. Turn it on in Settings to see yourself on the map.",
+      "unavailableNote": "Couldn't get your position — check that location is on and try again.",
       "openSettings": "Open settings"
     }
   },

@@ -195,6 +195,7 @@
     "location": {
       "locateButtonA11y": "Mostrar mi ubicación en el mapa",
       "deniedNote": "El acceso a la ubicación está desactivado para esta app. Actívalo en los ajustes para verte en el mapa.",
+      "unavailableNote": "No se pudo obtener tu ubicación — comprueba que la ubicación esté activada e inténtalo de nuevo.",
       "openSettings": "Abrir ajustes"
     }
   },

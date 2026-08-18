@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import * as Location from 'expo-location';
 
+import { INITIAL_USER_LOCATION_STATE, userLocationReducer } from './userLocationReducer';
+import type { UserLocationState } from './userLocationReducer';
+
+export type { UserLocationCoords, UserLocationEvent, UserLocationState, UserLocationStatus } from './userLocationReducer';
+
 /**
  * ON-DEVICE ONLY. This hook (and everything it calls) exists purely to
  * center the map on the user's own position, locally, for this device's
@@ -16,58 +21,25 @@ import * as Location from 'expo-location';
  * `requestLocation()` from an explicit user action (e.g. a tap on a
  * "locate me" button), never from a mount effect, so the OS prompt never
  * appears unprompted.
+ *
+ * The pure status/coords transition table lives in ./userLocationReducer.ts
+ * (no expo-location/react-native import there), so it's covered by
+ * test/userLocation.test.ts without any native module involved -- this file
+ * is the thin I/O wrapper around it, mirroring src/notifications/
+ * alertsService.ts's split around alertsClient.ts.
  */
-
-export type UserLocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
-
-export type UserLocationCoords = {
-  latitude: number;
-  longitude: number;
-};
-
-export type UserLocationState = {
-  status: UserLocationStatus;
-  coords: UserLocationCoords | null;
-};
 
 export type UseUserLocationResult = UserLocationState & {
   /** Requests foreground permission (if not already granted) and, on
    * success, reads the current position once. Safe to call repeatedly --
-   * concurrent calls collapse into the in-flight one. */
+   * concurrent calls collapse into the in-flight one, and a retry from
+   * 'denied' or 'unavailable' is always allowed (see userLocationReducer's
+   * REQUEST_STARTED transition). */
   requestLocation: () => Promise<void>;
 };
 
-const INITIAL_STATE: UserLocationState = { status: 'idle', coords: null };
-
-/**
- * Pure transition table for the permission/location request lifecycle,
- * kept separate from the hook body so it's testable without mocking
- * expo-location or React. Mirrors the outcomes `requestForegroundPermissionsAsync`
- * / `getCurrentPositionAsync` can produce.
- */
-export type UserLocationEvent =
-  | { type: 'REQUEST_STARTED' }
-  | { type: 'PERMISSION_GRANTED'; coords: UserLocationCoords }
-  | { type: 'PERMISSION_DENIED' }
-  | { type: 'REQUEST_FAILED' };
-
-export function userLocationReducer(state: UserLocationState, event: UserLocationEvent): UserLocationState {
-  switch (event.type) {
-    case 'REQUEST_STARTED':
-      return { status: 'requesting', coords: null };
-    case 'PERMISSION_GRANTED':
-      return { status: 'granted', coords: event.coords };
-    case 'PERMISSION_DENIED':
-      return { status: 'denied', coords: null };
-    case 'REQUEST_FAILED':
-      return { status: 'unavailable', coords: null };
-    default:
-      return state;
-  }
-}
-
 export function useUserLocation(): UseUserLocationResult {
-  const [state, setState] = useState<UserLocationState>(INITIAL_STATE);
+  const [state, setState] = useState<UserLocationState>(INITIAL_USER_LOCATION_STATE);
   const inFlight = useRef<Promise<void> | null>(null);
 
   const requestLocation = useCallback((): Promise<void> => {
