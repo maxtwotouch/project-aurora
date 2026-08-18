@@ -307,6 +307,14 @@
     "privacyPolicyLink": "Politique de confidentialité",
     "languageRowA11y": "Choisir la langue"
   },
+  "tripMode": {
+    "toggleLabel": "Mode voyage",
+    "description": "Une manière distincte et facultative de vous aider une fois sur place — uniquement au niveau du site, jamais vos coordonnées exactes. Désactivé par défaut, et vous pouvez le désactiver à nouveau à tout moment.",
+    "whatLeaves": "Ce qui quitte votre téléphone : uniquement des événements comme « à proximité de <site> » et « resté 20+ min », associés au nom du site et à l'heure — rien de plus précis, et rien du tout tant que c'est désactivé.",
+    "toggleOnHelper": "Partagera la présence au niveau du site dès que les fonctionnalités du mode voyage seront disponibles.",
+    "toggleOffHelper": "Désactivé. Rien n'est partagé.",
+    "comingSoonNote": "Ce réglage est prêt à l'avance — le mode voyage lui-même s'activera lorsque ses fonctionnalités arriveront dans une prochaine mise à jour."
+  },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
   },
