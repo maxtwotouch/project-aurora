@@ -1,13 +1,15 @@
 # Fly.io configuration for the aurora backend.
 #
-# Deployed by .github/workflows/deploy.yml (needs the FLY_API_TOKEN repo
-# secret). The Docker build context is the repo root because the backend
+# Deployed by Fly.io's GitHub integration: the app is connected to this
+# repository in the Fly dashboard and redeploys automatically on pushes to
+# main — no GitHub Actions workflow and no FLY_API_TOKEN repo secret are
+# involved. The Docker build context is the repo root because the backend
 # imports src/data/spots.json from outside backend/ — see backend/Dockerfile.
 #
-# If the app name below is already taken on Fly, change it here AND nowhere
-# else; the deploy workflow reads it from this file.
+# The app name below must match the app connected in the Fly dashboard
+# (created 2026-08-18 via the dashboard launch flow).
 
-app = "aurora-tromso-backend"
+app = "project-aurora"
 primary_region = "arn" # Stockholm — closest Fly region to Tromsø
 
 [build]

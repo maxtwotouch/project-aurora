@@ -85,24 +85,25 @@ So there's no rush and no risk in deploying the code before doing this.
 
 ## 4. Set the secrets on Fly
 
-This app deploys to Fly (`fly.toml`, deployed by
-`.github/workflows/deploy.yml`). Secrets are set via `flyctl`, never in
+This app deploys to Fly (`fly.toml`, deployed automatically by Fly.io's
+GitHub integration on pushes to main). Secrets are set via `flyctl` or the
+Fly dashboard's Secrets tab, never in
 `fly.toml` or any committed file (see `fly.toml`'s own comment on this for
 `ADMIN_TOKEN`/`CORS_ORIGINS` -- same rule applies here).
 
 ```bash
 # FCM_PROJECT_ID: the plain project id string.
-flyctl secrets set FCM_PROJECT_ID="aurora-tromso-alerts" --app aurora-tromso-backend
+flyctl secrets set FCM_PROJECT_ID="aurora-tromso-alerts" --app project-aurora
 
 # FCM_SERVICE_ACCOUNT: the ENTIRE downloaded JSON file, inline, as one
 # string value. Reading the file directly (rather than retyping it) avoids
 # any transcription error in the private_key's embedded newlines.
-flyctl secrets set FCM_SERVICE_ACCOUNT="$(cat /path/to/downloaded-key.json)" --app aurora-tromso-backend
+flyctl secrets set FCM_SERVICE_ACCOUNT="$(cat /path/to/downloaded-key.json)" --app project-aurora
 ```
 
 Notes:
 
-- `--app aurora-tromso-backend` matches the `app` name in `fly.toml`; adjust
+- `--app project-aurora` matches the `app` name in `fly.toml`; adjust
   if that's changed.
 - Setting a Fly secret triggers a new deploy of the existing image (no code
   change needed) -- the running process picks up the new env vars on that
@@ -144,7 +145,7 @@ short-circuits to "unavailable" there without attempting the import (see
 ## Rollback / disabling
 
 To stop sending alerts without touching code: `flyctl secrets unset
-FCM_PROJECT_ID FCM_SERVICE_ACCOUNT --app aurora-tromso-backend`. The engine
+FCM_PROJECT_ID FCM_SERVICE_ACCOUNT --app project-aurora`. The engine
 falls back to its inert mode immediately on the next restart -- nothing else
 needs to change, and no data is lost (the alerts-state.json mirror keeps
 tracking night keys/fired tiers regardless, so re-enabling later doesn't
