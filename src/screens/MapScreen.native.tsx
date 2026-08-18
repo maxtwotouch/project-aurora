@@ -17,6 +17,7 @@ import { ScoreBadge } from '../components/ScoreBadge';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useTranslation } from '../i18n/useTranslation';
+import { getStoredItem, setStoredItem } from '../lib/storage';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
@@ -42,21 +43,38 @@ const LOCATE_BUTTON_SIZE = 44;
 const LOCATE_BUTTON_GAP = 14;
 const LOCATE_NOTE_GAP = 8;
 
+// One-shot flag (see the auto-prompt effect below): set the FIRST time this
+// screen ever auto-triggers the location permission request, so it never
+// fires again on later visits/relaunches. Not location data itself -- just
+// a boolean "have we already asked" marker -- so it's fine to persist via
+// the shared storage helper (see src/lib/storage.ts's header) despite
+// useUserLocation.ts's on-device-only constraint on the coordinates
+// themselves.
+const LOCATION_AUTO_PROMPT_STORAGE_KEY = 'aurora.locationAutoPromptDone.v1';
+
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const { t } = useTranslation();
-  const topLabelAnim = useRef(new Animated.Value(0)).current;
   const sheetAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<Spot | null>(null);
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUser = useRef(false);
   const { status: locationStatus, coords: userCoords, requestLocation } = useUserLocation();
+  // Mirrors locationStatus into a ref so the auto-prompt effect below (which
+  // intentionally runs only once, on mount) can read the LATEST status right
+  // before firing rather than a value captured at mount time -- guards
+  // against the rare race where the user taps the locate button themselves
+  // while the auto-prompt's storage read is still in flight.
+  const locationStatusRef = useRef(locationStatus);
+  useEffect(() => {
+    locationStatusRef.current = locationStatus;
+  }, [locationStatus]);
   const tabBarSpace = useBottomTabBarSpace();
   // Measured height of whichever bottom sheet (selected-spot or empty) is
   // currently rendered -- both share this handler via onLayout so the
   // locate button/notes below can float clear of it instead of overlapping
   // it at a guessed fixed offset (see FIX 1 in this PR's review: the note
-  // used to be a top-anchored sibling of the always-on selectionNote, which
-  // collided with it once de/fr/es strings wrapped to 3+ lines).
+  // used to be positioned at a guessed fixed offset, which collided with
+  // the sheet once de/fr/es strings wrapped to 3+ lines).
   const [sheetHeight, setSheetHeight] = useState(0);
   const handleSheetLayout = (event: LayoutChangeEvent) => {
     setSheetHeight(event.nativeEvent.layout.height);
@@ -82,15 +100,6 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     const url = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`;
     void Linking.openURL(url);
   };
-
-  useEffect(() => {
-    Animated.timing(topLabelAnim, {
-      toValue: 1,
-      duration: 420,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true
-    }).start();
-  }, [topLabelAnim]);
 
   useEffect(() => {
     sheetAnim.setValue(0);
@@ -124,6 +133,47 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     );
   }, [userCoords]);
 
+  // Auto-trigger the SAME requestLocation() flow the locate button uses,
+  // in-context, the first time the user ever opens this screen -- an
+  // explicit product decision to prompt where location is relevant (looking
+  // at the map) rather than at app launch or only via the button. Runs once
+  // per screen instance (empty deps -- mount only) and the persisted flag
+  // below means it's also a true one-shot across remounts/tab revisits and
+  // app relaunches, not just this instance.
+  //
+  // The flag is written as soon as we know it's unset -- BEFORE
+  // requestLocation() is called -- so a crash/kill mid-prompt can never
+  // leave it unset and cause a second auto-prompt on the next open. That
+  // write happens UNCONDITIONALLY once resolved+absent, regardless of
+  // whether we then actually go on to call requestLocation(): if the user
+  // has already reached for the locate button themselves (granted, denied,
+  // requesting, or even a still-idle-but-in-flight retry) by the time the
+  // storage read resolves, this still marks the flag done and skips calling
+  // requestLocation() again -- harmless either way (the OS won't re-show
+  // its own permission sheet for a second call), but leaving the flag
+  // unset in that case would contradict this effect's once-ever intent.
+  // useUserLocation's reducer always starts 'idle' on mount and never
+  // inspects the OS's actual permission state up front, so gating on this
+  // hook's own status (rather than trying to ask the OS) is the only signal
+  // available here -- see useUserLocation.ts's header for why.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      // src/lib/storage.ts swallows read/write errors by design (see its
+      // header) -- a broken storage layer just means this flag never
+      // persists and the auto-prompt re-arms every session; accepted.
+      const alreadyPrompted = await getStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY);
+      if (cancelled || alreadyPrompted) return;
+      await setStoredItem(LOCATION_AUTO_PROMPT_STORAGE_KEY, '1');
+      if (cancelled || locationStatusRef.current !== 'idle') return;
+      void requestLocation();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only, see comment above.
+  }, []);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -143,31 +193,6 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           />
         ))}
       </MapView>
-
-      <Animated.View
-        style={[
-          styles.topLabel,
-          {
-            opacity: topLabelAnim,
-            transform: [
-              {
-                translateY: topLabelAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-10, 0]
-                })
-              }
-            ]
-          }
-        ]}
-      >
-        <Text style={styles.topLabelEyebrow}>{t('mapScreen.eyebrow')}</Text>
-        <Text style={styles.topLabelTitle}>{t('mapScreen.title')}</Text>
-      </Animated.View>
-
-      <View style={styles.selectionNote}>
-        <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
-        <Text style={styles.selectionNoteText}>{t('mapScreen.selectionNoteNative')}</Text>
-      </View>
 
       <Pressable
         accessibilityRole="button"
@@ -263,7 +288,6 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           ]}
         >
           <Text style={styles.emptyTitle}>{t('mapScreen.emptyTitle')}</Text>
-          <Text style={styles.emptyText}>{t('mapScreen.emptyText')}</Text>
         </Animated.View>
       )}
     </View>
@@ -277,39 +301,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1
-  },
-  topLabel: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    right: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    backgroundColor: '#10202bdc',
-    borderWidth: 1,
-    borderColor: '#284657'
-  },
-  selectionNote: {
-    position: 'absolute',
-    top: 88,
-    left: 14,
-    right: 14,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#112735e6',
-    borderWidth: 1,
-    borderColor: '#2c5265'
-  },
-  selectionNoteText: {
-    flex: 1,
-    color: palette.textSecondary,
-    fontSize: 13,
-    lineHeight: 18
   },
   locateButton: {
     position: 'absolute',
@@ -351,19 +342,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textDecorationLine: 'underline'
   },
-  topLabelEyebrow: {
-    color: palette.auroraMint,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 2
-  },
-  topLabelTitle: {
-    color: palette.textPrimary,
-    fontSize: 18,
-    fontWeight: '800'
-  },
   sheet: {
     position: 'absolute',
     left: 14,
@@ -394,13 +372,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: palette.textPrimary,
     fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 4
-  },
-  emptyText: {
-    color: palette.textSecondary,
-    fontSize: 14,
-    lineHeight: 20
+    fontWeight: '700'
   },
   sheetTop: {
     flexDirection: 'row',

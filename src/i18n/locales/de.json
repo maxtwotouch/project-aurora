@@ -174,10 +174,6 @@
     "liveFeedFallback": "Live-Feed"
   },
   "mapScreen": {
-    "eyebrow": "Kartenmodus",
-    "title": "Orte auf der Route",
-    "selectionNoteNative": "Der ausgewählte Ort ist standardmäßig der nächstgelegene Ort zur schnelleren Orientierung. Nutzen Sie die Schließen-Schaltfläche, um die Auswahl zu löschen.",
-    "selectionNoteWeb": "Der ausgewählte Ort ist standardmäßig der nächstgelegene Ort, damit Sie sofort einen sinnvollen Ausgangspunkt haben.",
     "distanceCityCenterShort": "{{km}} km vom Stadtzentrum",
     "scoreLabel": "Wert {{score}}",
     "selectedStop": "Ausgewählter Ort",
@@ -185,7 +181,6 @@
     "clear": "Zurücksetzen",
     "details": "Details",
     "emptyTitle": "Tippen Sie auf eine Markierung, um einen Ort zu prüfen.",
-    "emptyText": "Die untere Karte zeigt Entfernung, Wert und Schnellaktionen an.",
     "webTitle": "Die Kartenansicht ist in der Web-Beta vereinfacht.",
     "noSpotSelected": "Kein Ort ausgewählt",
     "noSpotSelectedText": "Wählen Sie einen Ort aus der Liste, um Wert und Schnellaktionen zu sehen.",

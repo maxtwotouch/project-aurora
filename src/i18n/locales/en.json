@@ -174,10 +174,6 @@
     "liveFeedFallback": "Live feed"
   },
   "mapScreen": {
-    "eyebrow": "Map mode",
-    "title": "Scout spots in driving order",
-    "selectionNoteNative": "Selected stop defaults to the nearest listed spot for quicker orientation. Use the close button to clear it.",
-    "selectionNoteWeb": "Selected stop defaults to the nearest listed spot so you get a useful starting point immediately.",
     "distanceCityCenterShort": "{{km}} km from city center",
     "scoreLabel": "Score {{score}}",
     "selectedStop": "Selected stop",
@@ -185,7 +181,6 @@
     "clear": "Clear",
     "details": "Details",
     "emptyTitle": "Tap a marker to inspect a viewing stop.",
-    "emptyText": "The bottom sheet updates with distance, score, and quick actions.",
     "webTitle": "Map view is simplified on web beta.",
     "noSpotSelected": "No spot selected",
     "noSpotSelectedText": "Choose a spot from the list to see its score and quick actions.",

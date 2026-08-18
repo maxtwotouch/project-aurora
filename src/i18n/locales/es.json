@@ -174,10 +174,6 @@
     "liveFeedFallback": "Feed en vivo"
   },
   "mapScreen": {
-    "eyebrow": "Modo mapa",
-    "title": "Explore los lugares en orden de trayecto",
-    "selectionNoteNative": "El lugar seleccionado es, de forma predeterminada, el lugar más cercano de la lista para una orientación más rápida. Use el botón de cierre para borrar la selección.",
-    "selectionNoteWeb": "El lugar seleccionado es, de forma predeterminada, el lugar más cercano de la lista, para ofrecerle de inmediato un punto de partida útil.",
     "distanceCityCenterShort": "{{km}} km del centro de la ciudad",
     "scoreLabel": "Puntuación {{score}}",
     "selectedStop": "Lugar seleccionado",
@@ -185,7 +181,6 @@
     "clear": "Borrar",
     "details": "Detalles",
     "emptyTitle": "Toque un marcador para revisar un lugar de observación.",
-    "emptyText": "El panel inferior muestra la distancia, la puntuación y las acciones rápidas.",
     "webTitle": "La vista de mapa está simplificada en la versión beta web.",
     "noSpotSelected": "Ningún lugar seleccionado",
     "noSpotSelectedText": "Elija un lugar de la lista para ver su puntuación y sus acciones rápidas.",
