@@ -191,6 +191,14 @@
     "noSpotSelectedText": "Choisissez un site dans la liste pour voir son score et ses actions rapides.",
     "spotScoreA11y": "{{name}}, score {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Afficher ma position sur la carte",
+      "deniedNote": "L'accès à la position est désactivé pour cette application. Activez-le dans les réglages pour vous voir sur la carte.",
+      "unavailableNote": "Impossible d'obtenir votre position — vérifiez que la localisation est activée, puis réessayez.",
+      "openSettings": "Ouvrir les réglages"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Site",
     "waitingNextRunNative": "En attente du prochain calcul de prévision",

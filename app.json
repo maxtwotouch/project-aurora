@@ -47,7 +47,13 @@
     "plugins": [
       "expo-localization",
       "expo-font",
-      "./plugins/withFmtConstevalFix.js"
+      "./plugins/withFmtConstevalFix.js",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Used to show where you are relative to aurora spots on the map. Never sent off your device."
+        }
+      ]
     ]
   }
 }
