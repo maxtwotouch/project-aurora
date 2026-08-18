@@ -174,10 +174,6 @@
     "liveFeedFallback": "Flux en direct"
   },
   "mapScreen": {
-    "eyebrow": "Mode carte",
-    "title": "Explorez les sites dans l'ordre du trajet",
-    "selectionNoteNative": "Le site sélectionné est par défaut le site répertorié le plus proche pour une orientation plus rapide. Utilisez le bouton de fermeture pour effacer la sélection.",
-    "selectionNoteWeb": "Le site sélectionné est par défaut le site répertorié le plus proche, pour vous donner immédiatement un point de départ utile.",
     "distanceCityCenterShort": "{{km}} km du centre-ville",
     "scoreLabel": "Score {{score}}",
     "selectedStop": "Site sélectionné",
@@ -185,7 +181,6 @@
     "clear": "Effacer",
     "details": "Détails",
     "emptyTitle": "Touchez un repère pour examiner un site d'observation.",
-    "emptyText": "La fiche en bas de l'écran affiche la distance, le score et les actions rapides.",
     "webTitle": "La vue carte est simplifiée dans la version bêta web.",
     "noSpotSelected": "Aucun site sélectionné",
     "noSpotSelectedText": "Choisissez un site dans la liste pour voir son score et ses actions rapides.",
