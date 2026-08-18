@@ -56,7 +56,7 @@ purpose(s). The table below gives all four for every data type Apple lists.
 - **App Store Connect selection:** declare "Usage Data" (or "Product Interaction" under
   Apple's current taxonomy) as collected; "Linked to You" = No; "Used for Tracking" = No.
 
-### Location — Not Collected
+### Location — Not Collected (current build)
 
 - No `expo-location` (or any geolocation) dependency exists in `package.json`; grepping
   `src/` for `Geolocation`, `getCurrentPosition`, `expo-location`,
@@ -69,7 +69,40 @@ purpose(s). The table below gives all four for every data type Apple lists.
   plus each spot's static `distanceKm`) against a fixed reference point (Tromsø city
   center) — never from the device's own position. There is no code path that reads or
   could read the user's real location.
-- **App Store Connect selection:** "Location" — Not Collected.
+- **App Store Connect selection (this section applies to the current and next build only —
+  neither includes Trip mode; see below):** "Location" — Not Collected.
+
+### Location — forward-looking note for Trip mode (not in this build; NOT a final answer)
+
+`docs/design-trip-tracking.md` (ship gate 6.3) specifies that Trip mode's App Store privacy
+answer must **not** be hard-coded in advance — it must be checked against the live App Store
+Connect questionnaire, against the actual shipped implementation, at the time a build
+containing Trip mode is first submitted. This section documents the distinction the owner
+drew during design review so whoever fills in that questionnaire later starts from the right
+frame, not a final answer:
+
+- The app **accesses** precise location (foreground-only, while Trip mode is on) for
+  **on-device** processing — comparing the device's position locally against the fixed spot
+  coordinates in `src/data/spots.json` to know which named spot, if any, the device is near.
+  This location value is never transmitted.
+- The developer/backend **collects** only the coarse, derived event this on-device
+  comparison produces — `{spotId, utcHour}` presence and 20-minute long-presence events, the
+  same shape and privacy posture as the existing usage events above — never coordinates.
+- Apple's questionnaire asks about *collection*, not *device access*, for most data types,
+  but explicitly separates "used for app functionality without leaving the device" language
+  for some categories — the exact selection (e.g. "Location" collected = Yes vs. a
+  functionality-only carve-out) depends on the current wording of that questionnaire at
+  submission time, which can change between App Store Connect releases.
+- Expected shape, subject to that live check: **Location → Coarse Location; Collected: Yes,
+  when the user has opted into Trip mode (off by default); Linked to user: No; Used for
+  tracking: No; Purpose(s): Analytics, and App Functionality (for the on-device "arrived at
+  spot" card)** — see `docs/design-trip-tracking.md` sections 3 and 6.
+- **Hard ship gate:** this answer must be verified against the live App Store Connect
+  questionnaire, and reconciled with the actual implementation at that time, **before any
+  build containing Trip mode collection code is submitted.** It does **not** apply to the
+  current build or the next planned build — neither ships Trip mode, geofencing, or any
+  location code (per `docs/design-trip-tracking.md` ship gates, this doc, the privacy
+  policy, and the consent UI are the only things shipping ahead of any collection code).
 
 ### Identifiers (Device ID, User ID, etc.) — Not Collected
 
@@ -79,11 +112,15 @@ purpose(s). The table below gives all four for every data type Apple lists.
   "getToken"` across `src/` returns nothing — there is no push-token retrieval code in the
   shipped client, so no device/push identifier is ever generated or stored client-side,
   let alone sent anywhere.
-- The only client-persisted values at all are three preference strings in
+- The only client-persisted values at all are four preference strings in
   `AsyncStorage`/`localStorage` (`src/lib/storage.ts`), none of which identify the device
   or the person, and none of which ever leave the device:
   - `aurora.language.v1` — the chosen UI language (`src/i18n/index.ts`)
   - `aurora.analyticsConsent.v1` — `'accepted' | 'declined'` (`src/analytics/consent.ts`)
+  - `aurora.tripModeConsent.v1` — `'accepted' | 'declined'`, a completely independent
+    consent choice from the one above (`src/analytics/tripModeConsent.ts`); Trip mode
+    itself has no collection code yet (see the forward-looking Location note below), this
+    key currently only records the toggle's on/off state
   - `aurora.designPreviewMode.v1` — `'on' | 'off'` (`src/preview/previewMode.ts`, a
     developer/marketing preview toggle — see `docs/store-listing/README.md`'s screenshot
     section for what it's used for)
@@ -178,11 +215,13 @@ first-party code:
   aggregate product/planning use (and, per policy, aggregate sharing with Tromsø kommune,
   which is still aggregate-only, never linked to an individual — see
   `docs/privacy-usage-events.md`'s "Access control" section).
-- **Why declare "Location: Not Collected" instead of "Coarse Location"?** Because no
-  location of any kind — coarse or precise — is ever read from the device. It would be a
-  category error to declare *any* location collection when the "distance" figures shown
-  are pre-computed static data about the spots themselves, not derived from the user in
-  any way, at any precision.
+- **Why declare "Location: Not Collected" instead of "Coarse Location"?** Because, in the
+  current and next build, no location of any kind — coarse or precise — is ever read from
+  the device. It would be a category error to declare *any* location collection when the
+  "distance" figures shown are pre-computed static data about the spots themselves, not
+  derived from the user in any way, at any precision. This changes only once a future build
+  actually ships Trip mode — see the forward-looking note above, which is explicitly not a
+  final answer for that future build.
 
 ## Cross-check against the public privacy policy
 

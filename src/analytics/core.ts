@@ -143,3 +143,43 @@ export function takeNextBatch<T>(queue: readonly T[]): BatchSplit<T> {
 export function dropQueueOnRevoke<T>(): T[] {
   return [];
 }
+
+/**
+ * Trip mode consent -- a SECOND, INDEPENDENT consent dimension (see
+ * docs/design-trip-tracking.md section 6.2 / 8 decision #4). This is
+ * distinct from ConsentState/isPersistedConsentState/
+ * resolveLoadedConsentState above:
+ *
+ * - different storage key (aurora.tripModeConsent.v1, owned by
+ *   ./tripModeConsent.ts -- never aurora.analyticsConsent.v1),
+ * - different UI surface (a Settings-only toggle -- never the first-open
+ *   ConsentModal),
+ * - never inferred from, defaulted from, or written alongside the usage
+ *   consent above.
+ *
+ * The underlying tri-state shape ('unset' | 'accepted' | 'declined') and
+ * fail-closed defaulting rule are intentionally identical to usage
+ * consent's (an unrecognized/missing persisted value always resolves to
+ * 'unset', never 'accepted'), so the two dimensions behave predictably the
+ * same way in isolation -- but they are two separate pieces of state, not
+ * one. Toggling one must never read, write, or otherwise touch the other.
+ *
+ * No event emission or geofencing logic exists yet -- this only models the
+ * consent choice itself (docs/design-trip-tracking.md ship gate 6.2, which
+ * must ship before any collection code).
+ */
+export type TripModeConsentState = 'unset' | 'accepted' | 'declined';
+
+/** Narrows a raw value read back from storage to a real persisted trip-mode choice. */
+export function isPersistedTripModeConsentState(value: string | null): value is 'accepted' | 'declined' {
+  return value === 'accepted' || value === 'declined';
+}
+
+/**
+ * Resolves what the in-memory trip-mode consent state should become once
+ * the persisted value has been read back from storage (or the read failed,
+ * in which case the caller passes `null`). 'unset' is the only fallback.
+ */
+export function resolveLoadedTripModeConsentState(stored: string | null): TripModeConsentState {
+  return isPersistedTripModeConsentState(stored) ? stored : 'unset';
+}
