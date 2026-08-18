@@ -40,13 +40,39 @@ review:
   crash/error/analytics tooling. (App-level Fastify serializers already
   strip req to `{method,url}` with no IP; the Fly.io edge/proxy logging
   layer is the open item — see ship gate 6.5.)
-- ❌ No background tracking in v1 (also an App Store review minefield).
+- ❌ No PASSIVE background tracking, ever — the phone is never sampled
+  while the user is simply living their life with the app closed. (Owner
+  data-quality rationale, 2026-08-18: passive collection would pollute the
+  dataset with residents living near spots and commuters driving past —
+  the opposite of the aurora-hunter signal we want.) Location during an
+  ACTIVE trip session continues if the user switches to their maps app
+  mid-drive — see section 3's session model; that is the iOS-standard
+  navigation pattern (when-in-use permission + the OS's visible location
+  indicator), not passive tracking.
 - ❌ Nothing collected without a separate, explicit, default-off opt-in.
 
 ## 3. The design: coarsen on device, count on server
 
-**Trip mode** is an opt-in the user turns on when heading out, with a real
-user-facing benefit (Apple requires location to serve the user, and
+**Trip mode** is a persistent opt-in (consent once in Settings, stays on
+until turned off) with session-based collection — the Google-Maps-navigation
+analogy (owner decision, 2026-08-18):
+
+- **Baseline (consented, app in use):** whenever the app is foregrounded,
+  position is classified locally and presence events fire per the rules
+  below.
+- **Trip session (the navigation analogy):** starting a trip to a spot
+  (e.g. tapping Navigate with Trip mode on) begins an ACTIVE session.
+  Like a navigation app, sampling continues while the session runs even if
+  the user switches to their maps app mid-drive — the iOS-standard pattern
+  (when-in-use permission + location background mode, with the OS's
+  location indicator visible throughout the session). The session ends on
+  arrival-plus-dwell, manual stop, or timeout. "Collect all the time"
+  means all the time *during a trip* — never all the time *in life*.
+- What crosses the network is IDENTICAL in both modes: the coarse
+  spot-level events below. Sessions change when sampling is allowed, not
+  what leaves the phone.
+
+The user-facing benefit (Apple requires location to serve the user, and
 recommends requesting authorization when the user engages the feature that
 needs it):
 
@@ -54,7 +80,7 @@ needs it):
 - On arrival: an "arrived at <spot>" context card — tonight's score for
   *this* spot, best viewing direction, remaining best-window time.
 
-While Trip mode is on (foreground/when-in-use only):
+While Trip mode is on (baseline foreground use, or an active trip session):
 
 1. The phone uses **precise location locally** (Core Location / fused
    provider) and compares it against the 28 spot coordinates
@@ -183,6 +209,6 @@ rule.
 | 1 | Spot-level presence model | **Approved with amendments** (all folded into this revision) |
 | 2 | Geofence radius | 500 m initially, pending geographic validation of all 28 spots (7.3); per-spot radii expected eventually |
 | 3 | Dwell threshold | 20 min, measured as continuous-inside (not at exit) |
-| 4 | Foreground-only v1 | Confirmed |
+| 4 | Collection scope | REVISED 2026-08-18: app-in-use baseline + active trip sessions (navigation pattern, when-in-use + background location mode during session only). No passive background, ever. Store-answer/App-Review note: UIBackgroundModes location must be declared and justified via the session framing — folds into ship gate 6.3. |
 | 5 | Trip-mode user benefit | Arrival context card |
 | 6 | Municipality sharing | Deferred to 7.7; fixed-dimension export only, never `/v1/stats`; gates 6.5+6.6 mandatory first |
