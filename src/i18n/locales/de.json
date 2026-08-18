@@ -191,6 +191,14 @@
     "noSpotSelectedText": "Wählen Sie einen Ort aus der Liste, um Wert und Schnellaktionen zu sehen.",
     "spotScoreA11y": "{{name}}, Wert {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Meinen Standort auf der Karte anzeigen",
+      "deniedNote": "Der Standortzugriff ist für diese App deaktiviert. Aktiviere ihn in den Einstellungen, um dich auf der Karte zu sehen.",
+      "unavailableNote": "Deine Position konnte nicht ermittelt werden — prüfe, ob der Standort aktiviert ist, und versuche es erneut.",
+      "openSettings": "Einstellungen öffnen"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Ort",
     "waitingNextRunNative": "Warten auf den nächsten Vorhersagelauf",
@@ -298,6 +306,14 @@
     "toggleOffHelper": "Es werden keine Nutzungsdaten geteilt.",
     "privacyPolicyLink": "Datenschutzerklärung",
     "languageRowA11y": "Sprache wählen"
+  },
+  "tripMode": {
+    "toggleLabel": "Trip-Modus",
+    "description": "Eine separate, optionale Möglichkeit, Ihnen unterwegs zu helfen — nur ortsbezogen, nie Ihre genauen Koordinaten. Standardmäßig deaktiviert, und Sie können es jederzeit wieder ausschalten.",
+    "whatLeaves": "Was Ihr Telefon verlässt: nur Ereignisse wie „in der Nähe von <Ort>“ und „20+ Min. geblieben“, verknüpft mit dem Ortsnamen und der Uhrzeit — nichts Genaueres, und nichts, solange dies deaktiviert ist.",
+    "toggleOnHelper": "Wird ortsbezogene Anwesenheit teilen, sobald die Funktionen des Trip-Modus verfügbar sind.",
+    "toggleOffHelper": "Aus. Es wird nichts geteilt.",
+    "comingSoonNote": "Dieser Schalter ist schon vorbereitet — der Trip-Modus selbst wird aktiv, sobald seine Funktionen in einem kommenden Update erscheinen."
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

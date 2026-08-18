@@ -191,6 +191,14 @@
     "noSpotSelectedText": "Choose a spot from the list to see its score and quick actions.",
     "spotScoreA11y": "{{name}}, score {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Show my location on the map",
+      "deniedNote": "Location access is off for this app. Turn it on in Settings to see yourself on the map.",
+      "unavailableNote": "Couldn't get your position — check that location is on and try again.",
+      "openSettings": "Open settings"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Spot",
     "waitingNextRunNative": "Waiting for the next forecast run",
@@ -298,6 +306,14 @@
     "toggleOffHelper": "Not sharing any usage data.",
     "privacyPolicyLink": "Privacy policy",
     "languageRowA11y": "Choose language"
+  },
+  "tripMode": {
+    "toggleLabel": "Trip mode",
+    "description": "A separate, optional way to help while you're heading out — spot-level only, never your exact coordinates. Off by default, and you can turn it off again anytime.",
+    "whatLeaves": "What leaves your phone: only \"near <spot>\" and \"stayed 20+ min\" events, tied to the spot name and the hour — nothing more precise, and nothing at all while this is off.",
+    "toggleOnHelper": "Will share spot-level presence once Trip mode features launch.",
+    "toggleOffHelper": "Off. Nothing is shared.",
+    "comingSoonNote": "This toggle is ready ahead of time — Trip mode itself activates when its features arrive in an upcoming update."
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

@@ -191,6 +191,14 @@
     "noSpotSelectedText": "Elija un lugar de la lista para ver su puntuación y sus acciones rápidas.",
     "spotScoreA11y": "{{name}}, puntuación {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Mostrar mi ubicación en el mapa",
+      "deniedNote": "El acceso a la ubicación está desactivado para esta app. Actívalo en los ajustes para verte en el mapa.",
+      "unavailableNote": "No se pudo obtener tu ubicación — comprueba que la ubicación esté activada e inténtalo de nuevo.",
+      "openSettings": "Abrir ajustes"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Lugar",
     "waitingNextRunNative": "Esperando la próxima ejecución de la previsión",
@@ -298,6 +306,14 @@
     "toggleOffHelper": "No se está compartiendo ningún dato de uso.",
     "privacyPolicyLink": "Política de privacidad",
     "languageRowA11y": "Elegir idioma"
+  },
+  "tripMode": {
+    "toggleLabel": "Modo viaje",
+    "description": "Una forma independiente y opcional de ayudarle mientras sale — solo a nivel de lugar, nunca sus coordenadas exactas. Desactivado de forma predeterminada, y puede volver a desactivarlo cuando quiera.",
+    "whatLeaves": "Lo que sale de su teléfono: solo eventos como «cerca de <lugar>» y «permaneció 20+ min», vinculados al nombre del lugar y a la hora — nada más preciso, y nada en absoluto mientras esto esté desactivado.",
+    "toggleOnHelper": "Compartirá presencia a nivel de lugar en cuanto se activen las funciones del Modo viaje.",
+    "toggleOffHelper": "Desactivado. No se comparte nada.",
+    "comingSoonNote": "Este interruptor está listo con antelación — el Modo viaje en sí se activará cuando lleguen sus funciones en una futura actualización."
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"

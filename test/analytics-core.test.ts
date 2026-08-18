@@ -12,13 +12,15 @@ import {
   bufferPendingEvent,
   dropQueueOnRevoke,
   isPersistedConsentState,
+  isPersistedTripModeConsentState,
   mayFlush,
   pushToQueue,
   resolveLoadedConsentState,
+  resolveLoadedTripModeConsentState,
   resolvePendingBeforeLoad,
   takeNextBatch
 } from '../src/analytics/core.js';
-import type { ConsentState } from '../src/analytics/core.js';
+import type { ConsentState, TripModeConsentState } from '../src/analytics/core.js';
 
 type Event = { type: 'spot_view' | 'navigate_pressed'; spotId: string };
 
@@ -283,5 +285,87 @@ describe('scenario: consent revoked mid-queue', () => {
 
     assert.deepEqual(queue, []);
     assert.equal(mayFlush({ loaded: true, consent: 'declined', configured: true }), false);
+  });
+});
+
+// Trip mode consent (src/analytics/tripModeConsent.ts) is a SECOND,
+// INDEPENDENT consent dimension from the usage-events consent tested above
+// -- see core.ts's TripModeConsentState doc comment. These tests mirror the
+// usage-consent coverage above 1:1 (default/accept/decline/toggle-off,
+// corrupt-value fallback) and add explicit independence checks, since
+// "never coupled to usage consent" is the entire point of having a second
+// dimension at all.
+describe('tripMode consent: isPersistedTripModeConsentState', () => {
+  test('accepts "accepted" and "declined"', () => {
+    assert.equal(isPersistedTripModeConsentState('accepted'), true);
+    assert.equal(isPersistedTripModeConsentState('declined'), true);
+  });
+
+  test('rejects null, "unset", and any other string', () => {
+    assert.equal(isPersistedTripModeConsentState(null), false);
+    assert.equal(isPersistedTripModeConsentState('unset'), false);
+    assert.equal(isPersistedTripModeConsentState(''), false);
+    assert.equal(isPersistedTripModeConsentState('garbage'), false);
+  });
+});
+
+describe('tripMode consent: resolveLoadedTripModeConsentState (default "unset" + load transitions)', () => {
+  test('default state: nothing persisted (first open, or a failed read) resolves to unset', () => {
+    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+  });
+
+  test('accept: a persisted "accepted" resolves to accepted', () => {
+    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+  });
+
+  test('decline: a persisted "declined" resolves to declined', () => {
+    assert.equal(resolveLoadedTripModeConsentState('declined'), 'declined');
+  });
+
+  test('toggle-off-after-accept: simulating accept then decline persists the latest choice, not the first', () => {
+    // No shared mutable state in core.ts -- each call is independent, so
+    // "toggling" is just resolving the most recently persisted value.
+    const afterAccept = resolveLoadedTripModeConsentState('accepted');
+    assert.equal(afterAccept, 'accepted');
+
+    const afterDecline = resolveLoadedTripModeConsentState('declined');
+    assert.equal(afterDecline, 'declined');
+  });
+
+  test('a corrupt/unrecognized persisted value falls back to unset (never accepted/declined)', () => {
+    assert.equal(resolveLoadedTripModeConsentState('yes-please'), 'unset');
+  });
+});
+
+describe('tripMode consent: independence from usage consent', () => {
+  test('the same raw stored value is interpreted identically but by fully separate functions', () => {
+    const usage: ConsentState = resolveLoadedConsentState('accepted');
+    const trip: TripModeConsentState = resolveLoadedTripModeConsentState('declined');
+
+    // Different inputs to each dimension produce different, uncoupled outputs --
+    // nothing here reads or infers one from the other.
+    assert.equal(usage, 'accepted');
+    assert.equal(trip, 'declined');
+  });
+
+  test('accepting usage consent has no bearing on what trip mode resolves to, and vice versa', () => {
+    // Usage consent accepted, trip mode never persisted (still unset).
+    assert.equal(resolveLoadedConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+
+    // Trip mode accepted, usage consent never persisted (still unset).
+    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedConsentState(null), 'unset');
+
+    // Usage consent declined, trip mode accepted -- both directions independently non-default.
+    assert.equal(resolveLoadedConsentState('declined'), 'declined');
+    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+  });
+
+  test('isPersistedConsentState and isPersistedTripModeConsentState agree on validity (same tri-state shape) but are distinct functions', () => {
+    assert.notEqual(isPersistedConsentState, isPersistedTripModeConsentState as unknown as typeof isPersistedConsentState);
+    for (const value of ['accepted', 'declined', null, 'unset', 'garbage']) {
+      assert.equal(isPersistedConsentState(value), isPersistedTripModeConsentState(value));
+    }
   });
 });

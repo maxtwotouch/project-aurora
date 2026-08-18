@@ -191,6 +191,14 @@
     "noSpotSelectedText": "从列表中选择一个地点以查看其分数和快捷操作。",
     "spotScoreA11y": "{{name}}，分数 {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "在地图上显示我的位置",
+      "deniedNote": "此应用的位置权限已关闭。请在设置中开启，以便在地图上看到您的位置。",
+      "unavailableNote": "无法获取您的位置——请确认已开启定位，然后重试。",
+      "openSettings": "打开设置"
+    }
+  },
   "spotDetail": {
     "eyebrow": "地点",
     "waitingNextRunNative": "正在等待下一次预报运行",
@@ -298,6 +306,14 @@
     "toggleOffHelper": "未共享任何使用数据。",
     "privacyPolicyLink": "隐私政策",
     "languageRowA11y": "选择语言"
+  },
+  "tripMode": {
+    "toggleLabel": "出行模式",
+    "description": "一种独立、可选的方式，在您外出时提供帮助——仅精确到地点级别，绝不记录您的精确坐标。默认关闭，您可以随时再次关闭。",
+    "whatLeaves": "从您的手机发出的内容：仅包括“靠近<地点>”和“停留超过20分钟”这类事件，仅关联地点名称和时间——不会更精确，且在关闭时不会发送任何内容。",
+    "toggleOnHelper": "出行模式功能上线后，将共享地点级别的到访情况。",
+    "toggleOffHelper": "已关闭。不共享任何内容。",
+    "comingSoonNote": "此开关已提前准备就绪——出行模式本身将在其功能随后续更新上线后启用。"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
