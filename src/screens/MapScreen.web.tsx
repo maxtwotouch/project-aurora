@@ -1,6 +1,5 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { useTranslation } from '../i18n/useTranslation';
@@ -45,10 +44,6 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const list = (
     <ScrollView contentContainerStyle={isWide ? styles.listWide : styles.listNarrow}>
       <Text style={styles.webTitle}>{t('mapScreen.webTitle')}</Text>
-      <View style={styles.note}>
-        <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
-        <Text style={styles.noteText}>{t('mapScreen.selectionNoteWeb')}</Text>
-      </View>
       {spots.map((spot) => {
         const isActive = selected?.id === spot.id;
         return (
@@ -182,22 +177,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: palette.textSecondary,
     marginBottom: space.xxs
-  },
-  note: {
-    flexDirection: 'row',
-    gap: space.xs,
-    alignItems: 'flex-start',
-    padding: space.sm,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: palette.borderHairline,
-    backgroundColor: palette.surfaceOverlay,
-    marginBottom: space.xs
-  },
-  noteText: {
-    flex: 1,
-    ...typography.bodySmall,
-    color: palette.textSecondary
   },
   webItem: {
     flexDirection: 'row',

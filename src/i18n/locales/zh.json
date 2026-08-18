@@ -174,10 +174,6 @@
     "liveFeedFallback": "实时画面"
   },
   "mapScreen": {
-    "eyebrow": "地图模式",
-    "title": "按行车顺序查看地点",
-    "selectionNoteNative": "默认选中列表中最近的地点，方便快速定位。点击关闭按钮可清除选择。",
-    "selectionNoteWeb": "默认选中列表中最近的地点，让您立即获得有用的起点。",
     "distanceCityCenterShort": "距市中心 {{km}} 公里",
     "scoreLabel": "分数 {{score}}",
     "selectedStop": "已选地点",
@@ -185,7 +181,6 @@
     "clear": "清除",
     "details": "详情",
     "emptyTitle": "点按标记以查看观测地点。",
-    "emptyText": "底部面板会显示距离、分数和快捷操作。",
     "webTitle": "网页测试版的地图视图为简化版本。",
     "noSpotSelected": "未选择地点",
     "noSpotSelectedText": "从列表中选择一个地点以查看其分数和快捷操作。",
