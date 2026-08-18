@@ -191,6 +191,13 @@
     "noSpotSelectedText": "从列表中选择一个地点以查看其分数和快捷操作。",
     "spotScoreA11y": "{{name}}，分数 {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "在地图上显示我的位置",
+      "deniedNote": "此应用的位置权限已关闭。请在设置中开启，以便在地图上看到您的位置。",
+      "openSettings": "打开设置"
+    }
+  },
   "spotDetail": {
     "eyebrow": "地点",
     "waitingNextRunNative": "正在等待下一次预报运行",

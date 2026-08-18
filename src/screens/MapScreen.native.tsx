@@ -4,6 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
+import { useUserLocation } from '../hooks/useUserLocation';
 import { useTranslation } from '../i18n/useTranslation';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
@@ -28,6 +29,9 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const topLabelAnim = useRef(new Animated.Value(0)).current;
   const sheetAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<Spot | null>(null);
+  const mapRef = useRef<MapView | null>(null);
+  const hasCenteredOnUser = useRef(false);
+  const { status: locationStatus, coords: userCoords, requestLocation } = useUserLocation();
 
   const scoreBySpot = useMemo(
     () => rankedSpots.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.spotId]: s.score }), {}),
@@ -68,9 +72,33 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
     setSelected((current) => current ?? defaultSpot);
   }, [defaultSpot]);
 
+  // Center the camera on the user once, the first time a position becomes
+  // available -- deliberately not a "follow" behavior (see useUserLocation's
+  // header comment: this is a display-only, one-shot recenter, and the user
+  // stays free to pan afterwards).
+  useEffect(() => {
+    if (!userCoords || hasCenteredOnUser.current) return;
+    hasCenteredOnUser.current = true;
+    mapRef.current?.animateToRegion(
+      {
+        latitude: userCoords.latitude,
+        longitude: userCoords.longitude,
+        latitudeDelta: 0.08,
+        longitudeDelta: 0.08
+      },
+      600
+    );
+  }, [userCoords]);
+
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={TROMSO_CENTER} customMapStyle={mapDarkStyle}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={TROMSO_CENTER}
+        customMapStyle={mapDarkStyle}
+        showsUserLocation={locationStatus === 'granted'}
+      >
         {spots.map((spot) => (
           <Marker
             key={spot.id}
@@ -106,6 +134,29 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         <Ionicons name="information-circle" size={18} color={palette.auroraIce} />
         <Text style={styles.selectionNoteText}>{t('mapScreen.selectionNoteNative')}</Text>
       </View>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('map.location.locateButtonA11y')}
+        style={styles.locateButton}
+        onPress={() => void requestLocation()}
+      >
+        <Ionicons
+          name={locationStatus === 'granted' ? 'locate' : 'locate-outline'}
+          size={20}
+          color={palette.textPrimary}
+        />
+      </Pressable>
+
+      {locationStatus === 'denied' ? (
+        <View style={styles.locationDeniedNote}>
+          <Ionicons name="information-circle" size={16} color={palette.auroraIce} />
+          <Text style={styles.locationDeniedNoteText}>{t('map.location.deniedNote')}</Text>
+          <Pressable onPress={() => void Linking.openSettings()}>
+            <Text style={styles.locationDeniedNoteLink}>{t('map.location.openSettings')}</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {selected ? (
         <Animated.View
@@ -213,6 +264,48 @@ const styles = StyleSheet.create({
     color: palette.textSecondary,
     fontSize: 13,
     lineHeight: 18
+  },
+  locateButton: {
+    position: 'absolute',
+    top: 152,
+    right: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#12232fdc',
+    borderWidth: 1,
+    borderColor: palette.cardBorder
+  },
+  locationDeniedNote: {
+    position: 'absolute',
+    top: 202,
+    left: 14,
+    right: 66,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: '#112735e6',
+    borderWidth: 1,
+    borderColor: '#2c5265'
+  },
+  locationDeniedNoteText: {
+    flex: 1,
+    minWidth: '60%',
+    color: palette.textSecondary,
+    fontSize: 12,
+    lineHeight: 16
+  },
+  locationDeniedNoteLink: {
+    color: palette.auroraMint,
+    fontSize: 12,
+    fontWeight: '700',
+    textDecorationLine: 'underline'
   },
   topLabelEyebrow: {
     color: palette.auroraMint,

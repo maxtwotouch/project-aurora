@@ -191,6 +191,13 @@
     "noSpotSelectedText": "Elija un lugar de la lista para ver su puntuación y sus acciones rápidas.",
     "spotScoreA11y": "{{name}}, puntuación {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Mostrar mi ubicación en el mapa",
+      "deniedNote": "El acceso a la ubicación está desactivado para esta app. Actívalo en los ajustes para verte en el mapa.",
+      "openSettings": "Abrir ajustes"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Lugar",
     "waitingNextRunNative": "Esperando la próxima ejecución de la previsión",

@@ -191,6 +191,13 @@
     "noSpotSelectedText": "Wählen Sie einen Ort aus der Liste, um Wert und Schnellaktionen zu sehen.",
     "spotScoreA11y": "{{name}}, Wert {{score}}"
   },
+  "map": {
+    "location": {
+      "locateButtonA11y": "Meinen Standort auf der Karte anzeigen",
+      "deniedNote": "Der Standortzugriff ist für diese App deaktiviert. Aktiviere ihn in den Einstellungen, um dich auf der Karte zu sehen.",
+      "openSettings": "Einstellungen öffnen"
+    }
+  },
   "spotDetail": {
     "eyebrow": "Ort",
     "waitingNextRunNative": "Warten auf den nächsten Vorhersagelauf",
