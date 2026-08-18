@@ -75,9 +75,9 @@
   {
     "id": "grunnfjord",
     "name": "Grunnfjord",
-    "lat": 69.772,
-    "lon": 18.198,
-    "distanceKm": 45,
+    "lat": 69.9925,
+    "lon": 19.5607,
+    "distanceKm": 70,
     "lightPollution": 1,
     "horizon": "north",
     "description": "Remote fjord location with little traffic or lighting."
@@ -134,8 +134,8 @@
   {
     "id": "vardentoppen",
     "name": "Vardentoppen",
-    "lat": 69.665,
-    "lon": 18.935,
+    "lat": 69.6606,
+    "lon": 18.9358,
     "distanceKm": 4,
     "lightPollution": 2,
     "horizon": "north",
