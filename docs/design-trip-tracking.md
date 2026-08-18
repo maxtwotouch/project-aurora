@@ -53,8 +53,26 @@ review:
 
 ## 3. The design: coarsen on device, count on server
 
-**Trip mode** is an opt-in the user turns on when heading out, with a real
-user-facing benefit (Apple requires location to serve the user, and
+**Trip mode** is a persistent opt-in (consent once in Settings, stays on
+until turned off) with session-based collection — the Google-Maps-navigation
+analogy (owner decision, 2026-08-18):
+
+- **Baseline (consented, app in use):** whenever the app is foregrounded,
+  position is classified locally and presence events fire per the rules
+  below.
+- **Trip session (the navigation analogy):** starting a trip to a spot
+  (e.g. tapping Navigate with Trip mode on) begins an ACTIVE session.
+  Like a navigation app, sampling continues while the session runs even if
+  the user switches to their maps app mid-drive — the iOS-standard pattern
+  (when-in-use permission + location background mode, with the OS's
+  location indicator visible throughout the session). The session ends on
+  arrival-plus-dwell, manual stop, or timeout. "Collect all the time"
+  means all the time *during a trip* — never all the time *in life*.
+- What crosses the network is IDENTICAL in both modes: the coarse
+  spot-level events below. Sessions change when sampling is allowed, not
+  what leaves the phone.
+
+The user-facing benefit (Apple requires location to serve the user, and
 recommends requesting authorization when the user engages the feature that
 needs it):
 
@@ -62,7 +80,7 @@ needs it):
 - On arrival: an "arrived at <spot>" context card — tonight's score for
   *this* spot, best viewing direction, remaining best-window time.
 
-While Trip mode is on (foreground/when-in-use only):
+While Trip mode is on (baseline foreground use, or an active trip session):
 
 1. The phone uses **precise location locally** (Core Location / fused
    provider) and compares it against the 28 spot coordinates
