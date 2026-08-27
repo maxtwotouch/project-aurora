@@ -113,7 +113,9 @@ test('GET /v1/stats/usage with the correct token returns an aggregate-only envel
     spot_shared: 0,
     spot_visit: 0,
     recommended_spot_visit: 0,
-    zone_dwell: 0
+    zone_dwell: 0,
+    spot_presence: 0,
+    spot_presence_long: 0
   });
   assert.equal(body.distinctCounterKeys, 2);
 
@@ -227,7 +229,9 @@ test('STATS_MIN_CELL > 0: low-count cells are omitted from bySpot/byHour/byDay, 
       spot_shared: 0,
       spot_visit: 0,
       recommended_spot_visit: 0,
-      zone_dwell: 0
+      zone_dwell: 0,
+      spot_presence: 0,
+      spot_presence_long: 0
     });
     assert.equal(body.distinctCounterKeys, 2);
 
@@ -277,7 +281,9 @@ test('STATS_MIN_CELL suppresses every breakdown once combined totals also fall b
       spot_shared: 0,
       spot_visit: 0,
       recommended_spot_visit: 0,
-      zone_dwell: 0
+      zone_dwell: 0,
+      spot_presence: 0,
+      spot_presence_long: 0
     });
 
     assert.deepEqual(body.bySpot, []);
@@ -322,7 +328,9 @@ test('spot_visit / recommended_spot_visit counts fold into totalsByType and bySp
     spot_shared: 0,
     spot_visit: 1,
     recommended_spot_visit: 1,
-    zone_dwell: 0
+    zone_dwell: 0,
+    spot_presence: 0,
+    spot_presence_long: 0
   });
 
   const bySpot = body.bySpot as Array<{ spotId: string; total: number; totalsByType: Record<string, number> }>;
@@ -368,7 +376,9 @@ test('zone_dwell counts fold into totalsByType and byZoneCell, never into bySpot
     spot_shared: 0,
     spot_visit: 0,
     recommended_spot_visit: 0,
-    zone_dwell: 3
+    zone_dwell: 3,
+    spot_presence: 0,
+    spot_presence_long: 0
   });
 
   assert.deepEqual(body.bySpot, [], 'zone_dwell has no spotId, so it must never appear in bySpot');
@@ -420,4 +430,58 @@ test('STATS_MIN_CELL suppresses low-count byZoneCell entries too, and counts tow
     // byDay (0, same reasoning) -- only the single low-count zone cell is suppressed.
     assert.deepEqual(body.suppression, { minCell: 3, suppressedCells: 1 });
   });
+});
+
+// --- spot_presence / spot_presence_long exposure (docs/design-trip-
+// tracking.md section 3 point 3, ship gate 6.4): fold into totalsByType and
+// bySpot exactly like spot_view/navigate_pressed/spot_shared -- same
+// (spotId, hourBucket) counter shape, just a different type. ---
+
+test('spot_presence / spot_presence_long counts fold into totalsByType and bySpot', async () => {
+  usageStoreModule.usageCounterStore.increment({
+    type: 'spot_presence',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T22'
+  });
+  usageStoreModule.usageCounterStore.increment({
+    type: 'spot_presence_long',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T22'
+  });
+  usageStoreModule.usageCounterStore.increment({
+    type: 'spot_presence',
+    spotId: 'kattfjordvatnet',
+    hourBucket: '2026-07-16T23'
+  });
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/v1/stats/usage',
+    headers: { 'x-admin-token': ADMIN_TOKEN }
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = response.json() as Record<string, unknown>;
+
+  assert.equal(body.totalEvents, 3);
+  assert.deepEqual(body.totalsByType, {
+    spot_view: 0,
+    navigate_pressed: 0,
+    spot_shared: 0,
+    spot_visit: 0,
+    recommended_spot_visit: 0,
+    zone_dwell: 0,
+    spot_presence: 2,
+    spot_presence_long: 1
+  });
+
+  const bySpot = body.bySpot as Array<{ spotId: string; total: number; totalsByType: Record<string, number> }>;
+  assert.equal(bySpot.length, 2);
+  const ersfjordbotn = bySpot.find((entry) => entry.spotId === 'ersfjordbotn');
+  assert.ok(ersfjordbotn);
+  assert.equal(ersfjordbotn?.total, 2);
+  assert.equal(ersfjordbotn?.totalsByType.spot_presence, 1);
+  assert.equal(ersfjordbotn?.totalsByType.spot_presence_long, 1);
+
+  assert.deepEqual(body.byZoneCell, []);
 });

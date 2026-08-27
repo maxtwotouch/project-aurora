@@ -17,7 +17,9 @@ const EVENT_TYPES: readonly UsageEventType[] = [
   'spot_shared',
   'spot_visit',
   'recommended_spot_visit',
-  'zone_dwell'
+  'zone_dwell',
+  'spot_presence',
+  'spot_presence_long'
 ];
 const DEFAULT_STATS_MIN_CELL = 0;
 
@@ -28,7 +30,9 @@ function emptyTypeTotals(): UsageTypeTotals {
     spot_shared: 0,
     spot_visit: 0,
     recommended_spot_visit: 0,
-    zone_dwell: 0
+    zone_dwell: 0,
+    spot_presence: 0,
+    spot_presence_long: 0
   };
 }
 

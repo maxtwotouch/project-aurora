@@ -201,6 +201,13 @@ export type TonightSnapshot = {
  * event types (spot_view / navigate_pressed / spot_shared) — never sent to
  * PostHog, never joined with the pseudonymous per-install id used there
  * (see docs/analytics-pivot.md section 1's "Does not change").
+ *
+ * `spot_presence` / `spot_presence_long` are the two original Trip-mode
+ * presence types specified by docs/design-trip-tracking.md section 3, point
+ * 3 and ship gate 6.4 — emitted on entering a spot's geofence and on 20
+ * minutes of continuous-inside dwell, respectively. Same identity-free
+ * aggregate pipeline, same `{spotId, utcHour}` shape as the tourism types
+ * below (never a full timestamp).
  */
 export type UsageEventType =
   | 'spot_view'
@@ -208,7 +215,9 @@ export type UsageEventType =
   | 'spot_shared'
   | 'spot_visit'
   | 'recommended_spot_visit'
-  | 'zone_dwell';
+  | 'zone_dwell'
+  | 'spot_presence'
+  | 'spot_presence_long';
 
 /** Coarse dwell-duration bucket shared by `spot_visit` and `zone_dwell` —
  * never a raw duration, always one of these five buckets. */
@@ -223,25 +232,30 @@ export const DWELL_BUCKETS: readonly DwellBucket[] = ['<5m', '5-15m', '15-30m', 
  * them with its own current UTC hour (see toHourBucket() in usageStore.ts),
  * unchanged from before this amendment.
  *
- * The three tourism types instead carry `utcHour` (0-23, hour-of-day only,
- * never a full timestamp): on-device geofencing computes a visit/dwell
- * summary that may be flushed to the network slightly after the hour it
- * belongs to, so the client tags the intended hour explicitly rather than
- * relying on "whatever hour the server happens to be in when the batch
- * arrives". The server combines this with its own current UTC calendar date
- * to build the same "YYYY-MM-DDTHH" hourBucket format used everywhere else
- * (see toHourBucketFromUtcHour() in usageStore.ts) — still never finer than
- * the hour, still no raw timestamp ever leaves the device.
+ * The three tourism types, plus `spot_presence` / `spot_presence_long`,
+ * instead carry `utcHour` (0-23, hour-of-day only, never a full timestamp):
+ * on-device geofencing computes a visit/dwell/presence event that may be
+ * flushed to the network slightly after the hour it belongs to, so the
+ * client tags the intended hour explicitly rather than relying on
+ * "whatever hour the server happens to be in when the batch arrives". The
+ * server combines this with its own current UTC calendar date to build the
+ * same "YYYY-MM-DDTHH" hourBucket format used everywhere else (see
+ * toHourBucketFromUtcHour() in usageStore.ts) — still never finer than the
+ * hour, still no raw timestamp ever leaves the device.
  */
 export type UsageEventInput =
   | { type: 'spot_view' | 'navigate_pressed' | 'spot_shared'; spotId: string }
   | { type: 'spot_visit'; spotId: string; utcHour: number; dwellBucket: DwellBucket }
   | { type: 'recommended_spot_visit'; spotId: string; utcHour: number; recommendationId: string }
-  | { type: 'zone_dwell'; h3Cell: string; utcHour: number; dwellBucket: DwellBucket };
+  | { type: 'zone_dwell'; h3Cell: string; utcHour: number; dwellBucket: DwellBucket }
+  | { type: 'spot_presence' | 'spot_presence_long'; spotId: string; utcHour: number };
 
 /**
  * Aggregation key granularity, one counter per distinct key:
  *   - spot_view / navigate_pressed / spot_shared: (type, spotId, hourBucket)
+ *   - spot_presence / spot_presence_long: (type, spotId, hourBucket) —
+ *     same shape as the line above, just a different set of allowed types
+ *     and a client- (not server-) supplied hour, see UsageEventInput above
  *   - spot_visit:              (type, spotId, hourBucket, dwellBucket)
  *   - recommended_spot_visit:  (type, spotId, hourBucket, recommendationId)
  *   - zone_dwell:              (type, h3Cell, hourBucket, dwellBucket)
@@ -249,7 +263,12 @@ export type UsageEventInput =
  * encoding of each shape.
  */
 export type UsageCounterRecord =
-  | { type: 'spot_view' | 'navigate_pressed' | 'spot_shared'; spotId: string; hourBucket: string; count: number }
+  | {
+      type: 'spot_view' | 'navigate_pressed' | 'spot_shared' | 'spot_presence' | 'spot_presence_long';
+      spotId: string;
+      hourBucket: string;
+      count: number;
+    }
   | { type: 'spot_visit'; spotId: string; hourBucket: string; dwellBucket: DwellBucket; count: number }
   | {
       type: 'recommended_spot_visit';

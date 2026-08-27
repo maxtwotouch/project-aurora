@@ -433,3 +433,40 @@ test("toHourBucketFromUtcHour() combines the given date's UTC day with the suppl
   assert.equal(usageStoreModule.toHourBucketFromUtcHour(23, date), '2026-07-16T23');
   assert.equal(usageStoreModule.toHourBucketFromUtcHour(0, date), '2026-07-16T00');
 });
+
+// --- spot_presence / spot_presence_long key shape (docs/design-trip-
+// tracking.md section 3 point 3, ship gate 6.4): same 3-segment
+// `type|spotId|hourBucket` shape as spot_view/navigate_pressed/spot_shared. ---
+
+for (const presenceType of ['spot_presence', 'spot_presence_long'] as const) {
+  test(`increment()/getAll() round-trips the ${presenceType} key shape: type|spotId|hourBucket`, async () => {
+    await resetStore();
+    const { usageCounterStore } = usageStoreModule;
+
+    usageCounterStore.increment({ type: presenceType, spotId: 'ersfjordbotn', hourBucket: '2026-07-16T22' });
+    await usageCounterStore.flush();
+
+    const raw = await fs.readFile(dataFilePath, 'utf8');
+    const parsed = JSON.parse(raw) as { counters: Record<string, number> };
+    assert.deepEqual(Object.keys(parsed.counters), [`${presenceType}|ersfjordbotn|2026-07-16T22`]);
+
+    const records = usageCounterStore.getAll();
+    assert.equal(records.length, 1);
+    const [record] = records;
+    assert.equal(record.type, presenceType);
+    assert.equal(record.spotId, 'ersfjordbotn');
+    assert.equal(record.hourBucket, '2026-07-16T22');
+    assert.deepEqual(Object.keys(record).sort(), ['count', 'hourBucket', 'spotId', 'type']);
+  });
+}
+
+test('spot_presence, spot_presence_long, and spot_view at the same spotId/hourBucket are distinct counters', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  usageCounterStore.increment({ type: 'spot_presence', spotId: 'ersfjordbotn', hourBucket: '2026-07-16T22' });
+  usageCounterStore.increment({ type: 'spot_presence_long', spotId: 'ersfjordbotn', hourBucket: '2026-07-16T22' });
+  usageCounterStore.increment({ type: 'spot_view', spotId: 'ersfjordbotn', hourBucket: '2026-07-16T22' });
+
+  assert.equal(usageCounterStore.getDistinctKeyCount(), 3);
+});

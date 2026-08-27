@@ -462,3 +462,110 @@ test('a mixed batch of legacy and tourism event types is accepted together', asy
   assert.equal(response.statusCode, 204);
   assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 4);
 });
+
+// --- spot_presence / spot_presence_long (docs/design-trip-tracking.md
+// section 3 point 3, ship gate 6.4): the original Trip-mode presence
+// events. Same {spotId, utcHour} shape and validation as the tourism types'
+// spotId/utcHour checks, but NO dwellBucket -- counter key stays the
+// 3-segment `type|spotId|hourBucket` shape shared with the original three. ---
+
+for (const presenceType of ['spot_presence', 'spot_presence_long'] as const) {
+  test(`valid ${presenceType} increments a (type, spotId, hourBucket) counter with no dwellBucket`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 22 }
+    });
+
+    assert.equal(response.statusCode, 204);
+
+    const records = usageStoreModule.usageCounterStore.getAll();
+    assert.equal(records.length, 1);
+    const [record] = records;
+    assert.equal(record.type, presenceType);
+    assert.equal(record.spotId, VALID_SPOT_ID);
+    assert.equal(record.count, 1);
+    assert.match(record.hourBucket, /^\d{4}-\d{2}-\d{2}T22$/);
+
+    // --- PRIVACY INVARIANT --- only the allowlisted fields are ever stored,
+    // and critically no dwellBucket (unlike spot_visit's identically-shaped
+    // {spotId, utcHour, dwellBucket} payload).
+    assert.deepEqual(Object.keys(record).sort(), ['count', 'hourBucket', 'spotId', 'type']);
+  });
+
+  test(`rejects ${presenceType} with an unknown spotId (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: 'not-a-real-spot', utcHour: 10 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with an out-of-range utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 24 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with a non-integer utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 10.5 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with a missing utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+}
+
+test('spot_presence and spot_presence_long for the same spot/hour increment independent counters', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_presence', spotId: VALID_SPOT_ID, utcHour: 9 },
+      { type: 'spot_presence_long', spotId: VALID_SPOT_ID, utcHour: 9 }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 2);
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 2);
+});
+
+test('a mixed batch of all eight event types is accepted together', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_view', spotId: VALID_SPOT_ID },
+      { type: 'navigate_pressed', spotId: VALID_SPOT_ID },
+      { type: 'spot_shared', spotId: VALID_SPOT_ID },
+      { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 12, dwellBucket: '5-15m' },
+      { type: 'recommended_spot_visit', spotId: OTHER_VALID_SPOT_ID, recommendationId: 'rec-1', utcHour: 12 },
+      { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 12, dwellBucket: '<5m' },
+      { type: 'spot_presence', spotId: OTHER_VALID_SPOT_ID, utcHour: 12 },
+      { type: 'spot_presence_long', spotId: OTHER_VALID_SPOT_ID, utcHour: 12 }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 8);
+});

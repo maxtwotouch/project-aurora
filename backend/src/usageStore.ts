@@ -24,6 +24,10 @@ import { DWELL_BUCKETS } from './types.js';
  * `encodeKey`/`decodeKey` below):
  *   - spot_view / navigate_pressed / spot_shared: `type|spotId|hourBucket`
  *     (unchanged from before the tourism-events amendment)
+ *   - spot_presence / spot_presence_long: `type|spotId|hourBucket` (same
+ *     3-segment shape as above, per docs/design-trip-tracking.md section 3
+ *     point 4 / ship gate 6.4 — just a client-supplied hour, see
+ *     toHourBucketFromUtcHour())
  *   - spot_visit:             `type|spotId|hourBucket|dwellBucket`
  *   - recommended_spot_visit: `type|spotId|hourBucket|recommendationId`
  *   - zone_dwell:             `type|h3Cell|hourBucket|dwellBucket`
@@ -46,7 +50,11 @@ import { DWELL_BUCKETS } from './types.js';
  */
 
 export type CounterKey =
-  | { type: 'spot_view' | 'navigate_pressed' | 'spot_shared'; spotId: string; hourBucket: string }
+  | {
+      type: 'spot_view' | 'navigate_pressed' | 'spot_shared' | 'spot_presence' | 'spot_presence_long';
+      spotId: string;
+      hourBucket: string;
+    }
   | { type: 'spot_visit'; spotId: string; hourBucket: string; dwellBucket: DwellBucket }
   | { type: 'recommended_spot_visit'; spotId: string; hourBucket: string; recommendationId: string }
   | { type: 'zone_dwell'; h3Cell: string; hourBucket: string; dwellBucket: DwellBucket };
@@ -77,6 +85,8 @@ function encodeKey(key: CounterKey): string {
     case 'spot_view':
     case 'navigate_pressed':
     case 'spot_shared':
+    case 'spot_presence':
+    case 'spot_presence_long':
       return [key.type, key.spotId, key.hourBucket].join(KEY_SEPARATOR);
     case 'spot_visit':
       return [key.type, key.spotId, key.hourBucket, key.dwellBucket].join(KEY_SEPARATOR);
@@ -100,7 +110,13 @@ function decodeKey(encoded: string): CounterKey | null {
   const parts = encoded.split(KEY_SEPARATOR);
   const [type] = parts;
 
-  if (type === 'spot_view' || type === 'navigate_pressed' || type === 'spot_shared') {
+  if (
+    type === 'spot_view' ||
+    type === 'navigate_pressed' ||
+    type === 'spot_shared' ||
+    type === 'spot_presence' ||
+    type === 'spot_presence_long'
+  ) {
     if (parts.length !== 3) return null;
     const [, spotId, hourBucket] = parts;
     if (!spotId || !hourBucket) return null;

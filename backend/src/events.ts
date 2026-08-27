@@ -26,6 +26,13 @@ import type { DwellBucket, UsageEventInput, UsageEventType } from './types.js';
  * public, unauthenticated endpoint is a row-level-data/injection risk even
  * when nothing here ever gets interpreted as a query.
  *
+ * spot_presence / spot_presence_long (docs/design-trip-tracking.md section 3
+ * point 3, ship gate 6.4) are the original Trip-mode presence events: entry
+ * into a spot's geofence, and 20 minutes of continuous-inside dwell,
+ * respectively. Same validation shape as spot_view/navigate_pressed/
+ * spot_shared (spotId against the catalog) plus the same client-supplied
+ * `utcHour` the tourism types use.
+ *
  * Logging invariant: this route disables Fastify's automatic per-request
  * access logging (via the route-scoped `logLevel: 'silent'` below), so the
  * built-in request/response log lines — which would otherwise include
@@ -42,7 +49,9 @@ const ALLOWED_EVENT_TYPES: readonly UsageEventType[] = [
   'spot_shared',
   'spot_visit',
   'recommended_spot_visit',
-  'zone_dwell'
+  'zone_dwell',
+  'spot_presence',
+  'spot_presence_long'
 ];
 const MAX_BATCH_SIZE = 20;
 // Small cap: a batch of 20 minimal events fits comfortably well under this.
@@ -156,6 +165,13 @@ function parseEvents(body: unknown, validSpotIds: ReadonlySet<string>): UsageEve
         parsed.push({ type, h3Cell: record.h3Cell, utcHour: record.utcHour, dwellBucket: record.dwellBucket });
         break;
       }
+      case 'spot_presence':
+      case 'spot_presence_long': {
+        if (!isValidSpotId(record.spotId, validSpotIds)) return null;
+        if (!isUtcHour(record.utcHour)) return null;
+        parsed.push({ type, spotId: record.spotId, utcHour: record.utcHour });
+        break;
+      }
     }
   }
 
@@ -239,6 +255,14 @@ export function registerEventRoutes(app: FastifyInstance): void {
               h3Cell: event.h3Cell,
               hourBucket: toHourBucketFromUtcHour(event.utcHour),
               dwellBucket: event.dwellBucket
+            });
+            break;
+          case 'spot_presence':
+          case 'spot_presence_long':
+            usageCounterStore.increment({
+              type: event.type,
+              spotId: event.spotId,
+              hourBucket: toHourBucketFromUtcHour(event.utcHour)
             });
             break;
         }
