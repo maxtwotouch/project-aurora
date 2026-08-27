@@ -51,8 +51,35 @@ Backend (`cd backend`):
 
 ## Privacy guardrails (READ before touching data collection)
 Any code that receives, stores, or exposes data from users is privacy-sensitive and **requires human review** — never merge it agentically.
-- **Aggregate by default.** Collect event counts, not personal profiles. `spot_view`, `navigate_pressed`, etc. as anonymous events.
-- **No PII, ever.** Do not store or log IP addresses, precise user coordinates, device IDs, or anything that identifies a person. Coarsen/round any location to spot-level.
-- **Opt-in for anything richer** (e.g. user-submitted sighting reports): explicit consent, and still no identity.
-- Stats endpoints intended for third parties (e.g. the municipality) must return **aggregates only** — never row-level records.
-- If a change might touch personal data, stop and flag it in the PR for a human decision.
+
+Revised 2026-08-19 (owner decision, see `docs/analytics-pivot.md`): the app
+runs **two analytics pipelines** with different rules.
+
+- **Person-level product analytics (consented):** permitted, via the
+  approved EU processor (PostHog EU) only. Pseudonymous per-install id,
+  explicit-allowlist events, no autocapture/session replay without a fresh
+  owner decision. Gated HARD on its own explicit, default-off consent —
+  the SDK must not initialize (zero network bytes) before acceptance, and
+  withdrawal stops collection and triggers processor-side deletion.
+- **Identity-free pipelines stay identity-free.** Trip-mode presence
+  events and the aggregate counter store carry no identifiers, are never
+  sent to the product-analytics processor, and are never joined with its
+  id. Any proposal to link them is a new owner decision with its own
+  policy rewrite.
+- **Precise user coordinates never reach any server** — ours or a
+  processor's. Location coarsens to spot-level on the device. Do not store
+  or log IP addresses in our backend.
+- **The privacy policy explains everything, before the code ships.** Every
+  data category, its purpose, the processor, retention, deletion, and how
+  to withdraw — in plain language, updated in the same PR set that changes
+  collection behavior, never after. Consent screens must match the policy
+  exactly; consent obtained under older terms does not cover new scope
+  (re-consent required).
+- **No dark patterns.** Default-off, decline is one tap and fully honored,
+  no nagging, no consent bundling across the two pipelines.
+- **Third-party/B2B sharing (e.g. the municipality) is aggregates only** —
+  suppressed, fixed-dimension exports; never row-level records, never
+  person-level data, regardless of pipeline.
+- No ad identifiers (IDFA/GAID), no cross-app tracking, no sale of data.
+- If a change might touch personal data, stop and flag it in the PR for a
+  human decision.
