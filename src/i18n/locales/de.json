@@ -302,6 +302,19 @@
     "privacyPolicyLink": "Datenschutzerklärung",
     "languageRowA11y": "Sprache wählen"
   },
+  "personalAnalyticsConsent": {
+    "eyebrow": "Noch eine Sache",
+    "title": "Personenbezogene Analysen mit uns teilen?",
+    "body": "Dies ist unabhängig von den anonymen Zählungen oben und wird separat abgefragt. Eine zufällige ID für diese Installation der App (nicht Ihr Name, Ihre E-Mail oder ein Konto — die App hat keines) wird mit App-Starts, Bildschirmaufrufen, Ortsansichten, Navigations-Taps, Freigaben, Alarm-Anmeldungen, Sprachänderungen und dem Status des Trip-Modus-Schalters verknüpft. Verarbeitet von PostHog in der EU. Sie können ablehnen, und alles funktioniert genauso weiter.",
+    "acceptButton": "Personenbezogene Analysen teilen",
+    "declineButton": "Nein, danke",
+    "footnote": "Sie können dies später jederzeit in den Einstellungen ändern.",
+    "toggleLabel": "Personenbezogene Analysen",
+    "toggleOnHelper": "App-Starts, Bildschirmaufrufe und Funktionsnutzung werden geteilt, verknüpft mit einer zufälligen ID für diese Installation.",
+    "toggleOffHelper": "Es werden keine personenbezogenen Analysen geteilt.",
+    "whatIncludes": "Was das einschließt: App-Starts, Bildschirmaufrufe, Ortsansichten, Navigations-Taps, Freigaben, Alarm-Anmeldungen, Sprachänderungen und den Status des Trip-Modus-Schalters — jeweils verknüpft mit einer zufälligen ID für diese Installation, verarbeitet von PostHog in der EU.",
+    "whatNeverIncludes": "Was das niemals einschließt: Ihren genauen Standort, Werbe-IDs, app-übergreifendes Tracking, Sitzungsaufzeichnungen oder die automatische Erfassung von allem, was Sie antippen."
+  },
   "tripMode": {
     "toggleLabel": "Trip-Modus",
     "description": "Eine separate, optionale Möglichkeit, Ihnen unterwegs zu helfen — nur ortsbezogen, nie Ihre genauen Koordinaten. Standardmäßig deaktiviert, und Sie können es jederzeit wieder ausschalten.",

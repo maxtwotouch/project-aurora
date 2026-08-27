@@ -104,6 +104,46 @@ frame, not a final answer:
   location code (per `docs/design-trip-tracking.md` ship gates, this doc, the privacy
   policy, and the consent UI are the only things shipping ahead of any collection code).
 
+### Identifiers / Product Interaction — forward-looking note for person-level analytics (PostHog) (not in this build; NOT a final answer for the current or next build)
+
+`docs/analytics-pivot.md` (PR 2 of that doc's section 4 sequencing) is the PR this section
+was written for. **This PR ships the privacy policy, the two-question consent UI, and this
+store-answers doc only — it does not ship the PostHog SDK, and it does not emit a single
+analytics event.** The SDK integration itself, and the App Store Connect label change that
+must accompany it, are a later, separately reviewed PR (PR 3). Until that PR ships and its
+own live-questionnaire check is done, **the current build's and the next planned build's App
+Store Connect answers are unchanged by this PR** — see the existing "Usage Data" section
+above, which still applies as written.
+
+- The one thing this PR does add client-side is a third, independent consent CHOICE
+  (`aurora.personalAnalyticsConsent.v1`, `'unset' | 'accepted' | 'declined'`, default
+  `'unset'` for every install — see `src/analytics/personalAnalyticsConsent.ts`) and the UI
+  to set it (a second, separately-actioned question in the first-open consent flow, plus a
+  `PersonalAnalyticsToggle` in Settings). No SDK reads this value yet; nothing is
+  transmitted as a result of it being `'accepted'` in this build.
+- Expected shape once PR 3 ships the SDK, subject to a live re-check at that time (mirrors
+  the Trip mode forward-looking note below): **Identifiers (User ID) — Collected: Yes**
+  (a pseudonymous per-install identifier generated and managed by PostHog); **Linked to
+  user: Yes** (unlike the existing aggregate "Usage Data" answer above, this pipeline does
+  attach a persistent identifier to events); **Used for tracking: No** (no cross-app or
+  advertising linkage — Apple's ATT "tracking" definition — see
+  `docs/analytics-pivot.md` section 3: no IDFA/GAID, no data sharing with other companies'
+  apps/sites); **Purpose(s): Analytics.**
+- **Product Interaction — Collected: Yes** (the explicit event allowlist in
+  `docs/analytics-pivot.md` section 3: `app_open`, `screen_view`, `spot_view`,
+  `navigate_pressed`, `spot_shared`, `alerts_opt_in`, `language_set`,
+  `trip_mode_toggled` — the toggle state only, never Trip mode's own presence events);
+  **Linked to user: Yes** (same pseudonymous identifier as above); **Used for tracking:
+  No**; **Purpose(s): Analytics.**
+- **Hard ship gate (mirrors the Trip mode note below):** this answer must be verified
+  against the live App Store Connect questionnaire, and reconciled with the actual shipped
+  implementation, **before any build containing the PostHog SDK or any event-emission code
+  is submitted.** It does **not** apply to this PR's build or the current/next planned
+  build — neither ships the SDK, per `docs/analytics-pivot.md` section 4's sequencing (PR 2
+  is policy/consent/store-answers only; PR 3 is the SDK). Per that same doc, App Store
+  Connect's live privacy label must reflect this new answer before the first build shipping
+  the SDK is submitted.
+
 ### Identifiers (Device ID, User ID, etc.) — Not Collected
 
 - No advertising ID, no push-notification registration token (see "Push notifications /
@@ -112,7 +152,7 @@ frame, not a final answer:
   "getToken"` across `src/` returns nothing — there is no push-token retrieval code in the
   shipped client, so no device/push identifier is ever generated or stored client-side,
   let alone sent anywhere.
-- The only client-persisted values at all are four preference strings in
+- The only client-persisted values at all are five preference strings in
   `AsyncStorage`/`localStorage` (`src/lib/storage.ts`), none of which identify the device
   or the person, and none of which ever leave the device:
   - `aurora.language.v1` — the chosen UI language (`src/i18n/index.ts`)
@@ -121,6 +161,12 @@ frame, not a final answer:
     consent choice from the one above (`src/analytics/tripModeConsent.ts`); Trip mode
     itself has no collection code yet (see the forward-looking Location note below), this
     key currently only records the toggle's on/off state
+  - `aurora.personalAnalyticsConsent.v1` — `'accepted' | 'declined'`, a third, completely
+    independent consent choice from both of the above
+    (`src/analytics/personalAnalyticsConsent.ts`; see the forward-looking Identifiers /
+    Product Interaction note above); person-level analytics itself has no SDK or
+    collection code yet in this build, this key currently only records the two-question
+    consent flow's answer
   - `aurora.designPreviewMode.v1` — `'on' | 'off'` (`src/preview/previewMode.ts`, a
     developer/marketing preview toggle — see `docs/store-listing/README.md`'s screenshot
     section for what it's used for)
@@ -185,13 +231,18 @@ first-party code:
   functionality.
 - No advertising SDK, no analytics SDK (Firebase Analytics, Mixpanel, Amplitude, etc.), no
   social SDK, no attribution SDK (AppsFlyer, Adjust, etc.) anywhere in either
-  `package.json`.
+  `package.json`. **This includes PostHog:** `docs/analytics-pivot.md` (this PR, PR 2 of
+  its sequencing) adds the consent UI and this doc's forward-looking note above, but does
+  not add the `posthog-react-native` (or any PostHog) package dependency, and no code in
+  `src/` imports or initializes it. The SDK dependency itself, and its consent-gated
+  initialization, are PR 3.
 - **Conclusion:** the only data this app's own code ever transmits off-device is (a) the
   opt-in usage events described above, to our own backend, and (b) ordinary weather/
   space-weather API requests to MET Norway / NOAA (or to our own backend proxying them),
   which carry no user data — they're plain `GET` requests for public forecast data, not
   requests parameterized by anything about the user (see `src/api/yr.ts` / `src/api/kp.ts`
-  / `backend/src/sources.ts`).
+  / `backend/src/sources.ts`). Nothing is ever sent to PostHog in this build, regardless of
+  the personal-analytics consent choice, because no code capable of sending it exists yet.
 
 ## "Why not X" — overclaiming/underclaiming notes
 

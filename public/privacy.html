@@ -127,14 +127,17 @@
   <h2>What we collect</h2>
   <p>
     By default, this app collects <strong>nothing</strong> about you or your device. There
-    are two, entirely separate, optional data-collection features, each off unless you
+    are three, entirely separate, optional data-collection features, each off unless you
     explicitly turn it on: a small anonymous usage counter (see &ldquo;Consent&rdquo;
-    below), and Trip mode (see &ldquo;Trip mode&rdquo; below). Turning one on never turns
-    the other on.
+    below), person-level product analytics (see &ldquo;Person-level product
+    analytics&rdquo; below), and Trip mode (see &ldquo;Trip mode&rdquo; below). Turning one
+    on never turns another on, and none of them are ever joined together — see
+    &ldquo;Product analytics: two separate pipelines&rdquo; just below for how the first
+    two relate to each other.
   </p>
   <p>
-    If you opt in, the app may send an anonymous event each time you view a spot or tap
-    &ldquo;navigate&rdquo; for a spot. Each event contains only:
+    If you opt in to the anonymous usage counter, the app may send an anonymous event each
+    time you view a spot or tap &ldquo;navigate&rdquo; for a spot. Each event contains only:
   </p>
   <ul>
     <li>an event type (spot viewed, or navigate tapped), and</li>
@@ -150,13 +153,29 @@
     <li><strong>No accounts.</strong> The app does not require sign-up or login, and has no concept of a user account.</li>
     <li><strong>No names or other identifying profile information</strong> are ever collected.</li>
     <li><strong>No IP addresses</strong> are stored or logged in connection with app usage.</li>
-    <li><strong>No device identifiers</strong> (advertising IDs, device IDs, push tokens used for tracking, etc.) are collected.</li>
+    <li><strong>No advertising identifiers (IDFA/GAID), device IDs, or push tokens used for tracking</strong> are ever collected. The one exception to &ldquo;no identifier of any kind&rdquo; is the pseudonymous per-install identifier used by person-level product analytics, and only if you separately opt into that specific feature — see &ldquo;Person-level product analytics&rdquo; below for exactly what it is and is not.</li>
     <li><strong>No precise location is ever collected — including by Trip mode.</strong> Unless you opt into Trip mode, the app does not request or read your GPS coordinates at all. If you do opt into Trip mode, your device&rsquo;s precise location is used, but only to compare it locally against fixed spot coordinates already stored in the app — it is processed entirely on your device and is never sent anywhere; see &ldquo;Trip mode&rdquo; below for exactly what does leave your device in that case. Outside of Trip mode, the only &ldquo;location&rdquo; concept in the app&rsquo;s anonymous counters is which named, fixed viewing spot you interacted with — never coordinates, and never your own position.</li>
     <li><strong>No cookies are used by the app itself.</strong></li>
-    <li><strong>No third-party trackers or advertising SDKs</strong> are embedded in the app.</li>
+    <li><strong>No third-party trackers or advertising SDKs</strong> are embedded in the app, other than the person-level analytics processor named in &ldquo;Person-level product analytics&rdquo; below, and only once you have separately opted into that specific feature.</li>
   </ul>
 
-  <h2>Consent</h2>
+  <h2>Product analytics: two separate pipelines</h2>
+  <p>
+    This app can collect usage information about you in two different ways. They are
+    entirely separate: turning one on never turns the other on, each is asked about
+    separately, and they are never joined together — an event sent to one pipeline is
+    never combined, matched, or cross-referenced with anything sent to the other.
+  </p>
+  <ul>
+    <li><strong>Aggregate usage counters</strong> (this has been part of the app since launch — see &ldquo;Consent&rdquo; immediately below). Anonymous, immediately folded into hour-level counts, with no identifier of any kind attached, ever.</li>
+    <li><strong>Person-level product analytics</strong> (new — see &ldquo;Person-level product analytics&rdquo; further below). A pseudonymous identifier generated for your specific app install, used to understand individual usage patterns like whether people come back to the app and where they tend to stop partway through common flows — something the aggregate counters above structurally cannot show, because they never distinguish one person&rsquo;s activity from another&rsquo;s.</li>
+  </ul>
+  <p>
+    Trip mode (see &ldquo;Trip mode&rdquo; below) is a third, separate, opt-in feature, and
+    is never joined with either analytics pipeline either.
+  </p>
+
+  <h2>Consent (aggregate usage counters)</h2>
   <p>
     The first time you open the app, you are asked whether you want to share anonymous
     usage counts as described above. Both choices are equally easy to make.
@@ -164,9 +183,98 @@
   <ul>
     <li>If you decline, or simply close the prompt, <strong>zero usage data is collected or sent</strong> — nothing changes about how the app works.</li>
     <li>If you accept, only the anonymous, aggregated counts described above are ever sent.</li>
-    <li>You can change your mind at any time using the &ldquo;Anonymous usage sharing&rdquo; toggle on the All Spots screen. Turning it off immediately stops any further collection.</li>
+    <li>You can change your mind at any time using the &ldquo;Anonymous usage sharing&rdquo; toggle in Settings. Turning it off immediately stops any further collection.</li>
     <li>Your consent choice itself is stored only on your own device (not on any server), purely so the app remembers your preference between visits.</li>
   </ul>
+  <p>
+    This consent choice covers the aggregate usage counters only. Person-level product
+    analytics is a separate opt-in, asked about separately, and answering this question
+    one way or the other has no effect on it — see the next section.
+  </p>
+
+  <h2>Person-level product analytics (separate, optional, off by default)</h2>
+  <p>
+    <strong>What this is.</strong> With your separate, explicit consent — asked as its own
+    question, never bundled with the aggregate usage-counter question above — the app can
+    send a small, predefined set of named usage events to a third-party analytics
+    processor, tagged with a pseudonymous identifier generated for your specific app
+    install. This is not your name, email address, or any account identifier — the app has
+    no accounts or login of any kind. This lets us see things the aggregate counters above
+    structurally cannot, such as how many people who open the app for the first time come
+    back again, or where in a common sequence of screens people tend to stop.
+  </p>
+  <p><strong>What exactly is collected — the full list, and nothing beyond it:</strong></p>
+  <ul>
+    <li><code>app_open</code></li>
+    <li><code>screen_view</code> (the name of the screen only — e.g. &ldquo;Tonight&rdquo; or &ldquo;All Spots&rdquo; — never what is displayed on it)</li>
+    <li><code>spot_view</code></li>
+    <li><code>navigate_pressed</code></li>
+    <li><code>spot_shared</code></li>
+    <li><code>alerts_opt_in</code></li>
+    <li><code>language_set</code></li>
+    <li><code>trip_mode_toggled</code> (only whether you switched Trip mode&rsquo;s Settings toggle on or off — never any of Trip mode&rsquo;s own presence events; those stay entirely within the identity-free pipeline described in &ldquo;Trip mode&rdquo; below and are never sent here, under any circumstances)</li>
+  </ul>
+  <p>
+    Each event is tagged with the pseudonymous per-install identifier described above and
+    a timestamp. The app never sends any event type, screen name, or field beyond what is
+    listed here.
+  </p>
+  <p>
+    <strong>Who processes it.</strong> These events are sent to and processed by
+    <strong>PostHog</strong>, specifically PostHog&rsquo;s <strong>EU Cloud service, hosted
+    in Frankfurt, Germany</strong>, under a data processing agreement (DPA) signed between
+    us and PostHog. Under that agreement PostHog acts as our data processor (GDPR Art. 28):
+    it processes this data only on our instructions, for the purpose described below, and
+    does not use it for its own separate purposes.
+  </p>
+  <p>
+    <strong>Why we collect it.</strong> To improve the app as a product — understanding
+    retention (whether people come back), funnels (where in a common flow people tend to
+    drop off), and which features actually get used — in ways the aggregate, identity-free
+    counters above cannot show. It is not used for advertising, and never will be without a
+    fresh, separate consent question and an update to this policy.
+  </p>
+  <p><strong>What this never includes, under any circumstances:</strong></p>
+  <ul>
+    <li>your precise GPS coordinates, or any location data at all — this pipeline never receives location information of any kind, the same as the rest of the app outside of Trip mode;</li>
+    <li>advertising identifiers (IDFA/GAID) or anything capable of linking your activity in this app to your activity in a different company&rsquo;s app or website — this is product analytics, not ad tracking. Because none of that cross-app linking happens, Apple&rsquo;s App Tracking Transparency prompt is correctly not triggered by this feature;</li>
+    <li>session replay or screen recording of any kind;</li>
+    <li>autocapture. When this feature is switched on, it only ever sends the exact named events listed above — it does not automatically record every tap, scroll, or on-screen element the way some analytics tools do by default.</li>
+  </ul>
+  <p>
+    <strong>Retention.</strong> This data is retained by PostHog for <strong>24
+    months</strong>, after which it is deleted. (The owner may adjust this retention
+    window in the future; if that happens, this section will be updated to match before
+    the change takes effect.)
+  </p>
+  <p>
+    <strong>Consent and withdrawal.</strong> This question is asked separately from, and
+    in addition to, the aggregate usage-counter question above — your answer to one has no
+    bearing on the other, in either direction. You can change your mind at any time using
+    the &ldquo;Personal analytics&rdquo; toggle in Settings. Turning it off stops any
+    further collection immediately, and also triggers a request to PostHog to delete the
+    data already associated with your pseudonymous identifier. One honest caveat: deletion
+    requests take some time to propagate through PostHog&rsquo;s own systems — this is not
+    instantaneous — so expect a short delay between switching the toggle off and the
+    underlying data actually being removed. We are not able to promise an exact number of
+    hours or days, only that the deletion request is made the moment you turn the toggle
+    off.
+  </p>
+  <p>
+    <strong>Your rights over this data specifically.</strong> Unlike the aggregate usage
+    counters and Trip mode&rsquo;s presence counters (see &ldquo;Your rights (GDPR)&rdquo;
+    further below), this pipeline is linked to a persistent identifier, so individual
+    data-subject rights under GDPR genuinely apply and can be honored here. You can request
+    access to, or deletion of, the data tied to your pseudonymous identifier via
+    PostHog&rsquo;s person-level data APIs. To exercise this, contact us using the details
+    below and we will action the request through PostHog on your behalf. You can also
+    simply turn the Settings toggle off yourself at any time, which triggers deletion as
+    described above without needing to contact us at all.
+  </p>
+  <p>
+    <strong>Contact for this section:</strong>
+    <span class="placeholder">[Operator name and contact — to be completed by the owner]</span>.
+  </p>
 
   <h2>Trip mode (separate, optional, off by default)</h2>
   <p>
@@ -241,13 +349,22 @@
 
   <h2>How we use this data</h2>
   <p>
-    Aggregated, anonymous counts (never individual records — there is nothing
-    row-level to share) may be used to:
+    This section covers the aggregate, identity-free pipelines only (the anonymous usage
+    counters and Trip mode&rsquo;s presence counters). Aggregated, anonymous counts (never
+    individual records — there is nothing row-level to share) may be used to:
   </p>
   <ul>
     <li>improve which spots and information the app highlights, and</li>
     <li>be shared as summary statistics with the Tromsø municipality (Tromsø kommune), for example to understand which viewing spots see the most interest and when. Any such sharing is limited to counts and never includes anything that could identify an individual, because no individual-level data exists in the first place.</li>
   </ul>
+  <p>
+    Person-level product analytics (see that section above) is used differently — to
+    understand individual usage patterns like retention and feature funnels, as described
+    there — and is never included in the aggregate sharing described here; see
+    &ldquo;Person-level product analytics&rdquo; above for how it is used, and note that
+    person-level data is never sold or shared with third parties, including Tromsø
+    kommune.
+  </p>
 
   <h2>Third-party services this app talks to</h2>
   <p>
@@ -257,6 +374,7 @@
   <ul>
     <li><strong>MET Norway</strong> (the Norwegian Meteorological Institute) — for weather forecasts.</li>
     <li><strong>NOAA</strong> (the U.S. National Oceanic and Atmospheric Administration) — for planetary K-index (geomagnetic activity) data.</li>
+    <li><strong>PostHog</strong> — only if you have separately opted into person-level product analytics (see &ldquo;Person-level product analytics&rdquo; above for what is sent, and where it is processed).</li>
   </ul>
   <p>Depending on how the app is configured, these requests are made either:</p>
   <ul>
@@ -276,7 +394,10 @@
     via <code>USAGE_RETENTION_DAYS</code>), after which older counts are pruned
     automatically. Trip mode&rsquo;s aggregated counts (see &ldquo;Trip mode&rdquo; above)
     are retained under this exact same policy — there is no separate retention period for
-    Trip mode.
+    Trip mode. Person-level product analytics has its own, separate retention period —
+    see &ldquo;Retention&rdquo; within &ldquo;Person-level product analytics&rdquo; above
+    (24 months) — because it is a different kind of data (linked to a persistent
+    identifier) processed by a different party (PostHog) under its own agreement.
   </p>
 
   <h2>Your rights (GDPR)</h2>
@@ -294,12 +415,19 @@
     you have questions about this policy or how the app handles data, contact:
     <span class="placeholder">[Operator name and contact — to be completed by the owner]</span>.
   </p>
+  <p>
+    This limitation does not apply to person-level product analytics: because that
+    pipeline is linked to a persistent identifier, individual access and erasure
+    requests genuinely can be honored for it — see &ldquo;Your rights over this data
+    specifically&rdquo; within &ldquo;Person-level product analytics&rdquo; above.
+  </p>
 
   <h2>Children</h2>
   <p>
     Because the app collects no data at all unless you explicitly opt in — either to the
-    anonymous, aggregated usage counters, or separately to Trip mode — no separate
-    age-verification or parental-consent mechanism is in place.
+    anonymous, aggregated usage counters, separately to person-level product analytics,
+    or separately to Trip mode — no separate age-verification or parental-consent
+    mechanism is in place.
   </p>
 
   <h2>Changes to this policy</h2>

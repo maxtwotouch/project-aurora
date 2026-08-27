@@ -10,6 +10,25 @@ import { typography } from '../theme/type';
 type Props = {
   onAccept: () => void;
   onDecline: () => void;
+  /**
+   * Which i18n namespace this question's copy (eyebrow/title/body/accept/
+   * decline/footnote) comes from. 'consent' is the original aggregate
+   * usage-counter question; 'personalAnalyticsConsent' is the second,
+   * separately-actioned person-level analytics question added in the
+   * analytics pivot (docs/analytics-pivot.md PR 2) -- see ConsentGate for
+   * how the two are sequenced. Both namespaces are shaped identically
+   * (eyebrow/title/body/acceptButton/declineButton/footnote) by convention
+   * so this component never needs question-specific branching beyond the
+   * key prefix itself.
+   */
+  copyKeyPrefix?: 'consent' | 'personalAnalyticsConsent';
+  /**
+   * Whether to show the language picker row. Only the first question a user
+   * sees needs it -- by the time a second, sequential question appears the
+   * language has already been confirmed, and re-showing the same picker
+   * would just be visual noise ahead of legally-relevant copy.
+   */
+  showLanguageRow?: boolean;
 };
 
 /**
@@ -17,13 +36,20 @@ type Props = {
  * ConsentGate) rather than blocking data loading underneath -- the app is
  * usable the instant a choice is made either way.
  *
+ * Reused for BOTH first-open questions (aggregate usage counters, then --
+ * sequentially, once that one is answered -- person-level analytics; see
+ * ConsentGate). The two questions are never combined into a single
+ * accept/decline pair: each render of this component asks exactly one
+ * question and reports exactly one choice, so the two consents stay
+ * unbundled per CLAUDE.md's "unbundled per purpose" requirement.
+ *
  * No dark patterns: both buttons share the exact same background, border,
  * size and font weight -- neither is filled/bright while the other is
  * outlined/muted. Only the label text color differs (a minimal mint vs.
  * primary-text distinction) so the two remain readable as separate
  * choices without implying either one is the "recommended" action.
  */
-export function ConsentModal({ onAccept, onDecline }: Props) {
+export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', showLanguageRow = true }: Props) {
   const { t } = useTranslation();
   const currentLanguage = getCurrentLanguage();
 
@@ -35,43 +61,45 @@ export function ConsentModal({ onAccept, onDecline }: Props) {
             legally-relevant consent copy below. Each label is in its own
             tongue; switching re-renders this whole modal instantly and
             persists the choice (same mechanism as the Settings picker). */}
-        <View
-          style={styles.languageRow}
-          accessibilityRole="radiogroup"
-          accessibilityLabel={t('consent.languageRowA11y')}
-        >
-          {SUPPORTED_LANGUAGES.map((code) => {
-            const active = code === currentLanguage;
-            return (
-              <Pressable
-                key={code}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={LANGUAGE_NATIVE_LABELS[code]}
-                style={({ pressed, focused }: WebPressableState) => [
-                  styles.languageChip,
-                  active ? styles.languageChipActive : null,
-                  focused ? styles.focusRing : null,
-                  pressed ? styles.buttonPressed : null
-                ]}
-                onPress={() => void setLanguage(code)}
-              >
-                <Text style={active ? styles.languageChipTextActive : styles.languageChipText}>
-                  {LANGUAGE_NATIVE_LABELS[code]}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {showLanguageRow ? (
+          <View
+            style={styles.languageRow}
+            accessibilityRole="radiogroup"
+            accessibilityLabel={t('consent.languageRowA11y')}
+          >
+            {SUPPORTED_LANGUAGES.map((code) => {
+              const active = code === currentLanguage;
+              return (
+                <Pressable
+                  key={code}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={LANGUAGE_NATIVE_LABELS[code]}
+                  style={({ pressed, focused }: WebPressableState) => [
+                    styles.languageChip,
+                    active ? styles.languageChipActive : null,
+                    focused ? styles.focusRing : null,
+                    pressed ? styles.buttonPressed : null
+                  ]}
+                  onPress={() => void setLanguage(code)}
+                >
+                  <Text style={active ? styles.languageChipTextActive : styles.languageChipText}>
+                    {LANGUAGE_NATIVE_LABELS[code]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
 
-        <Text style={styles.eyebrow}>{t('consent.eyebrow')}</Text>
-        <Text style={styles.title}>{t('consent.title')}</Text>
-        <Text style={styles.body}>{t('consent.body')}</Text>
+        <Text style={styles.eyebrow}>{t(`${copyKeyPrefix}.eyebrow`)}</Text>
+        <Text style={styles.title}>{t(`${copyKeyPrefix}.title`)}</Text>
+        <Text style={styles.body}>{t(`${copyKeyPrefix}.body`)}</Text>
 
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('consent.acceptButton')}
+            accessibilityLabel={t(`${copyKeyPrefix}.acceptButton`)}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
               focused ? styles.focusRing : null,
@@ -79,11 +107,11 @@ export function ConsentModal({ onAccept, onDecline }: Props) {
             ]}
             onPress={onAccept}
           >
-            <Text style={styles.acceptButtonText}>{t('consent.acceptButton')}</Text>
+            <Text style={styles.acceptButtonText}>{t(`${copyKeyPrefix}.acceptButton`)}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('consent.declineButton')}
+            accessibilityLabel={t(`${copyKeyPrefix}.declineButton`)}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
               focused ? styles.focusRing : null,
@@ -91,11 +119,11 @@ export function ConsentModal({ onAccept, onDecline }: Props) {
             ]}
             onPress={onDecline}
           >
-            <Text style={styles.declineButtonText}>{t('consent.declineButton')}</Text>
+            <Text style={styles.declineButtonText}>{t(`${copyKeyPrefix}.declineButton`)}</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.footnote}>{t('consent.footnote')}</Text>
+        <Text style={styles.footnote}>{t(`${copyKeyPrefix}.footnote`)}</Text>
       </View>
     </View>
   );

@@ -302,6 +302,19 @@
     "privacyPolicyLink": "Política de privacidad",
     "languageRowA11y": "Elegir idioma"
   },
+  "personalAnalyticsConsent": {
+    "eyebrow": "Una cosa más",
+    "title": "¿Compartir estadísticas personales con nosotros?",
+    "body": "Esto es independiente de los recuentos anónimos anteriores y se pregunta por separado. Un identificador aleatorio para esta instalación de la aplicación (nunca su nombre, correo electrónico o cuenta — la aplicación no tiene ninguna) se vincula a las aperturas de la aplicación, las vistas de pantalla, las vistas de lugares, los toques de navegación, las veces que comparte, las suscripciones a alertas, los cambios de idioma y el estado del interruptor del Modo viaje. Procesado por PostHog en la UE. Puede decir que no y todo seguirá funcionando igual.",
+    "acceptButton": "Compartir estadísticas personales",
+    "declineButton": "No, gracias",
+    "footnote": "Puede cambiar esto más tarde en Ajustes.",
+    "toggleLabel": "Estadísticas personales",
+    "toggleOnHelper": "Se comparten las aperturas de la aplicación, las vistas de pantalla y el uso de funciones, vinculados a un identificador aleatorio para esta instalación.",
+    "toggleOffHelper": "No se comparten estadísticas personales.",
+    "whatIncludes": "Qué incluye: aperturas de la aplicación, vistas de pantalla, vistas de lugares, toques de navegación, veces que comparte, suscripciones a alertas, cambios de idioma y el estado del interruptor del Modo viaje — cada uno vinculado a un identificador aleatorio para esta instalación, procesado por PostHog en la UE.",
+    "whatNeverIncludes": "Qué no incluye nunca: su ubicación exacta, identificadores publicitarios, seguimiento entre aplicaciones, grabaciones de sesión, ni la captura automática de todo lo que toca."
+  },
   "tripMode": {
     "toggleLabel": "Modo viaje",
     "description": "Una forma independiente y opcional de ayudarle mientras sale — solo a nivel de lugar, nunca sus coordenadas exactas. Desactivado de forma predeterminada, y puede volver a desactivarlo cuando quiera.",
