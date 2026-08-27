@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 
+import { captureAllowed } from '../analytics/personalAnalytics';
 import { getStoredItem, setStoredItem } from '../lib/storage';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './languages';
 import en from './locales/en.json';
@@ -92,9 +93,18 @@ export async function loadPersistedLanguage(): Promise<void> {
 /**
  * Applies a language instantly -- every component using `useTranslation()`
  * re-renders -- and persists the choice so it survives app restarts.
+ *
+ * Also records the `language_set` personal-analytics event (docs/
+ * analytics-pivot.md section 3) via the consent-gated wrapper -- a no-op
+ * unless personal-analytics consent is 'accepted'. This only fires for an
+ * explicit user choice (this function), never for the device-detected
+ * initial language or a persisted-choice restore on app start (see
+ * `detectDeviceLanguage`/`loadPersistedLanguage` above) -- those aren't the
+ * user "setting" anything this session.
  */
 export async function setLanguage(language: SupportedLanguage): Promise<void> {
   await i18next.changeLanguage(language);
+  captureAllowed('language_set', { language });
   try {
     await setStoredItem(STORAGE_KEY, language);
   } catch {

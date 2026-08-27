@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { posthog } from '../analytics/posthog';
+import { captureAllowed } from '../analytics/personalAnalytics';
 import { useTranslation } from '../i18n/useTranslation';
 import { ALERT_TIERS, DEFAULT_ENABLED_TIER } from '../notifications/alertsClient';
 import type { AlertTier } from '../notifications/alertsClient';
@@ -76,7 +76,12 @@ export function AuroraAlertsSection() {
           onPress={() => {
             if (disabled) return;
             const nextTier = isOn ? 'off' : DEFAULT_ENABLED_TIER;
-            posthog.capture('alert_preferences_changed', { alert_tier: nextTier });
+            // alerts_opt_in only ever fires for the opt-IN direction (turning
+            // the toggle on) -- turning it off is not a declared allowlist
+            // event, so nothing is sent in that direction.
+            if (nextTier !== 'off') {
+              captureAllowed('alerts_opt_in', { tier: nextTier });
+            }
             void setTier(nextTier);
           }}
         >
@@ -103,7 +108,10 @@ export function AuroraAlertsSection() {
                     pressed ? styles.chipPressed : null
                   ]}
                   onPress={() => {
-                    posthog.capture('alert_preferences_changed', { alert_tier: option });
+                    // Choosing a specific tier while already opted in is
+                    // still an opt-in action (a non-'off' tier is always
+                    // being selected here, never 'off' itself).
+                    captureAllowed('alerts_opt_in', { tier: option });
                     void setTier(option);
                   }}
                 >

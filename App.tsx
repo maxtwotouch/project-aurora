@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
@@ -7,7 +7,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { initialWindowMetrics, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PostHogErrorBoundary, PostHogProvider } from 'posthog-react-native';
 // Importing from each weight's own subpath (rather than the package root)
 // keeps Metro from bundling all 18 Fraunces weight/italic files -- the
 // aggregate `@expo-google-fonts/fraunces` entry point requires every one of
@@ -17,8 +16,9 @@ import { Fraunces_700Bold } from '@expo-google-fonts/fraunces/700Bold';
 import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
+import { captureAllowed } from './src/analytics/personalAnalytics';
+import { loadPersonalAnalyticsConsent } from './src/analytics/personalAnalyticsConsent';
 import { ConsentGate } from './src/components/ConsentGate';
-import { posthog } from './src/analytics/posthog';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
 import { PreviewModeBanner } from './src/components/PreviewModeBanner';
 import { SettingsButton } from './src/components/SettingsButton';
@@ -88,14 +88,6 @@ function HeaderTitleText({ children }: { children?: React.ReactNode }) {
     <Text numberOfLines={1} style={styles.headerTitleText}>
       {children}
     </Text>
-  );
-}
-
-function ErrorFallback() {
-  return (
-    <View style={styles.errorFallback}>
-      <Text style={styles.errorFallbackText}>Something went wrong. Please restart the app.</Text>
-    </View>
   );
 }
 
@@ -332,6 +324,21 @@ export default function App() {
   const navigationRef = useRef<any>(null);
   const routeNameRef = useRef<string | undefined>(undefined);
 
+  // app_open: emitted exactly once per cold start (this effect only ever
+  // runs once -- App is the root component and is never remounted on
+  // background/foreground). Waits for the ALREADY-IN-FLIGHT personal-
+  // analytics consent read (kicked off at personalAnalyticsConsent.ts's
+  // own module load, not started here) to resolve before deciding --
+  // that's a single one-shot check, not a queue: if it resolves to
+  // anything other than 'accepted', this app open is simply never
+  // recorded, and nothing is buffered to send once/if the user accepts
+  // later (docs/analytics-pivot.md section 3).
+  useEffect(() => {
+    void loadPersonalAnalyticsConsent().then(() => {
+      captureAllowed('app_open');
+    });
+  }, []);
+
   const forecast = useForecast();
   const { t } = useTranslation();
 
@@ -380,103 +387,109 @@ export default function App() {
                 const currentScreen = navigationRef.current?.getCurrentRoute()?.name;
 
                 if (previousScreen !== currentScreen && currentScreen) {
-                  posthog.screen(currentScreen, previousScreen ? { previous_screen: previousScreen } : undefined);
+                  // screen_view: screen NAME only (docs/analytics-pivot.md
+                  // section 3) -- captureAllowed no-ops unless personal-
+                  // analytics consent is 'accepted'. No PostHogProvider is
+                  // needed for this: every call site here uses the
+                  // consent-gated wrapper directly rather than the SDK's own
+                  // React context/autocapture navigation integration, which
+                  // this app deliberately never enables.
+                  captureAllowed(
+                    'screen_view',
+                    previousScreen ? { screen: currentScreen, previous_screen: previousScreen } : { screen: currentScreen }
+                  );
                 }
                 routeNameRef.current = currentScreen;
               }}
             >
-              <PostHogProvider client={posthog}>
-                <PostHogErrorBoundary fallback={ErrorFallback}>
-                  <Stack.Navigator
-                    screenOptions={{
-                      headerStyle: {
-                        backgroundColor: palette.night
-                      },
-                      headerTintColor: palette.textPrimary,
-                      headerShadowVisible: false,
-                      headerTitle: ({ children }) => (
-                        <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
-                      ),
-                      headerTitleAlign: 'left',
-                      headerBackground: () => <View style={styles.headerBackground} />
-                    }}
-                  >
-                    <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-                      {({ navigation }) => (
-                        <TabsRoot
-                          onOpenSpot={(spotId) => {
-                            navigation.navigate('SpotDetail', { spotId });
-                          }}
-                          onOpenSettings={() => navigation.navigate('Settings')}
-                          fontsLoaded={fontsLoaded}
-                          rankedSpots={forecast.rankedSpots}
-                          loading={forecast.loading}
-                          error={forecast.error}
-                          lastUpdatedAt={forecast.lastUpdatedAt}
-                          dataQuality={forecast.dataQuality}
-                          kp={forecast.kp}
-                          topSpots={forecast.topSpots}
-                          closeSpots={forecast.closeSpots}
-                          spotsById={forecast.spotsById}
-                          tonightScore={forecast.tonightScore}
-                          tomorrowScore={forecast.tomorrowScore}
-                          sightingPossibleFrom={forecast.sightingPossibleFrom}
-                          darkness={forecast.darkness}
-                          level={forecast.level}
-                          nowcast={forecast.nowcast}
-                          refresh={forecast.refresh}
-                        />
-                      )}
-                    </Stack.Screen>
-                    <Stack.Screen
-                      name="SpotDetail"
-                      options={({ route, navigation }) => ({
-                        title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
-                        headerBackVisible: false,
-                        headerLeft: () => (
-                          <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={t('common.goBack')}
-                            style={styles.backButton}
-                            onPress={() => navigation.goBack()}
-                          >
-                            <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                            <Text style={styles.backText}>{t('common.back')}</Text>
-                          </Pressable>
-                        )
-                      })}
-                    >
-                      {({ route }) => (
-                        <SpotDetailScreen
-                          spot={spotsById[route.params.spotId]}
-                          result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-                          forecast={forecast.forecastsBySpotId[route.params.spotId]}
-                        />
-                      )}
-                    </Stack.Screen>
-                    <Stack.Screen
-                      name="Settings"
-                      options={({ navigation }) => ({
-                        title: t('settings.title'),
-                        headerBackVisible: false,
-                        headerLeft: () => (
-                          <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={t('common.goBack')}
-                            style={styles.backButton}
-                            onPress={() => navigation.goBack()}
-                          >
-                            <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                            <Text style={styles.backText}>{t('common.back')}</Text>
-                          </Pressable>
-                        )
-                      })}
-                    >
-                      {() => <SettingsScreen />}
-                    </Stack.Screen>
-                  </Stack.Navigator>
-                </PostHogErrorBoundary>
-              </PostHogProvider>
+              <Stack.Navigator
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: palette.night
+                  },
+                  headerTintColor: palette.textPrimary,
+                  headerShadowVisible: false,
+                  headerTitle: ({ children }) => (
+                    <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
+                  ),
+                  headerTitleAlign: 'left',
+                  headerBackground: () => <View style={styles.headerBackground} />
+                }}
+              >
+                <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+                  {({ navigation }) => (
+                    <TabsRoot
+                      onOpenSpot={(spotId) => {
+                        navigation.navigate('SpotDetail', { spotId });
+                      }}
+                      onOpenSettings={() => navigation.navigate('Settings')}
+                      fontsLoaded={fontsLoaded}
+                      rankedSpots={forecast.rankedSpots}
+                      loading={forecast.loading}
+                      error={forecast.error}
+                      lastUpdatedAt={forecast.lastUpdatedAt}
+                      dataQuality={forecast.dataQuality}
+                      kp={forecast.kp}
+                      topSpots={forecast.topSpots}
+                      closeSpots={forecast.closeSpots}
+                      spotsById={forecast.spotsById}
+                      tonightScore={forecast.tonightScore}
+                      tomorrowScore={forecast.tomorrowScore}
+                      sightingPossibleFrom={forecast.sightingPossibleFrom}
+                      darkness={forecast.darkness}
+                      level={forecast.level}
+                      nowcast={forecast.nowcast}
+                      refresh={forecast.refresh}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="SpotDetail"
+                  options={({ route, navigation }) => ({
+                    title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
+                >
+                  {({ route }) => (
+                    <SpotDetailScreen
+                      spot={spotsById[route.params.spotId]}
+                      result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                      forecast={forecast.forecastsBySpotId[route.params.spotId]}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="Settings"
+                  options={({ navigation }) => ({
+                    title: t('settings.title'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
+                >
+                  {() => <SettingsScreen />}
+                </Stack.Screen>
+              </Stack.Navigator>
             </NavigationContainer>
           </View>
         </View>
@@ -495,17 +508,6 @@ const styles = StyleSheet.create({
   headerBackground: {
     flex: 1,
     backgroundColor: palette.night
-  },
-  errorFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: space.lg,
-    backgroundColor: palette.night
-  },
-  errorFallbackText: {
-    color: palette.textPrimary,
-    textAlign: 'center'
   },
   headerTitleText: {
     fontFamily: fraunces.bold,
