@@ -187,26 +187,78 @@ export type TonightSnapshot = {
  * Anonymous usage events (see backend/src/events.ts).
  *
  * IMPORTANT: these types intentionally have no room for anything
- * person-derived. Only an allowlisted event type, a spotId (validated
- * against the spot catalog), and an hour-granularity time bucket ever
- * exist for usage data — never raw timestamps, IPs, device/session ids,
- * or coordinates.
+ * person-derived. Every event carries only an allowlisted event type, an
+ * hour-granularity time bucket, and — depending on type — a spotId
+ * (validated against the spot catalog), an h3 resolution-7 cell id, a
+ * coarse dwell-duration bucket, or a small-allowlist-shaped
+ * recommendationId. Never raw timestamps, IPs, device/session ids, or
+ * coordinates.
+ *
+ * `spot_visit` / `recommended_spot_visit` / `zone_dwell` are the three
+ * unlinked tourism event types added per docs/analytics-pivot.md's
+ * "Amendment (owner decision, 2026-08-22 …)". They flow through this SAME
+ * identity-free aggregate pipeline as the original three product-usage
+ * event types (spot_view / navigate_pressed / spot_shared) — never sent to
+ * PostHog, never joined with the pseudonymous per-install id used there
+ * (see docs/analytics-pivot.md section 1's "Does not change").
  */
-export type UsageEventType = 'spot_view' | 'navigate_pressed' | 'spot_shared';
+export type UsageEventType =
+  | 'spot_view'
+  | 'navigate_pressed'
+  | 'spot_shared'
+  | 'spot_visit'
+  | 'recommended_spot_visit'
+  | 'zone_dwell';
 
-export type UsageEventInput = {
-  type: UsageEventType;
-  spotId: string;
-};
+/** Coarse dwell-duration bucket shared by `spot_visit` and `zone_dwell` —
+ * never a raw duration, always one of these five buckets. */
+export type DwellBucket = '<5m' | '5-15m' | '15-30m' | '30-60m' | '60m+';
 
-/** Aggregation key granularity: one counter per (type, spot, UTC hour). */
-export type UsageCounterRecord = {
-  type: UsageEventType;
-  spotId: string;
-  /** UTC hour bucket, formatted "YYYY-MM-DDTHH". Never finer than the hour. */
-  hourBucket: string;
-  count: number;
-};
+export const DWELL_BUCKETS: readonly DwellBucket[] = ['<5m', '5-15m', '15-30m', '30-60m', '60m+'];
+
+/**
+ * Discriminated per-type wire payload accepted by POST /v1/events.
+ *
+ * The original three types carry no time field at all — the server stamps
+ * them with its own current UTC hour (see toHourBucket() in usageStore.ts),
+ * unchanged from before this amendment.
+ *
+ * The three tourism types instead carry `utcHour` (0-23, hour-of-day only,
+ * never a full timestamp): on-device geofencing computes a visit/dwell
+ * summary that may be flushed to the network slightly after the hour it
+ * belongs to, so the client tags the intended hour explicitly rather than
+ * relying on "whatever hour the server happens to be in when the batch
+ * arrives". The server combines this with its own current UTC calendar date
+ * to build the same "YYYY-MM-DDTHH" hourBucket format used everywhere else
+ * (see toHourBucketFromUtcHour() in usageStore.ts) — still never finer than
+ * the hour, still no raw timestamp ever leaves the device.
+ */
+export type UsageEventInput =
+  | { type: 'spot_view' | 'navigate_pressed' | 'spot_shared'; spotId: string }
+  | { type: 'spot_visit'; spotId: string; utcHour: number; dwellBucket: DwellBucket }
+  | { type: 'recommended_spot_visit'; spotId: string; utcHour: number; recommendationId: string }
+  | { type: 'zone_dwell'; h3Cell: string; utcHour: number; dwellBucket: DwellBucket };
+
+/**
+ * Aggregation key granularity, one counter per distinct key:
+ *   - spot_view / navigate_pressed / spot_shared: (type, spotId, hourBucket)
+ *   - spot_visit:              (type, spotId, hourBucket, dwellBucket)
+ *   - recommended_spot_visit:  (type, spotId, hourBucket, recommendationId)
+ *   - zone_dwell:              (type, h3Cell, hourBucket, dwellBucket)
+ * See usageStore.ts's encodeKey/decodeKey for the exact on-disk string
+ * encoding of each shape.
+ */
+export type UsageCounterRecord =
+  | { type: 'spot_view' | 'navigate_pressed' | 'spot_shared'; spotId: string; hourBucket: string; count: number }
+  | { type: 'spot_visit'; spotId: string; hourBucket: string; dwellBucket: DwellBucket; count: number }
+  | {
+      type: 'recommended_spot_visit';
+      spotId: string;
+      hourBucket: string;
+      recommendationId: string;
+      count: number;
+    }
+  | { type: 'zone_dwell'; h3Cell: string; hourBucket: string; dwellBucket: DwellBucket; count: number };
 
 export type UsageTypeTotals = Record<UsageEventType, number>;
 
@@ -228,18 +280,38 @@ export type UsageDayTotals = {
   total: number;
 };
 
+/** Aggregate-only per-cell totals for `zone_dwell` (see UsageStatsResponse's
+ * `byZoneCell`). An h3 cell id only ever carries `zone_dwell` counts (no
+ * other event type is keyed by h3Cell), so — unlike bySpot/byHour/byDay —
+ * this is a flat {h3Cell, total} rather than a full per-type breakdown. */
+export type UsageZoneCellTotals = {
+  h3Cell: string;
+  total: number;
+};
+
 /** Small-cell / k-anonymity suppression status for GET /v1/stats/usage. Off
  * by default (`minCell: 0`); when the owner sets `STATS_MIN_CELL` > 0,
- * bySpot/byHour/byDay entries whose `total` falls below the threshold are
- * omitted from those breakdowns (never zeroed-in-place -- omitted entirely),
- * while `totalEvents`/`totalsByType` stay exact (computed over every record,
- * suppression never touches those). */
+ * bySpot/byHour/byDay/byZoneCell entries whose `total` falls below the
+ * threshold are omitted from those breakdowns (never zeroed-in-place --
+ * omitted entirely), while `totalEvents`/`totalsByType` stay exact (computed
+ * over every record, suppression never touches those). */
 export type UsageSuppressionInfo = {
   minCell: number;
   suppressedCells: number;
 };
 
-/** Aggregate-only usage response for GET /v1/stats/usage. Never row-level. */
+/** Aggregate-only usage response for GET /v1/stats/usage. Never row-level.
+ *
+ * `aggregationLevel` stays the literal `'spot-hour'` it was before this
+ * amendment — it describes the original bySpot/byHour/byDay breakdown level
+ * and is left unchanged for backwards compatibility with existing
+ * consumers/tests. `byZoneCell` is a separate, additional breakdown (h3
+ * resolution-7 cell x hour, `zone_dwell` only) layered on top, not folded
+ * into that label. NOTE for a future municipality/B2B export: that export is
+ * a distinct, not-yet-built endpoint that must apply its own fixed-dimension
+ * aggregation rules (see docs/analytics-pivot.md) — `byZoneCell` here is the
+ * internal/admin-token-gated view only, suppressed the same way as every
+ * other breakdown, but not itself the public export shape. */
 export type UsageStatsResponse = {
   generatedAt: string;
   aggregationLevel: 'spot-hour';
@@ -248,6 +320,7 @@ export type UsageStatsResponse = {
   bySpot: UsageSpotTotals[];
   byHour: UsageHourTotals[];
   byDay: UsageDayTotals[];
+  byZoneCell: UsageZoneCellTotals[];
   distinctCounterKeys: number;
   suppression: UsageSuppressionInfo;
 };

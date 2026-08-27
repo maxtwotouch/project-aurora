@@ -289,3 +289,147 @@ test('load() treats a key whose hour-bucket segment is not a parseable date as p
 
   usageCounterStore.setWarningHandler(() => {});
 });
+
+// --- Tourism event counter key shapes (docs/analytics-pivot.md's 2026-08-22
+// amendment): spot_visit / recommended_spot_visit / zone_dwell each extend
+// the base `type|...|hourBucket` shape with one extra dimension. ---
+
+test('increment()/getAll() round-trips the spot_visit key shape: type|spotId|hourBucket|dwellBucket', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  usageCounterStore.increment({
+    type: 'spot_visit',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '15-30m'
+  });
+
+  await usageCounterStore.flush();
+
+  const raw = await fs.readFile(dataFilePath, 'utf8');
+  const parsed = JSON.parse(raw) as { counters: Record<string, number> };
+  assert.deepEqual(Object.keys(parsed.counters), ['spot_visit|ersfjordbotn|2026-07-16T10|15-30m']);
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'spot_visit');
+  assert.equal(record.spotId, 'ersfjordbotn');
+  assert.equal(record.hourBucket, '2026-07-16T10');
+  assert.ok('dwellBucket' in record);
+  if ('dwellBucket' in record) assert.equal(record.dwellBucket, '15-30m');
+});
+
+test('increment()/getAll() round-trips the recommended_spot_visit key shape: type|spotId|hourBucket|recommendationId', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  usageCounterStore.increment({
+    type: 'recommended_spot_visit',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T10',
+    recommendationId: 'tonight-top-3'
+  });
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'recommended_spot_visit');
+  assert.ok('recommendationId' in record);
+  if ('recommendationId' in record) assert.equal(record.recommendationId, 'tonight-top-3');
+});
+
+test('increment()/getAll() round-trips the zone_dwell key shape: type|h3Cell|hourBucket|dwellBucket', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  usageCounterStore.increment({
+    type: 'zone_dwell',
+    h3Cell: '8708ed358ffffff',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '60m+'
+  });
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'zone_dwell');
+  assert.ok('h3Cell' in record);
+  if ('h3Cell' in record) assert.equal(record.h3Cell, '8708ed358ffffff');
+  assert.ok(!('spotId' in record), 'zone_dwell records are never keyed by spotId');
+});
+
+test('spot_visit and zone_dwell keys with the same dwellBucket text stay distinct counters (type disambiguates)', async () => {
+  await resetStore();
+  const { usageCounterStore } = usageStoreModule;
+
+  usageCounterStore.increment({
+    type: 'spot_visit',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '<5m'
+  });
+  usageCounterStore.increment({
+    type: 'zone_dwell',
+    h3Cell: '8708ed358ffffff',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '<5m'
+  });
+
+  assert.equal(usageCounterStore.getDistinctKeyCount(), 2);
+});
+
+test('load() rejects a persisted spot_visit key with an out-of-allowlist dwellBucket segment (dropped, not thrown)', async () => {
+  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+
+  await fs.writeFile(
+    dataFilePath,
+    JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      counters: {
+        'spot_visit|ersfjordbotn|2026-07-16T10|not-a-real-bucket': 5,
+        'spot_visit|ersfjordbotn|2026-07-16T10|<5m': 2
+      }
+    }),
+    'utf8'
+  );
+
+  const { usageCounterStore } = usageStoreModule;
+  await assert.doesNotReject(() => usageCounterStore.load());
+
+  const records = usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  assert.equal(records[0].count, 2);
+});
+
+test('load() rejects a persisted key with the wrong segment count for its type (dropped, not thrown)', async () => {
+  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
+
+  await fs.writeFile(
+    dataFilePath,
+    JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      counters: {
+        // spot_visit requires 4 segments (dwellBucket), not 3.
+        'spot_visit|ersfjordbotn|2026-07-16T10': 9,
+        // zone_dwell requires 4 segments too, and h3Cell/dwellBucket, not this.
+        'zone_dwell|8708ed358ffffff|2026-07-16T10': 9
+      }
+    }),
+    'utf8'
+  );
+
+  const { usageCounterStore } = usageStoreModule;
+  await assert.doesNotReject(() => usageCounterStore.load());
+  assert.deepEqual(usageCounterStore.getAll(), []);
+});
+
+// --- toHourBucketFromUtcHour() ---
+
+test("toHourBucketFromUtcHour() combines the given date's UTC day with the supplied hour", () => {
+  const date = new Date('2026-07-16T23:59:00.000Z');
+  assert.equal(usageStoreModule.toHourBucketFromUtcHour(5, date), '2026-07-16T05');
+  assert.equal(usageStoreModule.toHourBucketFromUtcHour(23, date), '2026-07-16T23');
+  assert.equal(usageStoreModule.toHourBucketFromUtcHour(0, date), '2026-07-16T00');
+});

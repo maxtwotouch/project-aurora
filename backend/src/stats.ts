@@ -1,20 +1,35 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import { usageCounterStore } from './usageStore.js';
-import type { UsageEventType, UsageStatsResponse, UsageTypeTotals } from './types.js';
+import type { UsageEventType, UsageStatsResponse, UsageTypeTotals, UsageZoneCellTotals } from './types.js';
 
 /**
  * Read side for anonymous usage counters. Every response here is an
- * aggregate over (type, spotId, hourBucket) counters — there is no
+ * aggregate over per-type counter dimensions (type, hourBucket, and — for
+ * the spot-keyed types — spotId, or — for zone_dwell — h3Cell) — there is no
  * row-level/raw data to return even in principle, by construction of
  * usageStore.ts.
  */
 
-const EVENT_TYPES: readonly UsageEventType[] = ['spot_view', 'navigate_pressed', 'spot_shared'];
+const EVENT_TYPES: readonly UsageEventType[] = [
+  'spot_view',
+  'navigate_pressed',
+  'spot_shared',
+  'spot_visit',
+  'recommended_spot_visit',
+  'zone_dwell'
+];
 const DEFAULT_STATS_MIN_CELL = 0;
 
 function emptyTypeTotals(): UsageTypeTotals {
-  return { spot_view: 0, navigate_pressed: 0, spot_shared: 0 };
+  return {
+    spot_view: 0,
+    navigate_pressed: 0,
+    spot_shared: 0,
+    spot_visit: 0,
+    recommended_spot_visit: 0,
+    zone_dwell: 0
+  };
 }
 
 function sumTotals(totals: UsageTypeTotals): number {
@@ -50,13 +65,25 @@ function buildUsageStats(): UsageStatsResponse {
   const bySpotMap = new Map<string, UsageTypeTotals>();
   const byHourMap = new Map<string, UsageTypeTotals>();
   const byDayMap = new Map<string, UsageTypeTotals>();
+  // zone_dwell is the only type keyed by h3Cell rather than spotId (see
+  // types.ts's UsageCounterRecord), so it gets its own map/breakdown instead
+  // of folding into bySpotMap — a flat count per cell is enough (see
+  // UsageZoneCellTotals), there's no other type sharing that dimension to
+  // break down by.
+  const byZoneCellMap = new Map<string, number>();
 
   for (const record of records) {
     totalsByType[record.type] += record.count;
 
-    const spotTotals = bySpotMap.get(record.spotId) ?? emptyTypeTotals();
-    spotTotals[record.type] += record.count;
-    bySpotMap.set(record.spotId, spotTotals);
+    if ('spotId' in record) {
+      const spotTotals = bySpotMap.get(record.spotId) ?? emptyTypeTotals();
+      spotTotals[record.type] += record.count;
+      bySpotMap.set(record.spotId, spotTotals);
+    }
+
+    if ('h3Cell' in record) {
+      byZoneCellMap.set(record.h3Cell, (byZoneCellMap.get(record.h3Cell) ?? 0) + record.count);
+    }
 
     const hourTotals = byHourMap.get(record.hourBucket) ?? emptyTypeTotals();
     hourTotals[record.type] += record.count;
@@ -79,6 +106,9 @@ function buildUsageStats(): UsageStatsResponse {
   const byDayAll = Array.from(byDayMap.entries())
     .map(([day, totals]) => ({ day, totalsByType: totals, total: sumTotals(totals) }))
     .sort((a, b) => a.day.localeCompare(b.day));
+  const byZoneCellAll: UsageZoneCellTotals[] = Array.from(byZoneCellMap.entries())
+    .map(([h3Cell, total]) => ({ h3Cell, total }))
+    .sort((a, b) => b.total - a.total);
 
   // Small-cell suppression (STATS_MIN_CELL, default 0 = off): omit
   // low-count breakdown entries entirely so a single-digit count can't be
@@ -88,6 +118,7 @@ function buildUsageStats(): UsageStatsResponse {
   const bySpotResult = suppressSmallCells(bySpotAll, minCell);
   const byHourResult = suppressSmallCells(byHourAll, minCell);
   const byDayResult = suppressSmallCells(byDayAll, minCell);
+  const byZoneCellResult = suppressSmallCells(byZoneCellAll, minCell);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -97,10 +128,12 @@ function buildUsageStats(): UsageStatsResponse {
     bySpot: bySpotResult.kept,
     byHour: byHourResult.kept,
     byDay: byDayResult.kept,
+    byZoneCell: byZoneCellResult.kept,
     distinctCounterKeys: usageCounterStore.getDistinctKeyCount(),
     suppression: {
       minCell,
-      suppressedCells: bySpotResult.suppressed + byHourResult.suppressed + byDayResult.suppressed
+      suppressedCells:
+        bySpotResult.suppressed + byHourResult.suppressed + byDayResult.suppressed + byZoneCellResult.suppressed
     }
   };
 }

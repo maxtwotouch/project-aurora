@@ -107,7 +107,14 @@ test('GET /v1/stats/usage with the correct token returns an aggregate-only envel
   assert.equal(typeof body.generatedAt, 'string');
   assert.equal(body.aggregationLevel, 'spot-hour');
   assert.equal(body.totalEvents, 3);
-  assert.deepEqual(body.totalsByType, { spot_view: 2, navigate_pressed: 1, spot_shared: 0 });
+  assert.deepEqual(body.totalsByType, {
+    spot_view: 2,
+    navigate_pressed: 1,
+    spot_shared: 0,
+    spot_visit: 0,
+    recommended_spot_visit: 0,
+    zone_dwell: 0
+  });
   assert.equal(body.distinctCounterKeys, 2);
 
   const bySpot = body.bySpot as Array<{ spotId: string; total: number }>;
@@ -149,6 +156,7 @@ test('GET /v1/stats/usage with no recorded events returns a well-formed empty en
   assert.deepEqual(body.bySpot, []);
   assert.deepEqual(body.byHour, []);
   assert.deepEqual(body.byDay, []);
+  assert.deepEqual(body.byZoneCell, []);
   assert.equal(body.distinctCounterKeys, 0);
   assert.deepEqual(body.suppression, { minCell: 0, suppressedCells: 0 });
 });
@@ -213,7 +221,14 @@ test('STATS_MIN_CELL > 0: low-count cells are omitted from bySpot/byHour/byDay, 
 
     // Totals remain exact -- suppression never touches totalEvents/totalsByType.
     assert.equal(body.totalEvents, 6);
-    assert.deepEqual(body.totalsByType, { spot_view: 5, navigate_pressed: 1, spot_shared: 0 });
+    assert.deepEqual(body.totalsByType, {
+      spot_view: 5,
+      navigate_pressed: 1,
+      spot_shared: 0,
+      spot_visit: 0,
+      recommended_spot_visit: 0,
+      zone_dwell: 0
+    });
     assert.equal(body.distinctCounterKeys, 2);
 
     const bySpot = body.bySpot as Array<{ spotId: string; total: number }>;
@@ -256,11 +271,153 @@ test('STATS_MIN_CELL suppresses every breakdown once combined totals also fall b
 
     // Exact totals survive even when every breakdown row is suppressed.
     assert.equal(body.totalEvents, 1);
-    assert.deepEqual(body.totalsByType, { spot_view: 1, navigate_pressed: 0, spot_shared: 0 });
+    assert.deepEqual(body.totalsByType, {
+      spot_view: 1,
+      navigate_pressed: 0,
+      spot_shared: 0,
+      spot_visit: 0,
+      recommended_spot_visit: 0,
+      zone_dwell: 0
+    });
 
     assert.deepEqual(body.bySpot, []);
     assert.deepEqual(body.byHour, []);
     assert.deepEqual(body.byDay, []);
     assert.deepEqual(body.suppression, { minCell: 10, suppressedCells: 3 });
+  });
+});
+
+// --- Tourism event types exposure (docs/analytics-pivot.md's 2026-08-22
+// amendment): totalsByType covers all six types; bySpot folds in the two
+// spot-keyed tourism types; zone_dwell gets its own byZoneCell breakdown
+// (h3Cell has no spotId, so it can never appear in bySpot). ---
+
+test('spot_visit / recommended_spot_visit counts fold into totalsByType and bySpot', async () => {
+  usageStoreModule.usageCounterStore.increment({
+    type: 'spot_visit',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '15-30m'
+  });
+  usageStoreModule.usageCounterStore.increment({
+    type: 'recommended_spot_visit',
+    spotId: 'ersfjordbotn',
+    hourBucket: '2026-07-16T11',
+    recommendationId: 'tonight-top-3'
+  });
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/v1/stats/usage',
+    headers: { 'x-admin-token': ADMIN_TOKEN }
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = response.json() as Record<string, unknown>;
+
+  assert.equal(body.totalEvents, 2);
+  assert.deepEqual(body.totalsByType, {
+    spot_view: 0,
+    navigate_pressed: 0,
+    spot_shared: 0,
+    spot_visit: 1,
+    recommended_spot_visit: 1,
+    zone_dwell: 0
+  });
+
+  const bySpot = body.bySpot as Array<{ spotId: string; total: number; totalsByType: Record<string, number> }>;
+  assert.equal(bySpot.length, 1);
+  assert.equal(bySpot[0].spotId, 'ersfjordbotn');
+  assert.equal(bySpot[0].total, 2);
+  assert.equal(bySpot[0].totalsByType.spot_visit, 1);
+  assert.equal(bySpot[0].totalsByType.recommended_spot_visit, 1);
+
+  assert.deepEqual(body.byZoneCell, []);
+});
+
+test('zone_dwell counts fold into totalsByType and byZoneCell, never into bySpot', async () => {
+  usageStoreModule.usageCounterStore.increment({
+    type: 'zone_dwell',
+    h3Cell: '8708ed358ffffff',
+    hourBucket: '2026-07-16T10',
+    dwellBucket: '60m+'
+  });
+  usageStoreModule.usageCounterStore.increment(
+    {
+      type: 'zone_dwell',
+      h3Cell: '8708ed358ffffff',
+      hourBucket: '2026-07-16T11',
+      dwellBucket: '<5m'
+    },
+    2
+  );
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/v1/stats/usage',
+    headers: { 'x-admin-token': ADMIN_TOKEN }
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = response.json() as Record<string, unknown>;
+
+  assert.equal(body.totalEvents, 3);
+  assert.deepEqual(body.totalsByType, {
+    spot_view: 0,
+    navigate_pressed: 0,
+    spot_shared: 0,
+    spot_visit: 0,
+    recommended_spot_visit: 0,
+    zone_dwell: 3
+  });
+
+  assert.deepEqual(body.bySpot, [], 'zone_dwell has no spotId, so it must never appear in bySpot');
+
+  const byZoneCell = body.byZoneCell as Array<{ h3Cell: string; total: number }>;
+  assert.equal(byZoneCell.length, 1);
+  assert.equal(byZoneCell[0].h3Cell, '8708ed358ffffff');
+  assert.equal(byZoneCell[0].total, 3);
+  assert.deepEqual(Object.keys(byZoneCell[0]).sort(), ['h3Cell', 'total']);
+
+  // --- PRIVACY INVARIANT --- byZoneCell entries carry no other dimension.
+  const serialized = JSON.stringify(body).toLowerCase();
+  for (const forbidden of ['ip', 'userid', 'deviceid', 'sessionid', 'lat', 'lon', 'timestamp']) {
+    assert.ok(!serialized.includes(`"${forbidden}"`), `response must not contain a "${forbidden}" field`);
+  }
+});
+
+test('STATS_MIN_CELL suppresses low-count byZoneCell entries too, and counts toward suppressedCells', async () => {
+  await withStatsMinCell('3', async () => {
+    // kept: total 5 >= 3
+    usageStoreModule.usageCounterStore.increment(
+      { type: 'zone_dwell', h3Cell: '8708ed358ffffff', hourBucket: '2026-07-16T10', dwellBucket: '60m+' },
+      5
+    );
+    // suppressed: total 1 < 3
+    usageStoreModule.usageCounterStore.increment({
+      type: 'zone_dwell',
+      h3Cell: '870831b30ffffff',
+      hourBucket: '2026-07-16T10',
+      dwellBucket: '<5m'
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/stats/usage',
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+
+    const body = response.json() as Record<string, unknown>;
+
+    assert.equal(body.totalEvents, 6);
+    assert.equal((body.totalsByType as Record<string, number>).zone_dwell, 6);
+
+    const byZoneCell = body.byZoneCell as Array<{ h3Cell: string; total: number }>;
+    assert.equal(byZoneCell.length, 1);
+    assert.equal(byZoneCell[0].h3Cell, '8708ed358ffffff');
+
+    // byZoneCell (1) + byHour (0, both cells share the same hour bucket, combined total 6 >= 3) +
+    // byDay (0, same reasoning) -- only the single low-count zone cell is suppressed.
+    assert.deepEqual(body.suppression, { minCell: 3, suppressedCells: 1 });
   });
 });
