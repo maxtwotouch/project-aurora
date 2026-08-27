@@ -154,7 +154,7 @@
     <li><strong>No names or other identifying profile information</strong> are ever collected.</li>
     <li><strong>No IP addresses</strong> are stored or logged in connection with app usage.</li>
     <li><strong>No advertising identifiers (IDFA/GAID), device IDs, or push tokens used for tracking</strong> are ever collected. The one exception to &ldquo;no identifier of any kind&rdquo; is the pseudonymous per-install identifier used by person-level product analytics, and only if you separately opt into that specific feature — see &ldquo;Person-level product analytics&rdquo; below for exactly what it is and is not.</li>
-    <li><strong>No precise location is ever collected — including by Trip mode.</strong> Unless you opt into Trip mode, the app does not request or read your GPS coordinates at all. If you do opt into Trip mode, your device&rsquo;s precise location is used, but only to compare it locally against fixed spot coordinates already stored in the app — it is processed entirely on your device and is never sent anywhere; see &ldquo;Trip mode&rdquo; below for exactly what does leave your device in that case. Outside of Trip mode, the only &ldquo;location&rdquo; concept in the app&rsquo;s anonymous counters is which named, fixed viewing spot you interacted with — never coordinates, and never your own position.</li>
+    <li><strong>No precise location is ever collected — including by Trip mode.</strong> Unless you opt into Trip mode, the app does not request or read your GPS coordinates at all. If you do opt into Trip mode, your device&rsquo;s precise location is used, but only to compare it locally against fixed spot coordinates already stored in the app and — only outside those spots, away from the Tromsø town area, and only after dark — to work out which coarse, roughly 5&nbsp;km&sup2; map cell you&rsquo;re currently in, for the sole purpose of spotting new viewing areas; it is all processed entirely on your device and your coordinates are never sent anywhere; see &ldquo;Trip mode&rdquo; below for exactly what does leave your device in that case. Outside of Trip mode, the only &ldquo;location&rdquo; concept in the app&rsquo;s anonymous counters is which named, fixed viewing spot you interacted with — never coordinates, and never your own position.</li>
     <li><strong>No cookies are used by the app itself.</strong></li>
     <li><strong>No third-party trackers or advertising SDKs</strong> are embedded in the app, other than the person-level analytics processor named in &ldquo;Person-level product analytics&rdquo; below, and only once you have separately opted into that specific feature.</li>
   </ul>
@@ -212,7 +212,7 @@
     <li><code>spot_shared</code></li>
     <li><code>alerts_opt_in</code></li>
     <li><code>language_set</code></li>
-    <li><code>trip_mode_toggled</code> (only whether you switched Trip mode&rsquo;s Settings toggle on or off — never any of Trip mode&rsquo;s own presence events; those stay entirely within the identity-free pipeline described in &ldquo;Trip mode&rdquo; below and are never sent here, under any circumstances)</li>
+    <li><code>trip_mode_toggled</code> (only whether you switched Trip mode&rsquo;s Settings toggle on or off — never any of Trip mode&rsquo;s own presence, visit, recommendation-outcome, or area-discovery events; those stay entirely within the identity-free pipeline described in &ldquo;Trip mode&rdquo; below and are never sent here, under any circumstances)</li>
   </ul>
   <p>
     Each event is tagged with the pseudonymous per-install identifier described above and
@@ -298,34 +298,45 @@
     window for that spot.
   </p>
   <p>
-    <strong>What leaves your device.</strong> Only two kinds of small presence events, and
-    only while Trip mode is on:
+    <strong>What leaves your device.</strong> Four kinds of small, spot- or area-level
+    events, and only while Trip mode is on:
   </p>
   <ul>
-    <li>that your device is currently near one of the app&rsquo;s named viewing spots (&ldquo;presence&rdquo;), and</li>
-    <li>that your device stayed continuously near that same spot for 20 minutes or more (&ldquo;long presence&rdquo;).</li>
+    <li>that your device is currently near one of the app&rsquo;s named viewing spots (&ldquo;presence&rdquo;), and that it stayed continuously near that same spot for 20 minutes or more (&ldquo;long presence&rdquo;) — a spot identifier and the current UTC hour, nothing else, exactly as before;</li>
+    <li><strong>a visit summary</strong>, sent once a visit to a spot ends (you leave, you move straight to a different spot, or the trip session ends while you&rsquo;re still there): the spot identifier, the UTC hour you arrived, and which coarse duration bucket you stayed for — under 5 minutes, 5&ndash;15, 15&ndash;30, 30&ndash;60, or 60-plus minutes — never the exact number of minutes;</li>
+    <li><strong>which recommendation you acted on, if any</strong>: when the app has shown you a recommended spot and you later arrive there, your device compares &ldquo;shown&rdquo; and &ldquo;arrived&rdquo; entirely on its own and sends only the outcome — the spot identifier, which recommendation it was, and the UTC hour. We never reconstruct your journey on our servers; this outcome event stands entirely on its own;</li>
+    <li><strong>a coarse area event, only to help us find new viewing areas we don&rsquo;t already know about</strong>: if your device dwells 15 minutes or more somewhere outside every named spot and away from the Tromsø town area, during dark hours only, it sends a single coarse map-cell identifier — roughly 5&nbsp;km&sup2; in size, deliberately too large to pinpoint an address or a cabin — plus the UTC hour and a coarse duration bucket, and at most once per area per night no matter how long you stay.</li>
   </ul>
   <p>
-    Each event contains only a spot identifier and the current UTC hour — nothing
-    else. These are aggregated immediately into hourly counts per spot, the same way the
-    anonymous usage counters above are, and no individual event is ever stored.
+    Across all four: <strong>no coordinates ever leave your phone</strong> — only the
+    derived spot or cell identifier, the UTC hour, and (where noted) a coarse duration
+    bucket described above. <strong>None of it is linked to you or to any identifier</strong>,
+    including linking these events to one another — a visit event, a recommendation-outcome
+    event, and an area event from the same device are not connected on our server. And
+    <strong>all of it feeds only anonymous, aggregated counters</strong>, the same
+    identity-free pipeline as the anonymous usage counters described earlier in this
+    policy: events are aggregated immediately into hourly counts per spot or per area, and
+    no individual event is ever stored.
   </p>
   <p><strong>What never leaves your device, under any circumstances:</strong></p>
   <ul>
-    <li>your precise GPS coordinates — only the fact that you&rsquo;re near a named spot is ever sent, never a latitude/longitude;</li>
-    <li>any route, path, or sequence of spots you visited — each event stands alone; the app does not send anything that could be reassembled into where you went before or after;</li>
-    <li>any device or account identifier that could link two events together;</li>
+    <li>your precise GPS coordinates — only the derived spot identifier, area-cell identifier, UTC hour, and coarse duration bucket described above are ever sent, never a latitude/longitude;</li>
+    <li>any route, path, or sequence of spots or areas you visited — each event stands alone; the app does not send anything that could be reassembled into where you went before or after, and the recommendation &ldquo;shown vs. arrived&rdquo; comparison described above happens entirely on your device, never on our servers;</li>
+    <li>any device or account identifier that could link two events together, or that could link a visit, recommendation-outcome, or area event to each other or to anything else this app sends;</li>
     <li>anything at all while Trip mode is off, or while the app is backgrounded or closed — Trip mode never runs, and never collects anything, outside the app being open in the foreground;</li>
-    <li>before Trip mode launches, the path your device&rsquo;s request travels to reach our server is designed and audited so that no IP address or other request-identifying information (request IDs, session IDs, device metadata) capable of linking events together is retained at any point along it — specifically so individual presence events cannot be reassembled into a sequence after the fact.</li>
+    <li>a coarse area event for anywhere inside a named spot&rsquo;s radius, inside the Tromsø town area, or outside dark hours — those conditions are all checked on your device before anything is sent, never filtered out afterwards;</li>
+    <li>before Trip mode launches, the path your device&rsquo;s request travels to reach our server is designed and audited so that no IP address or other request-identifying information (request IDs, session IDs, device metadata) capable of linking events together is retained at any point along it — specifically so individual presence, visit, recommendation-outcome, or area events cannot be reassembled into a sequence after the fact.</li>
   </ul>
   <p>
     <strong>On anonymity.</strong> We take a deliberately conservative position here,
     because a single event like &ldquo;near Grøtfjord at 22:00&rdquo; is not automatically
-    anonymous on its own — in combination with other information it could, in principle, be
-    identifying. So: individual presence events are treated as personal data while they are
-    being sent and processed. Only once they have been aggregated into counts, with
-    sufficiently small counts suppressed, are the resulting statistics treated as anonymous
-    — and only for aggregates that actually meet that bar.
+    anonymous on its own — and the same is true of a visit summary, a recommendation-outcome
+    event, or a coarse area event — in combination with other information it could, in
+    principle, be identifying. So: individual presence, visit, recommendation-outcome, and
+    area events are all treated as personal data while they are being sent and processed.
+    Only once they have been aggregated into counts, with sufficiently small counts
+    suppressed, are the resulting statistics treated as anonymous — and only for aggregates
+    that actually meet that bar.
   </p>
   <p>
     <strong>Consent and withdrawal.</strong> Trip mode is off by default. Turning its

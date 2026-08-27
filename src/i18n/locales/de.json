@@ -318,7 +318,7 @@
   "tripMode": {
     "toggleLabel": "Trip-Modus",
     "description": "Eine separate, optionale Möglichkeit, Ihnen unterwegs zu helfen — nur ortsbezogen, nie Ihre genauen Koordinaten. Standardmäßig deaktiviert, und Sie können es jederzeit wieder ausschalten.",
-    "whatLeaves": "Was Ihr Telefon verlässt: nur Ereignisse wie „in der Nähe von <Ort>“ und „20+ Min. geblieben“, verknüpft mit dem Ortsnamen und der Uhrzeit — nichts Genaueres, und nichts, solange dies deaktiviert ist.",
+    "whatLeaves": "Was Ihr Telefon verlässt: welche Orte Sie besuchen und wie lange Sie ungefähr bleiben, zu welchem empfohlenen Ort Sie tatsächlich gegangen sind, sowie grobe Bereiche, in denen Sie sich nachts beim Erkunden länger aufhalten — nie Ihre genaue Position, und nie mit Ihnen verknüpft.",
     "toggleOnHelper": "Wird ortsbezogene Anwesenheit teilen, sobald die Funktionen des Trip-Modus verfügbar sind.",
     "toggleOffHelper": "Aus. Es wird nichts geteilt.",
     "comingSoonNote": "Dieser Schalter ist schon vorbereitet — der Trip-Modus selbst wird aktiv, sobald seine Funktionen in einem kommenden Update erscheinen."
