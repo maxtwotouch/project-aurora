@@ -12,15 +12,17 @@ import {
   bufferPendingEvent,
   dropQueueOnRevoke,
   isPersistedConsentState,
+  isPersistedPersonalAnalyticsConsentState,
   isPersistedTripModeConsentState,
   mayFlush,
   pushToQueue,
   resolveLoadedConsentState,
+  resolveLoadedPersonalAnalyticsConsentState,
   resolveLoadedTripModeConsentState,
   resolvePendingBeforeLoad,
   takeNextBatch
 } from '../src/analytics/core.js';
-import type { ConsentState, TripModeConsentState } from '../src/analytics/core.js';
+import type { ConsentState, PersonalAnalyticsConsentState, TripModeConsentState } from '../src/analytics/core.js';
 
 type Event = { type: 'spot_view' | 'navigate_pressed'; spotId: string };
 
@@ -366,6 +368,121 @@ describe('tripMode consent: independence from usage consent', () => {
     assert.notEqual(isPersistedConsentState, isPersistedTripModeConsentState as unknown as typeof isPersistedConsentState);
     for (const value of ['accepted', 'declined', null, 'unset', 'garbage']) {
       assert.equal(isPersistedConsentState(value), isPersistedTripModeConsentState(value));
+    }
+  });
+});
+
+// Person-level analytics consent (src/analytics/personalAnalyticsConsent.ts) is a THIRD,
+// INDEPENDENT consent dimension from both the aggregate usage-events consent and Trip mode
+// consent tested above -- see core.ts's PersonalAnalyticsConsentState doc comment
+// (docs/analytics-pivot.md, PR 2 of the analytics pivot). These tests mirror the trip-mode
+// coverage above 1:1 (default/accept/decline/toggle-off, corrupt-value fallback) and add
+// explicit three-way independence checks, since "never coupled to either other dimension"
+// is the entire point of having a third dimension at all -- including the re-consent rule
+// that this dimension defaults to 'unset' for everyone regardless of what they answered for
+// the other two.
+describe('personalAnalytics consent: isPersistedPersonalAnalyticsConsentState', () => {
+  test('accepts "accepted" and "declined"', () => {
+    assert.equal(isPersistedPersonalAnalyticsConsentState('accepted'), true);
+    assert.equal(isPersistedPersonalAnalyticsConsentState('declined'), true);
+  });
+
+  test('rejects null, "unset", and any other string', () => {
+    assert.equal(isPersistedPersonalAnalyticsConsentState(null), false);
+    assert.equal(isPersistedPersonalAnalyticsConsentState('unset'), false);
+    assert.equal(isPersistedPersonalAnalyticsConsentState(''), false);
+    assert.equal(isPersistedPersonalAnalyticsConsentState('garbage'), false);
+  });
+});
+
+describe('personalAnalytics consent: resolveLoadedPersonalAnalyticsConsentState (default "unset" + load transitions)', () => {
+  test('default state: nothing persisted (first open, or a failed read) resolves to unset', () => {
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
+  });
+
+  test('accept: a persisted "accepted" resolves to accepted', () => {
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState('accepted'), 'accepted');
+  });
+
+  test('decline: a persisted "declined" resolves to declined', () => {
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState('declined'), 'declined');
+  });
+
+  test('toggle-off-after-accept: simulating accept then decline persists the latest choice, not the first', () => {
+    const afterAccept = resolveLoadedPersonalAnalyticsConsentState('accepted');
+    assert.equal(afterAccept, 'accepted');
+
+    const afterDecline = resolveLoadedPersonalAnalyticsConsentState('declined');
+    assert.equal(afterDecline, 'declined');
+  });
+
+  test('a corrupt/unrecognized persisted value falls back to unset (never accepted/declined) -- fail closed', () => {
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState('yes-please'), 'unset');
+  });
+});
+
+describe('personalAnalytics consent: re-consent-by-construction (new dimension, no carry-over from usage consent)', () => {
+  test('a user who previously accepted usage consent still resolves to unset for personal analytics until they answer the new question', () => {
+    // Simulates a returning user: usage consent has a real persisted value from before the
+    // pivot shipped, but personal-analytics consent has never been persisted for them
+    // (there is no migration path that copies one into the other).
+    assert.equal(resolveLoadedConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
+  });
+
+  test('a user who previously declined usage consent also resolves to unset for personal analytics -- decline does not carry over as accept OR as decline', () => {
+    assert.equal(resolveLoadedConsentState('declined'), 'declined');
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
+  });
+});
+
+describe('personalAnalytics consent: independence from BOTH usage consent and trip-mode consent', () => {
+  test('mutating personal-analytics consent has no bearing on what usage consent or trip-mode consent resolve to', () => {
+    // Personal analytics accepted; the other two dimensions never persisted (still unset).
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedConsentState(null), 'unset');
+    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+  });
+
+  test('mutating usage consent has no bearing on what personal-analytics consent resolves to', () => {
+    assert.equal(resolveLoadedConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
+  });
+
+  test('mutating trip-mode consent has no bearing on what personal-analytics consent resolves to', () => {
+    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
+  });
+
+  test('all three dimensions can independently hold different, non-default values simultaneously', () => {
+    const usage: ConsentState = resolveLoadedConsentState('accepted');
+    const trip: TripModeConsentState = resolveLoadedTripModeConsentState('declined');
+    const personalAnalytics: PersonalAnalyticsConsentState = resolveLoadedPersonalAnalyticsConsentState('accepted');
+
+    assert.equal(usage, 'accepted');
+    assert.equal(trip, 'declined');
+    assert.equal(personalAnalytics, 'accepted');
+
+    // Every combination of the three states is representable independently -- re-run with
+    // usage and personal-analytics swapped to confirm neither function's behavior depends
+    // on argument order or a shared module-level default.
+    assert.equal(resolveLoadedConsentState('declined'), 'declined');
+    assert.equal(resolveLoadedPersonalAnalyticsConsentState('declined'), 'declined');
+    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+  });
+
+  test('isPersistedConsentState, isPersistedTripModeConsentState, and isPersistedPersonalAnalyticsConsentState agree on validity but are three distinct functions', () => {
+    assert.notEqual(
+      isPersistedConsentState,
+      isPersistedPersonalAnalyticsConsentState as unknown as typeof isPersistedConsentState
+    );
+    assert.notEqual(
+      isPersistedTripModeConsentState,
+      isPersistedPersonalAnalyticsConsentState as unknown as typeof isPersistedTripModeConsentState
+    );
+    for (const value of ['accepted', 'declined', null, 'unset', 'garbage']) {
+      assert.equal(isPersistedConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
+      assert.equal(isPersistedTripModeConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
     }
   });
 });

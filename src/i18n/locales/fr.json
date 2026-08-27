@@ -302,6 +302,19 @@
     "privacyPolicyLink": "Politique de confidentialité",
     "languageRowA11y": "Choisir la langue"
   },
+  "personalAnalyticsConsent": {
+    "eyebrow": "Une dernière chose",
+    "title": "Partager des statistiques personnelles avec nous ?",
+    "body": "Ceci est indépendant des statistiques anonymes ci-dessus et fait l'objet d'une demande distincte. Un identifiant aléatoire pour cette installation de l'application (jamais votre nom, votre e-mail ou un compte — l'application n'en a aucun) est associé aux ouvertures de l'application, aux consultations d'écrans, aux consultations de sites, aux appuis de navigation, aux partages, aux inscriptions aux alertes, aux changements de langue et à l'état du réglage du mode voyage. Traité par PostHog dans l'UE. Vous pouvez refuser et tout continue de fonctionner de la même façon.",
+    "acceptButton": "Partager les statistiques personnelles",
+    "declineButton": "Non merci",
+    "footnote": "Vous pouvez modifier ce choix plus tard dans les réglages.",
+    "toggleLabel": "Statistiques personnelles",
+    "toggleOnHelper": "Les ouvertures de l'application, les consultations d'écrans et l'utilisation des fonctionnalités sont partagées, associées à un identifiant aléatoire pour cette installation.",
+    "toggleOffHelper": "Aucune statistique personnelle n'est partagée.",
+    "whatIncludes": "Ce que cela inclut : ouvertures de l'application, consultations d'écrans, consultations de sites, appuis de navigation, partages, inscriptions aux alertes, changements de langue et état du réglage du mode voyage — chacun associé à un identifiant aléatoire pour cette installation, traité par PostHog dans l'UE.",
+    "whatNeverIncludes": "Ce que cela n'inclut jamais : votre position exacte, les identifiants publicitaires, le suivi entre applications, les enregistrements de session, ou la capture automatique de tout ce que vous touchez."
+  },
   "tripMode": {
     "toggleLabel": "Mode voyage",
     "description": "Une manière distincte et facultative de vous aider une fois sur place — uniquement au niveau du site, jamais vos coordonnées exactes. Désactivé par défaut, et vous pouvez le désactiver à nouveau à tout moment.",

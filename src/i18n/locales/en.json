@@ -302,6 +302,19 @@
     "privacyPolicyLink": "Privacy policy",
     "languageRowA11y": "Choose language"
   },
+  "personalAnalyticsConsent": {
+    "eyebrow": "One more thing",
+    "title": "Share personal analytics with us?",
+    "body": "This is separate from the anonymous counts above and asked separately. It links a random ID for this install of the app (not your name, email, or any account — the app has none) to app opens, screen views, spot views, navigation taps, shares, alert opt-ins, language changes, and the Trip mode toggle state. Processed by PostHog in the EU. You can say no and everything works the same.",
+    "acceptButton": "Share personal analytics",
+    "declineButton": "No thanks",
+    "footnote": "You can change this later in Settings.",
+    "toggleLabel": "Personal analytics",
+    "toggleOnHelper": "Sharing app opens, screen views, and feature use, tagged with a random ID for this install.",
+    "toggleOffHelper": "Not sharing personal analytics.",
+    "whatIncludes": "What this includes: app opens, screen views, spot views, navigation taps, shares, alert opt-ins, language changes, and the Trip mode toggle state — each tagged with a random ID for this install, processed by PostHog in the EU.",
+    "whatNeverIncludes": "What this never includes: your exact location, advertising IDs, cross-app tracking, session recordings, or automatic capture of everything you tap."
+  },
   "tripMode": {
     "toggleLabel": "Trip mode",
     "description": "A separate, optional way to help while you're heading out — spot-level only, never your exact coordinates. Off by default, and you can turn it off again anytime.",

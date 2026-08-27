@@ -183,3 +183,59 @@ export function isPersistedTripModeConsentState(value: string | null): value is 
 export function resolveLoadedTripModeConsentState(stored: string | null): TripModeConsentState {
   return isPersistedTripModeConsentState(stored) ? stored : 'unset';
 }
+
+/**
+ * Person-level product analytics consent -- a THIRD, INDEPENDENT consent
+ * dimension (see docs/analytics-pivot.md sections 2 and 4, PR 2 of the
+ * analytics pivot). Distinct from both ConsentState (aggregate usage
+ * counters, above) and TripModeConsentState (above):
+ *
+ * - different storage key (aurora.personalAnalyticsConsent.v1, owned by
+ *   ./personalAnalyticsConsent.ts -- never aurora.analyticsConsent.v1 or
+ *   aurora.tripModeConsent.v1),
+ * - different UI surface: a SECOND, separately-actioned question in the
+ *   first-open consent flow (see ConsentGate/ConsentModal) in addition to a
+ *   Settings-only toggle (PersonalAnalyticsToggle) for changing the choice
+ *   later,
+ * - never inferred from, defaulted from, or written alongside either of the
+ *   other two dimensions.
+ *
+ * Re-consent: this dimension is entirely new and defaults to 'unset' for
+ * every install -- including people who already answered the aggregate
+ * usage-counter question above. That default is what implements "everyone
+ * re-consents" for the new scope (docs/analytics-pivot.md section 2.2):
+ * nobody's prior acceptance of the aggregate pipeline carries over to this
+ * one, because this dimension has no prior persisted value to read for
+ * anyone.
+ *
+ * The underlying tri-state shape ('unset' | 'accepted' | 'declined') and
+ * fail-closed defaulting rule are intentionally identical to the other two
+ * dimensions' (an unrecognized/missing persisted value always resolves to
+ * 'unset', never 'accepted'), so all three behave predictably the same way
+ * in isolation -- but they are three separate pieces of state, not one.
+ * Toggling any one must never read, write, or otherwise touch the other two.
+ *
+ * No SDK, no network calls, and no event emission exist yet -- this only
+ * models the consent choice itself. Per docs/analytics-pivot.md section 4,
+ * the PostHog SDK integration is a later, separately reviewed PR (PR 3);
+ * until it ships, this consent state has no observable effect beyond what
+ * is stored on-device.
+ */
+export type PersonalAnalyticsConsentState = 'unset' | 'accepted' | 'declined';
+
+/** Narrows a raw value read back from storage to a real persisted personal-analytics choice. */
+export function isPersistedPersonalAnalyticsConsentState(
+  value: string | null
+): value is 'accepted' | 'declined' {
+  return value === 'accepted' || value === 'declined';
+}
+
+/**
+ * Resolves what the in-memory personal-analytics consent state should
+ * become once the persisted value has been read back from storage (or the
+ * read failed, in which case the caller passes `null`). 'unset' is the only
+ * fallback.
+ */
+export function resolveLoadedPersonalAnalyticsConsentState(stored: string | null): PersonalAnalyticsConsentState {
+  return isPersistedPersonalAnalyticsConsentState(stored) ? stored : 'unset';
+}
