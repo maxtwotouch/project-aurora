@@ -67,7 +67,25 @@ truthful policy, the app moves to person-level product analytics.
   (either would need its own policy language and a fresh decision).
 - Event allowlist starts small: app_open, screen_view (screen name only),
   spot_view, navigate_pressed, spot_shared, alerts_opt_in, language_set,
-  trip_mode_toggled (the toggle state only — never presence events).
+  trip_mode_toggled (the toggle state only).
+
+  **Amendment (owner decision A, 2026-08-21) — spot-level journey events:**
+  two additional allowlisted events, `spot_arrived {spot_id, utcHour}` and
+  `spot_stayed {spot_id, utcHour}`, are captured person-level in PostHog —
+  but ONLY when BOTH consents are accepted: Trip mode consent (covers the
+  collection/geofencing purpose) AND person-level analytics consent (covers
+  the person-level processing purpose). Either toggle off → these events
+  are not sent to PostHog. Purposes remain unbundled; neither consent
+  implies the other. Coordinates still never leave the device — the events
+  carry the on-device geofence classification only (spot id + UTC hour,
+  the same payload shape as the identity-free pipeline). Raw GPS is
+  explicitly NOT collected (owner rejected scope B): PostHog's analysis
+  tools operate on event sequences, road-level flow questions route to
+  public Vegvesen traffic-counter data instead. The identity-free
+  aggregate pipeline continues unchanged in parallel (dual-write) and
+  remains the sole source for the municipality export. Policy, consent
+  copy, and the store label must be updated for these two events in the
+  implementation PR set before any code emits them.
 - No precise coordinates, no IP-based geolocation enrichment (disable
   GeoIP person properties), no third-party IDs (IDFA/GAID never requested
   — this is analytics, not ad tracking; App Tracking Transparency is NOT
