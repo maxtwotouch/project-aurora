@@ -6,8 +6,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mayEmitTripEvents } from '../src/trip/tripEventGate.js';
-import type { TripEventGateInput } from '../src/trip/tripEventGate.js';
+import { mayEmitTripEvents, shouldFlushStopIntents } from '../src/trip/tripEventGate.js';
+import type { TripEventGateInput, TripPresenceStopReason } from '../src/trip/tripEventGate.js';
 
 function baseInput(overrides: Partial<TripEventGateInput> = {}): TripEventGateInput {
   return { loaded: true, tripModeConsent: 'accepted', configured: true, ...overrides };
@@ -49,5 +49,29 @@ describe('mayEmitTripEvents: independence from usage-events consent', () => {
   // reference anywhere to the separate usage-events question, is sufficient.
   test('accepted Trip-mode consent alone is sufficient, regardless of what a caller "meant" by the other consent', () => {
     assert.equal(mayEmitTripEvents(baseInput({ tripModeConsent: 'accepted' })), true);
+  });
+});
+
+describe('shouldFlushStopIntents: the critical fix -- consent-revoked discards, everything else flushes', () => {
+  test('consent-revoked: false (discard the closing summary, never send it)', () => {
+    assert.equal(shouldFlushStopIntents('consent-revoked'), false);
+  });
+
+  test('background: true (consent still accepted -- only the watcher stops)', () => {
+    assert.equal(shouldFlushStopIntents('background'), true);
+  });
+
+  test('permission-lost: true (consent still accepted -- only the watcher stops)', () => {
+    assert.equal(shouldFlushStopIntents('permission-lost'), true);
+  });
+
+  test('unmount: true (consent still accepted -- only the watcher stops)', () => {
+    assert.equal(shouldFlushStopIntents('unmount'), true);
+  });
+
+  test('exhaustive: exactly one of the four reasons discards', () => {
+    const reasons: TripPresenceStopReason[] = ['consent-revoked', 'background', 'permission-lost', 'unmount'];
+    const discarding = reasons.filter((reason) => !shouldFlushStopIntents(reason));
+    assert.deepEqual(discarding, ['consent-revoked']);
   });
 });

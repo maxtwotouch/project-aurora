@@ -37,27 +37,10 @@
  * silently absorbed: no retry, no crash, no user-visible effect, just event
  * loss until the backend PR ships.
  *
- * WIRE FORMAT (per the finalized parallel backend-PR contract note): the
- * backend's field name for the hour bucket is `utcHour` on every event type,
- * including the three that this app's own pure trip modules internally call
- * `timeBucket` (spot_visit, recommended_spot_visit, zone_dwell -- see
- * presenceCore.ts/zoneDiscovery.ts's own doc comments on why THEY chose
- * `timeBucket`). `toWirePayload()` below is the ONE place that translates
- * `timeBucket` -> `utcHour` at the send boundary; `spot_presence`/
- * `spot_presence_long` already use `utcHour` internally, so those pass
- * through unchanged. The merged pure modules (presenceCore.ts,
- * recommendationAttribution.ts, zoneDiscovery.ts) are deliberately NOT
- * renamed to match -- this is a wire-serialization concern, not a change to
- * their own documented intent shapes.
- *
- * `recommendationId` must additionally match the backend's
- * `^[a-z0-9_-]{1,64}$` validator; `toWirePayload()` drops (does not send)
- * any `recommended_spot_visit` whose id fails that check, rather than
- * letting one malformed item fail the entire batch atomically (see
- * backend/src/events.ts's `parseEvents`, which rejects a whole batch on any
- * single invalid item) -- this app only ever mints
- * attributionStore.ts's `TONIGHT_BEST_SPOT_RECOMMENDATION_ID` today, which
- * satisfies the pattern, so this is defense in depth, not an expected path.
+ * WIRE FORMAT: the `timeBucket` -> `utcHour` translation and the
+ * `recommendationId` pattern check now live in ./tripEventWire.ts (pure, no
+ * react-native import, directly unit-tested in test/tripEventWire.test.ts)
+ * -- this module just calls `toWireBatch()` right before `fetch()`.
  *
  * BATCH ISOLATION: this module's queue/flush cycle is entirely separate from
  * src/analytics/events.ts's (separate array, separate timer, separate
@@ -73,44 +56,10 @@ import type { AppStateStatus } from 'react-native';
 import { getTripModeConsent, isTripModeConsentLoaded, subscribeTripModeConsent } from '../analytics/tripModeConsent';
 import { dropQueueOnRevoke, pushToQueue, takeNextBatch } from '../analytics/core';
 import { mayEmitTripEvents } from './tripEventGate';
-import type { DwellBucket, PresenceIntent } from './presenceCore';
-import type { RecommendedSpotVisitIntent } from './recommendationAttribution';
-import type { ZoneDwellIntent } from './zoneDiscovery';
+import { toWireBatch } from './tripEventWire';
+import type { TripEventIntent } from './tripEventWire';
 
-export type TripEventIntent = PresenceIntent | RecommendedSpotVisitIntent | ZoneDwellIntent;
-
-/** The backend wire shape -- `utcHour` throughout, per the finalized backend contract (see module header). */
-type TripEventWirePayload =
-  | { type: 'spot_presence'; spotId: string; utcHour: number }
-  | { type: 'spot_presence_long'; spotId: string; utcHour: number }
-  | { type: 'spot_visit'; spotId: string; utcHour: number; dwellBucket: DwellBucket }
-  | { type: 'recommended_spot_visit'; spotId: string; recommendationId: string; utcHour: number }
-  | { type: 'zone_dwell'; h3Cell: string; utcHour: number; dwellBucket: DwellBucket };
-
-const RECOMMENDATION_ID_PATTERN = /^[a-z0-9_-]{1,64}$/;
-
-/** Translates one internal intent into the backend's wire shape, or `null` to drop it (see module header). */
-function toWirePayload(intent: TripEventIntent): TripEventWirePayload | null {
-  switch (intent.type) {
-    case 'spot_presence':
-    case 'spot_presence_long':
-      return { type: intent.type, spotId: intent.spotId, utcHour: intent.utcHour };
-    case 'spot_visit':
-      return { type: 'spot_visit', spotId: intent.spotId, utcHour: intent.timeBucket, dwellBucket: intent.dwellBucket };
-    case 'recommended_spot_visit':
-      if (!RECOMMENDATION_ID_PATTERN.test(intent.recommendationId)) return null;
-      return {
-        type: 'recommended_spot_visit',
-        spotId: intent.spotId,
-        recommendationId: intent.recommendationId,
-        utcHour: intent.timeBucket
-      };
-    case 'zone_dwell':
-      return { type: 'zone_dwell', h3Cell: intent.h3Cell, utcHour: intent.timeBucket, dwellBucket: intent.dwellBucket };
-    default:
-      return null;
-  }
-}
+export type { TripEventIntent };
 
 // Same env/config pattern as src/analytics/events.ts and src/api/backend.ts
 // (each module reads these itself rather than sharing a config singleton).
@@ -138,6 +87,16 @@ function ensureFlushTimer(): void {
   }, FLUSH_INTERVAL_MS);
 }
 
+// NOTE (post-review, keep these two AppState listeners disjoint): this
+// module and useTripPresence.ts EACH register their own AppState 'change'
+// listener, deliberately -- do not merge them into one shared listener in a
+// future refactor. This one only ever tries to FLUSH THE NETWORK QUEUE
+// (already-built intents this module owns) on backgrounding -- it has no
+// visibility into presence/zone state and must not gain any. The hook's own
+// listener (see useTripPresence.ts) owns SAMPLING lifecycle -- starting/
+// stopping the location watcher and computing the closing `spot_visit` via
+// `endPresenceSession` -- which this module has no visibility into either.
+// Same data, same trigger event, two independent concerns.
 function ensureAppStateListener(): void {
   if (appStateSubscription) return;
   appStateSubscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
@@ -150,7 +109,7 @@ function ensureAppStateListener(): void {
 async function postBatch(batch: readonly TripEventIntent[]): Promise<void> {
   if (batch.length === 0 || !isConfigured()) return;
 
-  const wireBatch = batch.map(toWirePayload).filter((item): item is TripEventWirePayload => item !== null);
+  const wireBatch = toWireBatch(batch);
   if (wireBatch.length === 0) return;
 
   try {
@@ -207,19 +166,30 @@ async function flush(): Promise<void> {
 /**
  * Force-flushes a small set of intents immediately, BYPASSING the current
  * consent re-check -- used ONLY for the closing `spot_visit` summary
- * `endPresenceSession` produces at a deliberate stop (Trip mode toggled off,
- * app backgrounded, permission lost). That summary describes a visit that
- * happened WHILE consent was 'accepted' -- withdrawing consent stops future
- * collection (docs/analytics-pivot.md section 2: "toggle off in Settings
- * stops collection immediately"), it does not un-happen data already
- * gathered under valid consent, and presenceCore.ts's own design already
+ * `endPresenceSession` produces at a deliberate stop, and ONLY when the
+ * caller (useTripPresence.ts's `stop()`) has already determined Trip-mode
+ * consent is STILL 'accepted' at that moment (stop reasons `background`,
+ * `permission-lost`, `unmount` -- see tripEventGate.ts's
+ * `shouldFlushStopIntents`). That summary describes a visit that happened
+ * WHILE consent was 'accepted', and presenceCore.ts's own design already
  * treats an explicit session end as "a confirming instant" for exactly this
- * reason (see its `endPresenceSession` doc comment). Concretely: by the time
- * the presence hook's stop-handler runs in reaction to a consent change, the
- * shared consent module has ALREADY flipped to the new value, so routing
- * this through the normal `enqueueTripEvents` gate would silently drop the
- * very summary the toggle-off is supposed to still deliver. Still requires
- * `isConfigured()` (an infra check, not a consent check).
+ * reason (see its `endPresenceSession` doc comment) -- the bypass exists so
+ * this one closing summary doesn't get lost to a benign timing race between
+ * "the watcher itself needs to stop right now" (background/permission/
+ * unmount) and the normal queue's periodic flush cadence.
+ *
+ * CRITICAL INVARIANT (post-review fix -- read before calling this from
+ * anywhere new): this function must NEVER be called for a `consent-revoked`
+ * stop. Consent withdrawal must stop collection immediately (docs/design-
+ * trip-tracking.md section 5 / docs/analytics-pivot.md section 2: "toggle
+ * off in Settings stops collection immediately") -- an earlier version of
+ * this wiring routed every stop reason through this bypass, which meant
+ * toggling Trip mode off could still fire one more POST after revocation.
+ * useTripPresence.ts's `stop()` now decides whether to call this at all via
+ * `shouldFlushStopIntents(reason)` BEFORE reaching this function; a
+ * `consent-revoked` stop discards its `endPresenceSession` intents outright
+ * and never calls this. Still requires `isConfigured()` (an infra check,
+ * not a consent check) -- that alone is not sufficient permission to send.
  */
 export function flushFinalTripEvents(intents: readonly TripEventIntent[]): void {
   if (intents.length === 0 || !isConfigured()) return;
@@ -228,8 +198,17 @@ export function flushFinalTripEvents(intents: readonly TripEventIntent[]): void 
 
 // Drop everything queued (but not yet sent) the moment Trip-mode consent is
 // no longer 'accepted' -- mirrors src/analytics/events.ts's subscribeConsent
-// handler, but keyed on Trip-mode consent. Deliberately does NOT affect
-// flushFinalTripEvents(), which bypasses this queue entirely.
+// handler, but keyed on Trip-mode consent. This is what satisfies "revoked
+// consent means already-queued items must not post either": combined with
+// `enqueueTripEvents`/`flush()`'s own `mayEmitTripEvents` gate (which
+// re-checks the LIVE consent value via `getTripModeConsent()`, not a stale
+// closure), no ordering assumption between this subscription firing and any
+// other consent listener is required for correctness -- a queued item is
+// either dropped here, or refused by the gate the next time anything tries
+// to flush it, whichever happens first. Deliberately does NOT affect
+// flushFinalTripEvents(), which bypasses this queue entirely (see that
+// function's own doc comment for the invariant governing when it may be
+// called at all).
 subscribeTripModeConsent((state) => {
   if (state === 'accepted') return;
 

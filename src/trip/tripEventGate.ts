@@ -54,3 +54,36 @@ export type TripEventGateInput = {
 export function mayEmitTripEvents(input: TripEventGateInput): boolean {
   return input.loaded && input.tripModeConsent === 'accepted' && input.configured;
 }
+
+/**
+ * Why useTripPresence.ts's `stop()` is called -- see that hook's own header
+ * for where each reason originates.
+ */
+export type TripPresenceStopReason = 'consent-revoked' | 'background' | 'permission-lost' | 'unmount';
+
+/**
+ * Whether the closing summary a stop produces (endPresenceSession's
+ * `spot_visit` intent, if any) should be FLUSHED or DISCARDED -- extracted
+ * as its own pure predicate (post-review fix) after an earlier version of
+ * useTripPresence.ts routed every stop reason, including consent
+ * revocation, through the bypass-the-gate `flushFinalTripEvents` -- which
+ * meant toggling Trip mode off could still fire one more POST after
+ * revocation, contradicting docs/design-trip-tracking.md section 5 and
+ * docs/analytics-pivot.md section 2 ("toggle off in Settings stops
+ * collection immediately"). "Stops collection immediately" is read
+ * literally here: a `consent-revoked` stop's summary is discarded outright,
+ * never queued and never sent, even though the dwell it describes happened
+ * while consent was still 'accepted' (the tension `flushFinalTripEvents`'s
+ * own doc comment discusses does NOT apply to consent revocation
+ * specifically -- withdrawal is the one signal that must win outright).
+ *
+ * Every OTHER stop reason (`background`, `permission-lost`, `unmount`)
+ * happens while Trip-mode consent is STILL 'accepted' -- only the watcher
+ * itself is stopping, not the user's underlying consent -- so those keep
+ * flushing the closing summary, per presenceCore.ts's own "an explicit
+ * session end is a confirming instant" design and `flushFinalTripEvents`'s
+ * documented rationale.
+ */
+export function shouldFlushStopIntents(reason: TripPresenceStopReason): boolean {
+  return reason !== 'consent-revoked';
+}

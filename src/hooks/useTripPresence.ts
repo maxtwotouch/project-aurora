@@ -19,6 +19,8 @@ import {
 import type { PresenceSample, PresenceState, SpotGeofence } from '../trip/presenceCore';
 import { enqueueTripEvents, flushFinalTripEvents } from '../trip/tripEventClient';
 import type { TripEventIntent } from '../trip/tripEventClient';
+import { shouldFlushStopIntents } from '../trip/tripEventGate';
+import type { TripPresenceStopReason } from '../trip/tripEventGate';
 import { TROMSO_CENTER, TROMSO_URBAN_EXCLUSION_CELLS } from '../trip/urbanExclusion';
 import {
   DEFAULT_ZONE_MAX_GAP_MS,
@@ -44,12 +46,29 @@ import type { NightDedupeState, ZoneDwellState } from '../trip/zoneDiscovery';
  *      the first time (1) and (2) are both true -- "at the point of
  *      relevance" per Apple's own guidance, quoted in docs/design-trip-
  *      tracking.md section 3 -- never on cold start regardless of consent).
+ *      PERMISSION-REVOCATION ASSUMPTION: revoking foreground location
+ *      permission requires leaving this app (iOS Settings, or Android's
+ *      equivalent) -- so the AppState background handler below already
+ *      covers the common case (the app backgrounds the instant the user
+ *      goes to revoke it), and the foreground re-check in `start()` covers
+ *      the return trip; Android's "only this time" one-shot grant, which
+ *      CAN auto-revoke without the user visiting Settings, is caught the
+ *      same way: the next `start()` (next foreground, or the next Trip-mode
+ *      re-evaluation) re-checks `getForegroundPermissionsAsync()` before
+ *      trusting it. `watchPositionAsync`'s own `errorHandler` below is an
+ *      additional, defensive `permission-lost` stop for the rarer case
+ *      where a running subscription itself errors out.
  *   4. `EXPO_PUBLIC_USE_BACKEND`/`EXPO_PUBLIC_API_BASE_URL` are configured
  *      (checked deeper, inside tripEventClient.ts -- collection can still
  *      run locally without a configured backend, but nothing is ever
  *      queued to send; see that module).
- * Any one of (1)-(3) becoming false immediately stops the watcher and
- * flushes/reset the local state -- see `stop()` below.
+ * Any one of (1)-(3) becoming false immediately stops the watcher via
+ * `stop(reason)` -- see that function below, and tripEventGate.ts's
+ * `shouldFlushStopIntents` for the reason-keyed flush/discard decision this
+ * hook defers to (a `consent-revoked` stop DISCARDS its closing summary
+ * outright rather than sending it, per the "consent off stops collection
+ * immediately" fix; every other reason still flushes it, since consent is
+ * still 'accepted' in those cases -- only the watcher itself is stopping).
  *
  * SAMPLING PARAMETERS (battery-conscious, documented per the task):
  *   - `Location.Accuracy.Balanced` (~100m, WiFi/cell-assisted rather than
@@ -196,15 +215,27 @@ export function useTripPresence(): void {
   );
 
   /**
-   * Stops the watcher (if any) and flushes the current visit, per the task's
-   * "Consent off / app background / permission missing -> no watcher, state
-   * reset via resetPresence + endPresenceSession flush" instruction.
-   * `alsoResetAttribution` is true only for the explicit Trip-mode-off path
-   * (item 5) -- see attributionStore.ts's own comment on why backgrounding
-   * alone must NOT reset it (the whole point of the 12h attribution window
-   * is surviving exactly that kind of gap).
+   * Stops the watcher (if any) and settles the current visit, per the
+   * task's "Consent off / app background / permission missing -> no
+   * watcher, state reset via resetPresence + endPresenceSession flush"
+   * instruction -- with the reason-keyed flush/discard split from the
+   * post-review fix (see tripEventGate.ts's `shouldFlushStopIntents` for
+   * the decision itself, and flushFinalTripEvents's doc comment in
+   * tripEventClient.ts for the invariant this branch upholds):
+   *
+   *   - `'consent-revoked'`: endPresenceSession still runs (so local state
+   *     resets cleanly either way), but its resulting intents are
+   *     DISCARDED -- never queued, never sent -- because consent
+   *     withdrawal must stop collection immediately. Also resets the
+   *     attribution store (item 5 of the wiring task) -- see
+   *     attributionStore.ts's own comment on why the OTHER reasons below
+   *     must NOT do this (the 12h attribution window is meant to survive
+   *     exactly a background/foreground gap).
+   *   - `'background' | 'permission-lost' | 'unmount'`: consent is still
+   *     'accepted' in every one of these cases -- only the watcher itself
+   *     is stopping -- so the closing summary is flushed as before.
    */
-  const stop = useCallback((alsoResetAttribution: boolean) => {
+  const stop = useCallback((reason: TripPresenceStopReason) => {
     startTokenRef.current += 1; // invalidate any in-flight start()
     if (watcherRef.current) {
       watcherRef.current.remove();
@@ -219,10 +250,17 @@ export function useTripPresence(): void {
     // just forget the in-progress cell.
     zoneStateRef.current = INITIAL_ZONE_DWELL_STATE;
 
-    if (intents.length > 0) {
+    if (intents.length > 0 && shouldFlushStopIntents(reason)) {
       flushFinalTripEvents(intents);
     }
-    if (alsoResetAttribution) {
+    // else (consent-revoked): the closing summary is intentionally dropped
+    // here -- see shouldFlushStopIntents's doc comment. tripEventClient.ts's
+    // own subscribeTripModeConsent handler independently clears anything
+    // already sitting in its queue the moment consent flips, so revoked
+    // consent drops BOTH the trailing summary (here) and any prior
+    // not-yet-sent queued items (there).
+
+    if (reason === 'consent-revoked') {
       resetAttributionStore();
     }
   }, []);
@@ -264,7 +302,15 @@ export function useTripPresence(): void {
           distanceInterval: SAMPLE_DISTANCE_INTERVAL_M,
           timeInterval: SAMPLE_TIME_INTERVAL_MS
         },
-        handleSample
+        handleSample,
+        // Defensive `permission-lost` stop for a running subscription that
+        // itself errors out (e.g. permission revoked out from under an
+        // active watch) -- see the GATING section's "PERMISSION-REVOCATION
+        // ASSUMPTION" note above for why this is a defensive backstop, not
+        // the primary detection path. Consent is still 'accepted' here, so
+        // this flushes the closing summary like any other non-revocation
+        // stop (shouldFlushStopIntents('permission-lost') === true).
+        () => stop('permission-lost')
       );
     } catch {
       return;
@@ -277,7 +323,7 @@ export function useTripPresence(): void {
 
     watcherRef.current = subscription;
     runningRef.current = true;
-  }, [handleSample]);
+  }, [handleSample, stop]);
 
   // Re-evaluate whenever Trip-mode consent (or its loaded-ness) changes.
   useEffect(() => {
@@ -285,12 +331,21 @@ export function useTripPresence(): void {
     if (tripModeConsent === 'accepted') {
       void start();
     } else {
-      stop(true);
+      stop('consent-revoked');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripModeConsent, tripModeConsentLoaded]);
 
-  // Foreground/background transitions.
+  // Foreground/background transitions. NOTE (post-review, keep these two
+  // AppState listeners disjoint): this hook and tripEventClient.ts EACH
+  // register their own AppState 'change' listener, deliberately -- do not
+  // merge them into one shared listener in a future refactor. This one owns
+  // SAMPLING LIFECYCLE (starting/stopping Location.watchPositionAsync and
+  // computing the closing `spot_visit` via `endPresenceSession`) -- it has
+  // no visibility into, and must not gain any into, the network queue
+  // tripEventClient.ts owns. That module's own listener only ever tries to
+  // flush ALREADY-BUILT intents on backgrounding; it has no visibility into
+  // presence/zone state. Same trigger event, two independent concerns.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next: AppStateStatus) => {
       if (next === 'active') {
@@ -298,7 +353,7 @@ export function useTripPresence(): void {
           void start();
         }
       } else {
-        stop(false);
+        stop('background');
       }
     });
     return () => subscription.remove();
@@ -307,9 +362,12 @@ export function useTripPresence(): void {
 
   // Unmount: stop cleanly (should not normally happen -- this hook is
   // mounted once at the app root -- but covers hot reload / test teardown).
+  // Consent is still 'accepted' at this point (unmount isn't a consent
+  // change), so this flushes the closing summary like any other
+  // non-revocation stop.
   useEffect(() => {
     return () => {
-      stop(false);
+      stop('unmount');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
