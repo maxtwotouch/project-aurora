@@ -1,25 +1,40 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-import type { UsageCounterRecord, UsageEventType } from './types.js';
+import type { DwellBucket, UsageCounterRecord } from './types.js';
+import { DWELL_BUCKETS } from './types.js';
 
 /**
  * PRIVACY INVARIANT: this module is the only place usage data is persisted.
- * The sole stored representation is an integer counter keyed by
- * (event type, spotId, UTC hour bucket). Raw events, precise timestamps,
- * IP addresses, user agents, device/session identifiers, or any other
- * request metadata are never held here — nothing person-derived is ever
- * persisted or logged.
+ * The sole stored representation is an integer counter keyed by a small,
+ * per-type-fixed set of coarse dimensions (event type, UTC hour bucket, and
+ * — depending on type — spotId / h3Cell / dwellBucket / recommendationId).
+ * Raw events, precise timestamps, IP addresses, user agents, device/session
+ * identifiers, or any other request metadata are never held here — nothing
+ * person-derived is ever persisted or logged.
  *
  * The store is exposed behind a small interface (`UsageCounterStore`) so a
  * future iteration can swap the JSON-file-backed implementation below for a
  * real database without touching callers in events.ts / stats.ts.
  *
  * On-disk storage schema (`backend/data/usage-stats.json`):
- *   { updatedAt: string, counters: { "<type>|<spotId>|<hourBucket>": <count>, ... } }
- * Every key is exactly `type|spotId|hourBucket` (see `encodeKey`/`decodeKey`
- * below) and every value a non-negative integer count — nothing else is ever
- * written to this file.
+ *   { updatedAt: string, counters: { "<encoded key>": <count>, ... } }
+ * Every value is a non-negative integer count — nothing else is ever written
+ * to this file. The encoded key shape depends on the event type (see
+ * `encodeKey`/`decodeKey` below):
+ *   - spot_view / navigate_pressed / spot_shared: `type|spotId|hourBucket`
+ *     (unchanged from before the tourism-events amendment)
+ *   - spot_presence / spot_presence_long: `type|spotId|hourBucket` (same
+ *     3-segment shape as above, per docs/design-trip-tracking.md section 3
+ *     point 4 / ship gate 6.4 — just a client-supplied hour, see
+ *     toHourBucketFromUtcHour())
+ *   - spot_visit:             `type|spotId|hourBucket|dwellBucket`
+ *   - recommended_spot_visit: `type|spotId|hourBucket|recommendationId`
+ *   - zone_dwell:             `type|h3Cell|hourBucket|dwellBucket`
+ * recommendationId and h3Cell are both validated upstream (events.ts) against
+ * shapes that can never contain the `|` separator (recommendationId:
+ * `^[a-z0-9_-]{1,64}$`; h3Cell: a valid h3 resolution-7 cell id, lowercase
+ * hex), so a plain split on `|` is unambiguous for every key shape above.
  *
  * Retention: hour-bucket keys older than `USAGE_RETENTION_DAYS` (default 180
  * days; parsed like `STALE_SNAPSHOT_MS` in store.ts — invalid/missing falls
@@ -29,17 +44,20 @@ import type { UsageCounterRecord, UsageEventType } from './types.js';
  * parsed as a date is treated as prunable too (see `pruneExpiredBuckets`
  * below). Pruning is logged as a single count-only warning via the same
  * handler used for the distinct-key cap warning — never the pruned keys
- * themselves (though note: a key is just `type|spotId|hourBucket`, so logging
- * one wouldn't leak anything person-derived either way; we just keep the
- * warning simple).
+ * themselves (though note: a key never carries anything person-derived
+ * regardless of shape, so logging one wouldn't leak anything either way; we
+ * just keep the warning simple).
  */
 
-export type CounterKey = {
-  type: UsageEventType;
-  spotId: string;
-  /** UTC hour bucket, formatted "YYYY-MM-DDTHH". */
-  hourBucket: string;
-};
+export type CounterKey =
+  | {
+      type: 'spot_view' | 'navigate_pressed' | 'spot_shared' | 'spot_presence' | 'spot_presence_long';
+      spotId: string;
+      hourBucket: string;
+    }
+  | { type: 'spot_visit'; spotId: string; hourBucket: string; dwellBucket: DwellBucket }
+  | { type: 'recommended_spot_visit'; spotId: string; hourBucket: string; recommendationId: string }
+  | { type: 'zone_dwell'; h3Cell: string; hourBucket: string; dwellBucket: DwellBucket };
 
 export interface UsageCounterStore {
   increment(key: CounterKey, amount?: number): void;
@@ -58,16 +76,75 @@ const KEY_SEPARATOR = '|';
 const DEFAULT_USAGE_RETENTION_DAYS = 180;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-function encodeKey(key: CounterKey): string {
-  return `${key.type}${KEY_SEPARATOR}${key.spotId}${KEY_SEPARATOR}${key.hourBucket}`;
+function isDwellBucket(value: string): value is DwellBucket {
+  return (DWELL_BUCKETS as readonly string[]).includes(value);
 }
 
+function encodeKey(key: CounterKey): string {
+  switch (key.type) {
+    case 'spot_view':
+    case 'navigate_pressed':
+    case 'spot_shared':
+    case 'spot_presence':
+    case 'spot_presence_long':
+      return [key.type, key.spotId, key.hourBucket].join(KEY_SEPARATOR);
+    case 'spot_visit':
+      return [key.type, key.spotId, key.hourBucket, key.dwellBucket].join(KEY_SEPARATOR);
+    case 'recommended_spot_visit':
+      return [key.type, key.spotId, key.hourBucket, key.recommendationId].join(KEY_SEPARATOR);
+    case 'zone_dwell':
+      return [key.type, key.h3Cell, key.hourBucket, key.dwellBucket].join(KEY_SEPARATOR);
+  }
+}
+
+/** Decodes a persisted key string back into a `CounterKey`, or `null` if it
+ * doesn't match any known type's shape (wrong segment count, unknown type,
+ * empty segment, or — for the two dwellBucket-keyed shapes — a 4th segment
+ * that isn't one of the five allowlisted dwell buckets). Defensive: this only
+ * ever reads back what `encodeKey` (via `increment()`, which is itself only
+ * ever called with values events.ts has already validated) wrote, but a
+ * hand-edited or corrupted `usage-stats.json` mirror is still handled
+ * gracefully rather than crashing the store — same tolerance load() already
+ * has for the rest of the file. */
 function decodeKey(encoded: string): CounterKey | null {
   const parts = encoded.split(KEY_SEPARATOR);
-  if (parts.length !== 3) return null;
-  const [type, spotId, hourBucket] = parts;
-  if (!type || !spotId || !hourBucket) return null;
-  return { type: type as UsageEventType, spotId, hourBucket };
+  const [type] = parts;
+
+  if (
+    type === 'spot_view' ||
+    type === 'navigate_pressed' ||
+    type === 'spot_shared' ||
+    type === 'spot_presence' ||
+    type === 'spot_presence_long'
+  ) {
+    if (parts.length !== 3) return null;
+    const [, spotId, hourBucket] = parts;
+    if (!spotId || !hourBucket) return null;
+    return { type, spotId, hourBucket };
+  }
+
+  if (type === 'spot_visit') {
+    if (parts.length !== 4) return null;
+    const [, spotId, hourBucket, dwellBucket] = parts;
+    if (!spotId || !hourBucket || !isDwellBucket(dwellBucket)) return null;
+    return { type, spotId, hourBucket, dwellBucket };
+  }
+
+  if (type === 'recommended_spot_visit') {
+    if (parts.length !== 4) return null;
+    const [, spotId, hourBucket, recommendationId] = parts;
+    if (!spotId || !hourBucket || !recommendationId) return null;
+    return { type, spotId, hourBucket, recommendationId };
+  }
+
+  if (type === 'zone_dwell') {
+    if (parts.length !== 4) return null;
+    const [, h3Cell, hourBucket, dwellBucket] = parts;
+    if (!h3Cell || !hourBucket || !isDwellBucket(dwellBucket)) return null;
+    return { type, h3Cell, hourBucket, dwellBucket };
+  }
+
+  return null;
 }
 
 /** Reads USAGE_RETENTION_DAYS per-call (not cached at import time), mirroring
@@ -237,4 +314,26 @@ export const usageCounterStore: UsageCounterStore = new JsonFileUsageCounterStor
 /** Formats a Date as a UTC hour bucket "YYYY-MM-DDTHH". Never finer than the hour. */
 export function toHourBucket(date: Date = new Date()): string {
   return date.toISOString().slice(0, 13);
+}
+
+/** Builds a "YYYY-MM-DDTHH" hour bucket from `date`'s current UTC calendar
+ * day combined with a client-supplied hour-of-day (`utcHour`, 0-23) — used
+ * only for the tourism event types (spot_visit / recommended_spot_visit /
+ * zone_dwell), whose on-device geofencing may enqueue a visit/dwell summary
+ * slightly before it's actually flushed to the network. events.ts validates
+ * `utcHour` is an integer in [0, 23] before this is ever called.
+ *
+ * This is still never finer than the hour and still never derived from a raw
+ * client timestamp — only the hour-of-day integer the device claims. Right
+ * at the UTC day boundary this can be off by up to a day (e.g. an event
+ * tagged hour 23 that reaches the server just after it has rolled over to
+ * hour 0 gets bucketed under *today's* date at hour 23, i.e. one hour "in
+ * the future" of a literal-timestamp bucket); that imprecision is accepted
+ * as consistent with the rest of this pipeline's coarse, aggregate-only hour
+ * bucketing (the original three event types have the same kind of tolerance
+ * for drift across an hour boundary, just from network/processing latency
+ * rather than a client-claimed hour). */
+export function toHourBucketFromUtcHour(utcHour: number, date: Date = new Date()): string {
+  const day = date.toISOString().slice(0, 10);
+  return `${day}T${String(utcHour).padStart(2, '0')}`;
 }

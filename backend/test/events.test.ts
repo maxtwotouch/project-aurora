@@ -24,6 +24,14 @@ let app: FastifyInstance;
 const VALID_SPOT_ID = 'ersfjordbotn';
 const OTHER_VALID_SPOT_ID = 'kattfjordvatnet';
 
+// Real h3 cell ids (generated with h3-js's latLngToCell for a point near
+// Tromsø) at resolution 7 (valid for zone_dwell) and resolution 9 (a
+// well-formed h3 cell, but the WRONG resolution -- must be rejected, per the
+// "malformed/high-res cell id must be REJECTED server-side" requirement).
+const VALID_ZONE_CELL_RES7 = '8708ed358ffffff';
+const WRONG_RESOLUTION_ZONE_CELL_RES9 = '8908ed3589bffff';
+const MALFORMED_ZONE_CELL = 'not-a-real-h3-cell';
+
 before(async () => {
   originalCwd = process.cwd();
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aurora-events-test-'));
@@ -218,4 +226,346 @@ test('rejects a body larger than the 8KiB cap (413, nothing stored)', async () =
 
   assert.equal(response.statusCode, 413);
   assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+// --- Tourism event types (docs/analytics-pivot.md's 2026-08-22 amendment):
+// spot_visit, recommended_spot_visit, zone_dwell. Unlinked, identity-free,
+// same pipeline/route/rejection convention as the original three types. ---
+
+test('valid spot_visit increments a (type, spotId, hourBucket, dwellBucket) counter', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 21, dwellBucket: '15-30m' }
+  });
+
+  assert.equal(response.statusCode, 204);
+
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'spot_visit');
+  assert.equal(record.spotId, VALID_SPOT_ID);
+  assert.equal(record.count, 1);
+  assert.ok('dwellBucket' in record);
+  if ('dwellBucket' in record) assert.equal(record.dwellBucket, '15-30m');
+  assert.match(record.hourBucket, /^\d{4}-\d{2}-\d{2}T21$/);
+
+  // --- PRIVACY INVARIANT --- only the allowlisted fields are ever stored.
+  assert.deepEqual(Object.keys(record).sort(), ['count', 'dwellBucket', 'hourBucket', 'spotId', 'type']);
+});
+
+test('two spot_visit events with different dwellBucket values increment separate counters', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 20, dwellBucket: '<5m' },
+      { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 20, dwellBucket: '60m+' }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 2, 'dwellBucket must be part of the counter key, not folded together');
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 2);
+});
+
+test('rejects spot_visit with an unknown spotId (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'spot_visit', spotId: 'not-a-real-spot', utcHour: 10, dwellBucket: '<5m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects spot_visit with an invalid dwellBucket (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 10, dwellBucket: '90m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects spot_visit with an out-of-range utcHour (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 24, dwellBucket: '<5m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects spot_visit with a non-integer utcHour (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 10.5, dwellBucket: '<5m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('valid recommended_spot_visit increments a (type, spotId, hourBucket, recommendationId) counter', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: {
+      type: 'recommended_spot_visit',
+      spotId: VALID_SPOT_ID,
+      recommendationId: 'tonight-top-3',
+      utcHour: 5
+    }
+  });
+
+  assert.equal(response.statusCode, 204);
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'recommended_spot_visit');
+  assert.equal(record.spotId, VALID_SPOT_ID);
+  assert.ok('recommendationId' in record);
+  if ('recommendationId' in record) assert.equal(record.recommendationId, 'tonight-top-3');
+  assert.deepEqual(Object.keys(record).sort(), ['count', 'hourBucket', 'recommendationId', 'spotId', 'type']);
+});
+
+test('rejects recommended_spot_visit with an oversized recommendationId (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: {
+      type: 'recommended_spot_visit',
+      spotId: VALID_SPOT_ID,
+      recommendationId: 'x'.repeat(65),
+      utcHour: 5
+    }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects recommended_spot_visit with a recommendationId outside the allowlist pattern (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: {
+      type: 'recommended_spot_visit',
+      spotId: VALID_SPOT_ID,
+      recommendationId: 'not valid! <script>',
+      utcHour: 5
+    }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects recommended_spot_visit with an unknown spotId (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: {
+      type: 'recommended_spot_visit',
+      spotId: 'not-a-real-spot',
+      recommendationId: 'tonight-top-3',
+      utcHour: 5
+    }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('valid zone_dwell increments a (type, h3Cell, hourBucket, dwellBucket) counter', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 23, dwellBucket: '30-60m' }
+  });
+
+  assert.equal(response.statusCode, 204);
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 1);
+  const [record] = records;
+  assert.equal(record.type, 'zone_dwell');
+  assert.ok('h3Cell' in record);
+  if ('h3Cell' in record) assert.equal(record.h3Cell, VALID_ZONE_CELL_RES7);
+  assert.ok(!('spotId' in record), 'zone_dwell must never carry a spotId');
+  assert.deepEqual(Object.keys(record).sort(), ['count', 'dwellBucket', 'h3Cell', 'hourBucket', 'type']);
+});
+
+test('rejects zone_dwell with a malformed h3 cell id (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'zone_dwell', h3Cell: MALFORMED_ZONE_CELL, utcHour: 23, dwellBucket: '30-60m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects zone_dwell with a well-formed but WRONG-RESOLUTION h3 cell id (400, nothing stored)', async () => {
+  // A real, validly-encoded h3 cell -- just resolution 9, not 7. A buggy or
+  // malicious client sending a higher-resolution (house-level) cell must be
+  // rejected, not silently accepted.
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'zone_dwell', h3Cell: WRONG_RESOLUTION_ZONE_CELL_RES9, utcHour: 23, dwellBucket: '30-60m' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects zone_dwell with an invalid dwellBucket (400, nothing stored)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 23, dwellBucket: 'forever' }
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+});
+
+test('rejects a batch where one item is a valid zone_dwell and another is invalid (400, nothing stored at all)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 23, dwellBucket: '30-60m' },
+      { type: 'zone_dwell', h3Cell: MALFORMED_ZONE_CELL, utcHour: 23, dwellBucket: '30-60m' }
+    ]
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(
+    usageStoreModule.usageCounterStore.getAll(),
+    [],
+    'the whole batch is rejected atomically, even the valid item is dropped'
+  );
+});
+
+test('a mixed batch of legacy and tourism event types is accepted together', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_view', spotId: VALID_SPOT_ID },
+      { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 12, dwellBucket: '5-15m' },
+      { type: 'recommended_spot_visit', spotId: OTHER_VALID_SPOT_ID, recommendationId: 'rec-1', utcHour: 12 },
+      { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 12, dwellBucket: '<5m' }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 4);
+});
+
+// --- spot_presence / spot_presence_long (docs/design-trip-tracking.md
+// section 3 point 3, ship gate 6.4): the original Trip-mode presence
+// events. Same {spotId, utcHour} shape and validation as the tourism types'
+// spotId/utcHour checks, but NO dwellBucket -- counter key stays the
+// 3-segment `type|spotId|hourBucket` shape shared with the original three. ---
+
+for (const presenceType of ['spot_presence', 'spot_presence_long'] as const) {
+  test(`valid ${presenceType} increments a (type, spotId, hourBucket) counter with no dwellBucket`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 22 }
+    });
+
+    assert.equal(response.statusCode, 204);
+
+    const records = usageStoreModule.usageCounterStore.getAll();
+    assert.equal(records.length, 1);
+    const [record] = records;
+    assert.equal(record.type, presenceType);
+    assert.equal(record.spotId, VALID_SPOT_ID);
+    assert.equal(record.count, 1);
+    assert.match(record.hourBucket, /^\d{4}-\d{2}-\d{2}T22$/);
+
+    // --- PRIVACY INVARIANT --- only the allowlisted fields are ever stored,
+    // and critically no dwellBucket (unlike spot_visit's identically-shaped
+    // {spotId, utcHour, dwellBucket} payload).
+    assert.deepEqual(Object.keys(record).sort(), ['count', 'hourBucket', 'spotId', 'type']);
+  });
+
+  test(`rejects ${presenceType} with an unknown spotId (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: 'not-a-real-spot', utcHour: 10 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with an out-of-range utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 24 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with a non-integer utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID, utcHour: 10.5 }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+
+  test(`rejects ${presenceType} with a missing utcHour (400, nothing stored)`, async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/events',
+      payload: { type: presenceType, spotId: VALID_SPOT_ID }
+    });
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(usageStoreModule.usageCounterStore.getAll(), []);
+  });
+}
+
+test('spot_presence and spot_presence_long for the same spot/hour increment independent counters', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_presence', spotId: VALID_SPOT_ID, utcHour: 9 },
+      { type: 'spot_presence_long', spotId: VALID_SPOT_ID, utcHour: 9 }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  const records = usageStoreModule.usageCounterStore.getAll();
+  assert.equal(records.length, 2);
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 2);
+});
+
+test('a mixed batch of all eight event types is accepted together', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/events',
+    payload: [
+      { type: 'spot_view', spotId: VALID_SPOT_ID },
+      { type: 'navigate_pressed', spotId: VALID_SPOT_ID },
+      { type: 'spot_shared', spotId: VALID_SPOT_ID },
+      { type: 'spot_visit', spotId: VALID_SPOT_ID, utcHour: 12, dwellBucket: '5-15m' },
+      { type: 'recommended_spot_visit', spotId: OTHER_VALID_SPOT_ID, recommendationId: 'rec-1', utcHour: 12 },
+      { type: 'zone_dwell', h3Cell: VALID_ZONE_CELL_RES7, utcHour: 12, dwellBucket: '<5m' },
+      { type: 'spot_presence', spotId: OTHER_VALID_SPOT_ID, utcHour: 12 },
+      { type: 'spot_presence_long', spotId: OTHER_VALID_SPOT_ID, utcHour: 12 }
+    ]
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(usageStoreModule.usageCounterStore.getDistinctKeyCount(), 8);
 });

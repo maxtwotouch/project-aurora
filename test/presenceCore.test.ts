@@ -13,6 +13,8 @@ import {
   INITIAL_PRESENCE_STATE,
   advancePresence,
   classifySpot,
+  dwellBucketOf,
+  endPresenceSession,
   resetPresence,
   spotsToGeofences
 } from '../src/trip/presenceCore.js';
@@ -166,7 +168,10 @@ describe('advancePresence: spot -> null (exit forgets state)', () => {
     const entered = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: T0 }, SPOTS);
     const left = advancePresence(entered.state, { lat: OUTSIDE.lat, lon: OUTSIDE.lon, timestampMs: T0 + minutes(2) }, SPOTS);
 
-    assert.deepEqual(left.intents, []);
+    // The flushed spot_visit's dwell is measured up to the last CONFIRMED
+    // inside sample (T0, the entry itself -- there was only one inside
+    // sample before leaving), not up to the T0+2min exit-detecting sample.
+    assert.deepEqual(left.intents, [{ type: 'spot_visit', spotId: 'a', timeBucket: 20, dwellBucket: '<5m' }]);
     assert.equal(left.state.currentSpotId, null);
     assert.equal(left.state.enteredAtMs, null);
     assert.equal(left.state.presenceEmitted, false);
@@ -196,7 +201,12 @@ describe('advancePresence: spot -> different spot (exit+enter in one step)', () 
     const enteredA = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: T0 }, SPOTS);
     const toB = advancePresence(enteredA.state, { lat: SPOT_B.lat, lon: SPOT_B.lon, timestampMs: T0 + minutes(3) }, SPOTS);
 
-    assert.deepEqual(toB.intents, [{ type: 'spot_presence', spotId: 'b', utcHour: 20 }]);
+    // A's spot_visit is flushed (dwell measured up to A's last confirmed
+    // sample, T0) before B's spot_presence entry intent.
+    assert.deepEqual(toB.intents, [
+      { type: 'spot_visit', spotId: 'a', timeBucket: 20, dwellBucket: '<5m' },
+      { type: 'spot_presence', spotId: 'b', utcHour: 20 }
+    ]);
     assert.equal(toB.state.currentSpotId, 'b');
     assert.equal(toB.state.enteredAtMs, T0 + minutes(3));
     assert.equal(toB.state.longPresenceEmitted, false);
@@ -213,6 +223,7 @@ describe('advancePresence: large gap breaks continuity even in the same spot', (
     );
 
     assert.deepEqual(afterGap.intents, [
+      { type: 'spot_visit', spotId: 'a', timeBucket: 20, dwellBucket: '<5m' },
       { type: 'spot_presence', spotId: 'a', utcHour: new Date(T0 + DEFAULT_PRESENCE_CONFIG.maxGapMs + 1).getUTCHours() }
     ]);
     assert.equal(afterGap.state.enteredAtMs, T0 + DEFAULT_PRESENCE_CONFIG.maxGapMs + 1);
@@ -242,8 +253,9 @@ describe('advancePresence: large gap breaks continuity even in the same spot', (
       config
     );
 
-    assert.equal(afterGap.intents.length, 1);
-    assert.equal(afterGap.intents[0].type, 'spot_presence');
+    assert.equal(afterGap.intents.length, 2);
+    assert.equal(afterGap.intents[0].type, 'spot_visit');
+    assert.equal(afterGap.intents[1].type, 'spot_presence');
     assert.equal(afterGap.state.enteredAtMs, T0 + minutes(1) + 1);
   });
 });
@@ -274,7 +286,7 @@ describe('utcHour derivation', () => {
   test('utcHour reflects the sample timestamp in UTC, not local time', () => {
     const lateNight = Date.UTC(2026, 7, 18, 23, 30, 0);
     const { intents } = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: lateNight }, SPOTS);
-    assert.equal(intents[0].utcHour, 23);
+    assert.deepEqual(intents, [{ type: 'spot_presence', spotId: 'a', utcHour: 23 }]);
   });
 
   test('utcHour rolls over past midnight UTC', () => {
@@ -284,7 +296,7 @@ describe('utcHour derivation', () => {
       { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: justAfterMidnight },
       SPOTS
     );
-    assert.equal(intents[0].utcHour, 0);
+    assert.deepEqual(intents, [{ type: 'spot_presence', spotId: 'a', utcHour: 0 }]);
   });
 });
 
@@ -336,5 +348,80 @@ describe('spotsToGeofences adapter', () => {
     const geofences = spotsToGeofences(rawSpots, { ersfjordbotn: 250 });
     assert.equal(geofences.find((g) => g.spotId === 'ersfjordbotn')?.radiusM, 250);
     assert.equal(geofences.find((g) => g.spotId === 'kattfjordvatnet')?.radiusM, 500);
+  });
+});
+
+// -----------------------------------------------------------------------
+// spot_visit (docs/analytics-pivot.md amendment, item 1): dwell buckets,
+// entry-hour timeBucket, and the flush behaviours exercised above from the
+// occurrence-intent side (exit/switch/gap) already cover the "visit ends"
+// paths through advancePresence. This section covers dwellBucketOf's
+// boundaries directly, timeBucket using the ENTRY hour (not the exit hour),
+// and endPresenceSession.
+// -----------------------------------------------------------------------
+
+describe('dwellBucketOf', () => {
+  test('boundaries are inclusive on the lower bound of each bucket', () => {
+    assert.equal(dwellBucketOf(0), '<5m');
+    assert.equal(dwellBucketOf(minutes(4) + 59_000), '<5m');
+    assert.equal(dwellBucketOf(minutes(5)), '5-15m');
+    assert.equal(dwellBucketOf(minutes(14) + 59_000), '5-15m');
+    assert.equal(dwellBucketOf(minutes(15)), '15-30m');
+    assert.equal(dwellBucketOf(minutes(29) + 59_000), '15-30m');
+    assert.equal(dwellBucketOf(minutes(30)), '30-60m');
+    assert.equal(dwellBucketOf(minutes(59) + 59_000), '30-60m');
+    assert.equal(dwellBucketOf(minutes(60)), '60m+');
+    assert.equal(dwellBucketOf(minutes(180)), '60m+');
+  });
+});
+
+describe('advancePresence: spot_visit timeBucket uses the ENTRY hour', () => {
+  test('a visit that straddles UTC midnight buckets by its entry hour, not its exit hour', () => {
+    const enteredLateNight = Date.UTC(2026, 7, 18, 23, 50, 0); // hour 23
+    const entered = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: enteredLateNight }, SPOTS);
+
+    // A second inside sample 5 minutes later (well under maxGapMs) advances
+    // lastSampleMs -- this is what the eventual flush's dwell measures up to.
+    const stillInside = advancePresence(
+      entered.state,
+      { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: enteredLateNight + minutes(5) },
+      SPOTS
+    );
+    assert.deepEqual(stillInside.intents, []);
+
+    // Leaves after UTC midnight (hour 0). The exit-detecting sample's own
+    // timestamp/hour must NOT leak into the emitted intent.
+    const afterMidnight = Date.UTC(2026, 7, 19, 0, 5, 0);
+    const left = advancePresence(stillInside.state, { lat: OUTSIDE.lat, lon: OUTSIDE.lon, timestampMs: afterMidnight }, SPOTS);
+
+    assert.deepEqual(left.intents, [{ type: 'spot_visit', spotId: 'a', timeBucket: 23, dwellBucket: '5-15m' }]);
+  });
+});
+
+describe('endPresenceSession', () => {
+  test('flushes an in-progress visit using the given session-end timestamp as the dwell end', () => {
+    const entered = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: T0 }, SPOTS);
+    const stillInside = advancePresence(entered.state, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: T0 + minutes(2) }, SPOTS);
+    assert.deepEqual(stillInside.intents, []);
+
+    // The session ends 20 minutes after entry, well after the last GPS
+    // sample (T0+2min) -- endPresenceSession trusts the session-end instant
+    // itself, not just the last sample, per the module header's rationale.
+    const ended = endPresenceSession(stillInside.state, T0 + minutes(20));
+
+    assert.deepEqual(ended.intents, [{ type: 'spot_visit', spotId: 'a', timeBucket: 20, dwellBucket: '15-30m' }]);
+    assert.deepEqual(ended.state, INITIAL_PRESENCE_STATE);
+  });
+
+  test('ending a session while outside every spot flushes nothing', () => {
+    const ended = endPresenceSession(INITIAL_PRESENCE_STATE, T0);
+    assert.deepEqual(ended.intents, []);
+    assert.deepEqual(ended.state, INITIAL_PRESENCE_STATE);
+  });
+
+  test('always resets to the initial state, mirroring resetPresence', () => {
+    const entered = advancePresence(INITIAL_PRESENCE_STATE, { lat: SPOT_A.lat, lon: SPOT_A.lon, timestampMs: T0 }, SPOTS);
+    const ended = endPresenceSession(entered.state, T0 + minutes(1));
+    assert.deepEqual(ended.state, resetPresence());
   });
 });
