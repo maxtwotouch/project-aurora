@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
+import { TONIGHT_BEST_SPOT_RECOMMENDATION_ID, recordShownRecommendation } from '../trip/attributionStore';
 import { HeroSection } from '../components/tonight/HeroSection';
 import { NowcastPanel } from '../components/tonight/NowcastPanel';
 import { OutlookCard } from '../components/tonight/OutlookCard';
@@ -148,6 +149,26 @@ export function TonightScreen({
       })
     ]).start();
   }, [heroAnim, listAnim, secondaryAnim, reducedMotion]);
+
+  // Trip mode's on-device recommendation attribution (docs/analytics-
+  // pivot.md's amendment item 2): records "this recommendation, covering
+  // these spots, was shown now" into the in-memory attribution store
+  // whenever the Tonight screen presents its ranked recommendation. Never
+  // gated on Trip-mode consent here -- recordShownRecommendation performs no
+  // I/O (see attributionStore.ts's own privacy contract); the only place
+  // consent matters is whether a later arrival is ever attributed and sent
+  // (useTripPresence.ts, gated well upstream of this). `topSpotIds` is
+  // recomputed each render but the effect only re-fires when the actual
+  // ranked ids change, not on every render.
+  const topSpotIds = topSpots.map((spot) => spot.spotId).join(',');
+  useEffect(() => {
+    if (topSpots.length === 0) return;
+    recordShownRecommendation(
+      TONIGHT_BEST_SPOT_RECOMMENDATION_ID,
+      topSpots.map((spot) => spot.spotId)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topSpotIds]);
 
   const riseFrom = (distance: number) => (reducedMotion ? 0 : distance);
 
