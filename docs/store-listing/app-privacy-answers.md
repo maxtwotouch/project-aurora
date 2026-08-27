@@ -85,9 +85,20 @@ frame, not a final answer:
   **on-device** processing — comparing the device's position locally against the fixed spot
   coordinates in `src/data/spots.json` to know which named spot, if any, the device is near.
   This location value is never transmitted.
-- The developer/backend **collects** only the coarse, derived event this on-device
-  comparison produces — `{spotId, utcHour}` presence and 20-minute long-presence events, the
-  same shape and privacy posture as the existing usage events above — never coordinates.
+- The developer/backend **collects** only the coarse, derived events this on-device
+  comparison produces — never coordinates. Per `docs/analytics-pivot.md`'s 2026-08-22
+  amendment, this is now three related-but-unlinked event shapes, all flowing into the same
+  identity-free pipeline as the existing usage events above:
+  - `{spotId, utcHour}` presence and 20-minute long-presence events (unchanged from the
+    original design), plus a per-visit summary — `{spotId, timeBucket, dwellBucket}` — with
+    a coarse dwell bucket, not an exact duration;
+  - `{spotId, recommendationId, timeBucket}` recommendation-outcome events, attributed
+    entirely on-device (the app compares its own "shown" and "arrived" state locally; the
+    server never joins the two);
+  - `{h3Cell, timeBucket, dwellBucket}` coarse zone-discovery events — an H3 resolution-7 map
+    cell id (~5 km², deliberately too coarse to identify a cabin or address), for cells
+    outside every known spot and outside the excluded Tromsø urban zone, during dark hours
+    only, at most one per cell per night per device (enforced on-device).
 - Apple's questionnaire asks about *collection*, not *device access*, for most data types,
   but explicitly separates "used for app functionality without leaving the device" language
   for some categories — the exact selection (e.g. "Location" collected = Yes vs. a
@@ -96,13 +107,19 @@ frame, not a final answer:
 - Expected shape, subject to that live check: **Location → Coarse Location; Collected: Yes,
   when the user has opted into Trip mode (off by default); Linked to user: No; Used for
   tracking: No; Purpose(s): Analytics, and App Functionality (for the on-device "arrived at
-  spot" card)** — see `docs/design-trip-tracking.md` sections 3 and 6.
+  spot" card)** — covering all three event shapes above, since none of them carry a
+  device/person identifier or coordinates — see `docs/design-trip-tracking.md` sections 3
+  and 6 and `docs/analytics-pivot.md`'s 2026-08-22 amendment.
 - **Hard ship gate:** this answer must be verified against the live App Store Connect
   questionnaire, and reconciled with the actual implementation at that time, **before any
-  build containing Trip mode collection code is submitted.** It does **not** apply to the
-  current build or the next planned build — neither ships Trip mode, geofencing, or any
-  location code (per `docs/design-trip-tracking.md` ship gates, this doc, the privacy
-  policy, and the consent UI are the only things shipping ahead of any collection code).
+  build containing Trip mode collection code — including the visit-summary,
+  recommendation-outcome, or zone-discovery events above — is submitted.** It does **not**
+  apply to the current build or the next planned build — neither ships Trip mode,
+  geofencing, or any location code (per `docs/design-trip-tracking.md` ship gates, this doc,
+  the privacy policy, and the consent UI are the only things shipping ahead of any
+  collection code; `src/trip/presenceCore.ts`, `recommendationAttribution.ts`, and
+  `zoneDiscovery.ts` are pure, unwired logic modules with no `expo-location` import, no
+  analytics-emission call site, and no UI — see each file's own header comment).
 
 ### Identifiers / Product Interaction — forward-looking note for person-level analytics (PostHog) (not in this build; NOT a final answer for the current or next build)
 

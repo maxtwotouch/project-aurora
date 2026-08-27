@@ -318,7 +318,7 @@
   "tripMode": {
     "toggleLabel": "Modo viaje",
     "description": "Una forma independiente y opcional de ayudarle mientras sale — solo a nivel de lugar, nunca sus coordenadas exactas. Desactivado de forma predeterminada, y puede volver a desactivarlo cuando quiera.",
-    "whatLeaves": "Lo que sale de su teléfono: solo eventos como «cerca de <lugar>» y «permaneció 20+ min», vinculados al nombre del lugar y a la hora — nada más preciso, y nada en absoluto mientras esto esté desactivado.",
+    "whatLeaves": "Lo que sale de su teléfono: qué lugares visita y aproximadamente cuánto tiempo se queda, a qué lugar recomendado fue realmente, y zonas aproximadas donde se detiene un rato por la noche mientras explora — nunca su posición exacta, y nunca vinculado a usted.",
     "toggleOnHelper": "Compartirá presencia a nivel de lugar en cuanto se activen las funciones del Modo viaje.",
     "toggleOffHelper": "Desactivado. No se comparte nada.",
     "comingSoonNote": "Este interruptor está listo con antelación — el Modo viaje en sí se activará cuando lleguen sus funciones en una futura actualización."
