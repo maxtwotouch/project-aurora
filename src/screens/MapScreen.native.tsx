@@ -13,6 +13,7 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
+import { posthog } from '../analytics/posthog';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -200,7 +201,10 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
         accessibilityState={{ busy: locationStatus === 'requesting' }}
         disabled={locationStatus === 'requesting'}
         style={[styles.locateButton, { bottom: locateButtonBottom }]}
-        onPress={() => void requestLocation()}
+        onPress={() => {
+          posthog.capture('location_requested');
+          void requestLocation();
+        }}
       >
         {locationStatus === 'requesting' ? (
           <ActivityIndicator size="small" color={palette.textPrimary} />

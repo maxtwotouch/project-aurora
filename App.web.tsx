@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import { PostHogErrorBoundary, PostHogProvider } from 'posthog-react-native';
 // See App.tsx for why these are imported per-weight rather than from the
 // package root (avoids Metro bundling all 18 Fraunces weight/italic files).
 import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
@@ -16,6 +17,7 @@ import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
 import { ConsentGate } from './src/components/ConsentGate';
+import { posthog } from './src/analytics/posthog';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
 import { PreviewModeBanner } from './src/components/PreviewModeBanner';
 import { SettingsButton } from './src/components/SettingsButton';
@@ -83,6 +85,14 @@ const navTheme: Theme = {
 };
 
 const typedSpots = spots as Spot[];
+
+function ErrorFallback() {
+  return (
+    <View style={styles.errorFallback}>
+      <Text style={styles.errorFallbackText}>Something went wrong. Please restart the app.</Text>
+    </View>
+  );
+}
 
 type TabsRootProps = {
   onOpenSpot: (spotId: string) => void;
@@ -251,6 +261,8 @@ export default function App() {
   // to the system font (web's own font-display: swap equivalent) until
   // registration completes and the tree next re-renders.
   useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+  const navigationRef = useRef<any>(null);
+  const routeNameRef = useRef<string | undefined>(undefined);
 
   const forecast = useForecast();
   const { t } = useTranslation();
@@ -276,94 +288,119 @@ export default function App() {
               PreviewModeBanner's own header comment for why. */}
           <PreviewModeBanner />
           <View style={styles.navRoot}>
-            <NavigationContainer theme={navTheme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: palette.nightSoft
-            },
-            headerTintColor: palette.textPrimary
-          }}
-        >
-          <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-            {({ navigation }) => (
-              <TabsRoot
-                onOpenSpot={(spotId) => {
-                  navigation.navigate('SpotDetail', { spotId });
-                }}
-                onOpenSettings={() => navigation.navigate('Settings')}
-                rankedSpots={forecast.rankedSpots}
-                loading={forecast.loading}
-                error={forecast.error}
-                lastUpdatedAt={forecast.lastUpdatedAt}
-                dataQuality={forecast.dataQuality}
-                kp={forecast.kp}
-                topSpots={forecast.topSpots}
-                closeSpots={forecast.closeSpots}
-                spotsById={forecast.spotsById}
-                tonightScore={forecast.tonightScore}
-                tomorrowScore={forecast.tomorrowScore}
-                sightingPossibleFrom={forecast.sightingPossibleFrom}
-                darkness={forecast.darkness}
-                level={forecast.level}
-                nowcast={forecast.nowcast}
-                refresh={forecast.refresh}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="SpotDetail"
-            options={({ route, navigation }) => ({
-              title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={({ focused }: WebPressableState) => [styles.backButton, focused ? styles.focusRing : null]}
-                  onPress={() => navigation.goBack()}
-                >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {({ route }) => (
-              <WebPage>
-                <SpotDetailScreen
-                  spot={spotsById[route.params.spotId]}
-                  result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-                  forecast={forecast.forecastsBySpotId[route.params.spotId]}
-                />
-              </WebPage>
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="Settings"
-            options={({ navigation }) => ({
-              title: t('settings.title'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={({ focused }: WebPressableState) => [styles.backButton, focused ? styles.focusRing : null]}
-                  onPress={() => navigation.goBack()}
-                >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {() => (
-              <WebPage>
-                <SettingsScreen />
-              </WebPage>
-            )}
-          </Stack.Screen>
-        </Stack.Navigator>
+            <NavigationContainer
+              ref={navigationRef}
+              theme={navTheme}
+              onReady={() => {
+                routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+              }}
+              onStateChange={() => {
+                const previousScreen = routeNameRef.current;
+                const currentScreen = navigationRef.current?.getCurrentRoute()?.name;
+
+                if (previousScreen !== currentScreen && currentScreen) {
+                  posthog.screen(currentScreen, previousScreen ? { previous_screen: previousScreen } : undefined);
+                }
+                routeNameRef.current = currentScreen;
+              }}
+            >
+              <PostHogProvider client={posthog}>
+                <PostHogErrorBoundary fallback={ErrorFallback}>
+                  <Stack.Navigator
+                    screenOptions={{
+                      headerStyle: {
+                        backgroundColor: palette.nightSoft
+                      },
+                      headerTintColor: palette.textPrimary
+                    }}
+                  >
+                    <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+                      {({ navigation }) => (
+                        <TabsRoot
+                          onOpenSpot={(spotId) => {
+                            navigation.navigate('SpotDetail', { spotId });
+                          }}
+                          onOpenSettings={() => navigation.navigate('Settings')}
+                          rankedSpots={forecast.rankedSpots}
+                          loading={forecast.loading}
+                          error={forecast.error}
+                          lastUpdatedAt={forecast.lastUpdatedAt}
+                          dataQuality={forecast.dataQuality}
+                          kp={forecast.kp}
+                          topSpots={forecast.topSpots}
+                          closeSpots={forecast.closeSpots}
+                          spotsById={forecast.spotsById}
+                          tonightScore={forecast.tonightScore}
+                          tomorrowScore={forecast.tomorrowScore}
+                          sightingPossibleFrom={forecast.sightingPossibleFrom}
+                          darkness={forecast.darkness}
+                          level={forecast.level}
+                          nowcast={forecast.nowcast}
+                          refresh={forecast.refresh}
+                        />
+                      )}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="SpotDetail"
+                      options={({ route, navigation }) => ({
+                        title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
+                        headerBackVisible: false,
+                        headerLeft: () => (
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={t('common.goBack')}
+                            style={({ focused }: WebPressableState) => [
+                              styles.backButton,
+                              focused ? styles.focusRing : null
+                            ]}
+                            onPress={() => navigation.goBack()}
+                          >
+                            <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                            <Text style={styles.backText}>{t('common.back')}</Text>
+                          </Pressable>
+                        )
+                      })}
+                    >
+                      {({ route }) => (
+                        <WebPage>
+                          <SpotDetailScreen
+                            spot={spotsById[route.params.spotId]}
+                            result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                            forecast={forecast.forecastsBySpotId[route.params.spotId]}
+                          />
+                        </WebPage>
+                      )}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="Settings"
+                      options={({ navigation }) => ({
+                        title: t('settings.title'),
+                        headerBackVisible: false,
+                        headerLeft: () => (
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={t('common.goBack')}
+                            style={({ focused }: WebPressableState) => [
+                              styles.backButton,
+                              focused ? styles.focusRing : null
+                            ]}
+                            onPress={() => navigation.goBack()}
+                          >
+                            <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                            <Text style={styles.backText}>{t('common.back')}</Text>
+                          </Pressable>
+                        )
+                      })}
+                    >
+                      {() => (
+                        <WebPage>
+                          <SettingsScreen />
+                        </WebPage>
+                      )}
+                    </Stack.Screen>
+                  </Stack.Navigator>
+                </PostHogErrorBoundary>
+              </PostHogProvider>
             </NavigationContainer>
           </View>
         </View>
@@ -382,6 +419,17 @@ const styles = StyleSheet.create({
   webPage: {
     flex: 1,
     backgroundColor: palette.night
+  },
+  errorFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: space.lg,
+    backgroundColor: palette.night
+  },
+  errorFallbackText: {
+    color: palette.textPrimary,
+    textAlign: 'center'
   },
   webPageInner: {
     flex: 1,

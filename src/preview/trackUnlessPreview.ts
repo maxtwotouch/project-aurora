@@ -1,3 +1,4 @@
+import { posthog } from '../analytics/posthog';
 import { track } from '../analytics/events';
 import type { UsageEventType } from '../analytics/events';
 import { isPreviewModeOn } from './previewMode';
@@ -19,4 +20,5 @@ import { isPreviewModeOn } from './previewMode';
 export function trackUnlessPreview(type: UsageEventType, spotId: string): void {
   if (isPreviewModeOn()) return;
   track(type, spotId);
+  posthog.capture(type, { spot_id: spotId });
 }

@@ -85,22 +85,33 @@ function withAlertStringsPlugin(expoConfig) {
   return { ...expoConfig, plugins: [...existingPlugins, ALERT_STRINGS_PLUGIN] };
 }
 
+function withPostHogConfig(expoConfig) {
+  return {
+    ...expoConfig,
+    extra: {
+      ...(expoConfig.extra || {}),
+      posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
+      posthogHost: process.env.POSTHOG_HOST
+    }
+  };
+}
+
 module.exports = ({ config }) => {
   const base = { ...appJson.expo, ...(config || {}) };
   const baseUrl = process.env.EXPO_WEB_BASE_URL;
 
   if (!baseUrl) {
-    return withAlertStringsPlugin(withFirebaseIfConfigured(config));
+    return withPostHogConfig(withAlertStringsPlugin(withFirebaseIfConfigured(config)));
   }
 
   return {
     ...appJson,
-    expo: withAlertStringsPlugin(withFirebaseIfConfigured({
+    expo: withPostHogConfig(withAlertStringsPlugin(withFirebaseIfConfigured({
       ...base,
       experiments: {
         ...(base.experiments || {}),
         baseUrl,
       },
-    })),
+    }))),
   };
 };

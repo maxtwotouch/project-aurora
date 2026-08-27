@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { posthog } from '../analytics/posthog';
 import { useTranslation } from '../i18n/useTranslation';
 import { ALERT_TIERS, DEFAULT_ENABLED_TIER } from '../notifications/alertsClient';
 import type { AlertTier } from '../notifications/alertsClient';
@@ -74,7 +75,9 @@ export function AuroraAlertsSection() {
           ]}
           onPress={() => {
             if (disabled) return;
-            void setTier(isOn ? 'off' : DEFAULT_ENABLED_TIER);
+            const nextTier = isOn ? 'off' : DEFAULT_ENABLED_TIER;
+            posthog.capture('alert_preferences_changed', { alert_tier: nextTier });
+            void setTier(nextTier);
           }}
         >
           <View style={[styles.toggleKnob, isOn ? styles.toggleKnobOn : null]} />
@@ -99,7 +102,10 @@ export function AuroraAlertsSection() {
                     focused ? styles.focusRing : null,
                     pressed ? styles.chipPressed : null
                   ]}
-                  onPress={() => void setTier(option)}
+                  onPress={() => {
+                    posthog.capture('alert_preferences_changed', { alert_tier: option });
+                    void setTier(option);
+                  }}
                 >
                   <Text style={[styles.chipText, isActive ? styles.chipTextActive : null]}>
                     {t(TIER_LABEL_KEYS[option])}
