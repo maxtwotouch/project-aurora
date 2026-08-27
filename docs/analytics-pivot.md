@@ -69,23 +69,60 @@ truthful policy, the app moves to person-level product analytics.
   spot_view, navigate_pressed, spot_shared, alerts_opt_in, language_set,
   trip_mode_toggled (the toggle state only).
 
-  **Amendment (owner decision A, 2026-08-21) — spot-level journey events:**
-  two additional allowlisted events, `spot_arrived {spot_id, utcHour}` and
-  `spot_stayed {spot_id, utcHour}`, are captured person-level in PostHog —
-  but ONLY when BOTH consents are accepted: Trip mode consent (covers the
-  collection/geofencing purpose) AND person-level analytics consent (covers
-  the person-level processing purpose). Either toggle off → these events
-  are not sent to PostHog. Purposes remain unbundled; neither consent
-  implies the other. Coordinates still never leave the device — the events
-  carry the on-device geofence classification only (spot id + UTC hour,
-  the same payload shape as the identity-free pipeline). Raw GPS is
-  explicitly NOT collected (owner rejected scope B): PostHog's analysis
-  tools operate on event sequences, road-level flow questions route to
-  public Vegvesen traffic-counter data instead. The identity-free
-  aggregate pipeline continues unchanged in parallel (dual-write) and
-  remains the sole source for the municipality export. Policy, consent
-  copy, and the store label must be updated for these two events in the
-  implementation PR set before any code emits them.
+  **Amendment (owner decision, 2026-08-22 — supersedes the earlier
+  "decision A" person-level journey-events draft, which was never
+  ratified):** tourism/location analytics are **unlinked**, not
+  person-level. The product analytics allowlist above stays exactly as-is
+  (8 events, person-level). Location-derived analytics instead flow as
+  follows:
+
+  1. **Spot visits (unlinked):** on-device geofencing emits one
+     visit-summary event per visit — `spot_visit {spot_id, time_bucket,
+     dwell_bucket}` (dwell buckets <5m / 5–15m / 15–30m / 30–60m / 60m+)
+     — into the identity-free backend pipeline (`/v1/events` aggregate
+     counters). NOT sent to PostHog; no person id, no device id, no
+     coordinates. Gated on Trip-mode consent.
+  2. **Recommendation effectiveness (unlinked, attributed on-device):**
+     the device stores the last-shown recommendation locally, compares on
+     arrival, and emits only the outcome — `recommended_spot_visit
+     {spot_id, recommendation_id, time_bucket}` — same identity-free
+     pipeline. No journey reconstruction server-side.
+  3. **Spot discovery (unlinked, coarse zones):** to find NEW aurora
+     hotspots outside the 28 curated spots: when a Trip-mode-consented
+     device dwells ≥15 min in one H3 **resolution-7** cell (~5 km² hexes —
+     deliberately too coarse to identify a cabin or address) that is
+     outside every known spot geofence AND outside the excluded urban
+     zone, during dark hours, it emits `zone_dwell {h3_cell, time_bucket,
+     dwell_bucket}` — identity-free pipeline. **At most one zone_dwell per
+     cell per night per device, enforced on-device** — this bounds any
+     single device's contribution, makes event counts approximate device
+     counts for suppression purposes, and caps data volume. The resulting
+     suppressed heatmap generates candidate AREAS for human scouting —
+     new spots are still curated by the owner, never auto-created.
+  4. Person-linkage for location events requires a compelling analytical
+     need none of the above has; if one appears (e.g. origin–destination
+     matrices), the first resort is unlinked transition-pair events, not
+     identifiers.
+
+  Rationale for unlinked: every stated tourism-intelligence goal (volume,
+  dwell, congestion, distribution, recommendation effectiveness,
+  discovery) is answerable without linkage; unlinked events are cheaper,
+  simpler in every disclosure conversation, and keep the municipality
+  product's "no identities anywhere in this pipeline" property intact.
+  Raw GPS remains explicitly not collected; road-level flow questions
+  route to public Vegvesen traffic-counter data.
+
+  Consent & policy: all three event types are location-derived and gated
+  on Trip-mode consent (collection purpose unchanged: aggregate tourism
+  statistics). `zone_dwell` extends what the policy enumerates, so the
+  policy and Trip-mode consent copy must be updated in the implementation
+  PR set BEFORE any code emits it. Because zone cells are strictly
+  coarser/less sensitive than the already-consented spot-level events and
+  the purpose is unchanged, existing Trip-mode consents remain valid (no
+  re-consent reset) — owner confirms this position by merging; if
+  preferred, flipping to a re-consent reset is a one-line change in the
+  implementation PR.
+
 - No precise coordinates, no IP-based geolocation enrichment (disable
   GeoIP person properties), no third-party IDs (IDFA/GAID never requested
   — this is analytics, not ad tracking; App Tracking Transparency is NOT
