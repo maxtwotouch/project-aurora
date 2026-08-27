@@ -83,7 +83,28 @@ function construct(): PostHog | null {
     //   separate opt-in package/option this app never enables).
     // - flushAt/flushInterval are left at SDK defaults.
     captureAppLifecycleEvents: false,
-    disableGeoip: true
+    disableGeoip: true,
+    // WITHDRAWAL-LINKAGE / footprint reduction: this app has no PostHog
+    // feature flags to evaluate, so the only effect of the SDK's default
+    // "fetch flags on every construction" behavior is an unnecessary,
+    // identifier-bearing request. Verified against the installed
+    // posthog-react-native/@posthog/core source
+    // (node_modules/@posthog/core/dist/posthog-core.js's `_remoteConfigAsync`):
+    // on every `new PostHog(...)`, the SDK unconditionally GETs
+    // `{host}/array/{apiKey}/config` (no distinct_id/device_id -- keyed only
+    // by the public project token; this request cannot be suppressed via any
+    // current option, since the SDK's own `disableRemoteConfig` option is
+    // documented as a no-op/deprecated -- "Remote config is now always
+    // loaded"), and THEN, unless `disableRemoteFeatureFlags` is set, POSTs
+    // distinct_id + $device_id to `{host}/flags/?v=2` to evaluate flags.
+    // Setting this to true skips that second, identity-bearing request
+    // entirely (it also makes reset()/identify()/group() flag-reload calls
+    // no-ops, which is irrelevant here since we never read flags). This is
+    // NOT what closes the withdrawal-linkage gap (see teardown()'s
+    // reset([]) below for that) -- it's an independent reduction of the
+    // pre-first-event network footprint, requested because this app has no
+    // use for remote flags at all.
+    disableRemoteFeatureFlags: true
   });
 }
 
@@ -91,10 +112,37 @@ function teardown(instance: PostHog): void {
   // Withdrawal (docs/analytics-pivot.md section 2.3): stop sending
   // immediately and ask PostHog to delete data tied to the pseudonymous
   // identifier. optOut() first (belt-and-braces against any in-flight
-  // capture racing the reset), then reset() to drop the local identity/
+  // capture racing the reset), then reset([]) to drop the local identity/
   // queued state so a future re-acceptance starts from a clean slate.
+  //
+  // WITHDRAWAL-LINKAGE: this MUST be reset([]), not reset() with no
+  // arguments. Verified from posthog-react-native's own reset() override
+  // (node_modules/posthog-react-native/dist/posthog-rn.js): called with no
+  // arguments, it defaults `propertiesToKeep` to
+  // [InstalledAppBuild, InstalledAppVersion, DeviceId] ("device bucketing
+  // properties are automatically preserved" per the SDK's own reset() doc
+  // comment) -- i.e. PostHogPersistedProperty.DeviceId survives a bare
+  // reset(). Passing [] explicitly overrides that default with "keep
+  // nothing" (RN's own `propertiesToKeep !== null && !== undefined ?
+  // propertiesToKeep : <default list>` check treats [] as a real, empty
+  // list, not "unset"), so DeviceId is cleared along with everything else.
+  //
+  // Why this matters even with disableRemoteFeatureFlags set above (which
+  // stops the *current* SDK version's only outgoing use of DeviceId, the
+  // flags-evaluation POST's $device_id field): DeviceId is meant by the SDK
+  // as a stable per-device bucketing id that deliberately SURVIVES a bare
+  // reset() (see its own "logout/login on the same device" example). That
+  // is the opposite of what withdrawal needs -- a clean break, not device
+  // continuity. Leaving it in place across withdraw -> re-accept would mean
+  // the "new" anonymous install and the withdrawn one still share the same
+  // on-device identifier, available to any future/other code path that
+  // reads getDeviceId() (native session replay, a later flags/experiments
+  // feature, an SDK upgrade), which is exactly the correlation risk "clean
+  // break on withdrawal" (docs/analytics-pivot.md section 2.3) promises
+  // does NOT happen. Defense in depth: clear it now rather than relying
+  // solely on disableRemoteFeatureFlags never being reverted later.
   instance.optOut();
-  instance.reset();
+  instance.reset([]);
 }
 
 function applyConsentState(consent: PersonalAnalyticsConsentState): void {
