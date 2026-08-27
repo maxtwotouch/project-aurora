@@ -53,6 +53,14 @@
         {
           "locationWhenInUsePermission": "Used to show where you are relative to aurora spots on the map. Never sent off your device."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
     ]
   }

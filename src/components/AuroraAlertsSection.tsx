@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { captureAllowed } from '../analytics/personalAnalytics';
 import { useTranslation } from '../i18n/useTranslation';
 import { ALERT_TIERS, DEFAULT_ENABLED_TIER } from '../notifications/alertsClient';
 import type { AlertTier } from '../notifications/alertsClient';
@@ -74,7 +75,14 @@ export function AuroraAlertsSection() {
           ]}
           onPress={() => {
             if (disabled) return;
-            void setTier(isOn ? 'off' : DEFAULT_ENABLED_TIER);
+            const nextTier = isOn ? 'off' : DEFAULT_ENABLED_TIER;
+            // alerts_opt_in only ever fires for the opt-IN direction (turning
+            // the toggle on) -- turning it off is not a declared allowlist
+            // event, so nothing is sent in that direction.
+            if (nextTier !== 'off') {
+              captureAllowed('alerts_opt_in', { tier: nextTier });
+            }
+            void setTier(nextTier);
           }}
         >
           <View style={[styles.toggleKnob, isOn ? styles.toggleKnobOn : null]} />
@@ -99,7 +107,13 @@ export function AuroraAlertsSection() {
                     focused ? styles.focusRing : null,
                     pressed ? styles.chipPressed : null
                   ]}
-                  onPress={() => void setTier(option)}
+                  onPress={() => {
+                    // Choosing a specific tier while already opted in is
+                    // still an opt-in action (a non-'off' tier is always
+                    // being selected here, never 'off' itself).
+                    captureAllowed('alerts_opt_in', { tier: option });
+                    void setTier(option);
+                  }}
                 >
                   <Text style={[styles.chipText, isActive ? styles.chipTextActive : null]}>
                     {t(TIER_LABEL_KEYS[option])}
