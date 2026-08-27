@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { captureAllowed } from '../analytics/personalAnalytics';
 import { useTripModeConsent } from '../analytics/tripModeConsent';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
@@ -47,7 +48,19 @@ export function TripModeConsentToggle() {
           focused ? styles.focusRing : null,
           pressed ? styles.togglePressed : null
         ]}
-        onPress={() => (isOn ? decline() : accept())}
+        onPress={() => {
+          const nextEnabled = !isOn;
+          // trip_mode_toggled records only the toggle STATE (docs/
+          // analytics-pivot.md section 3) -- never any of Trip mode's own
+          // presence events, which stay entirely within the identity-free
+          // pipeline and are never sent to PostHog under any circumstances.
+          captureAllowed('trip_mode_toggled', { enabled: nextEnabled });
+          if (nextEnabled) {
+            accept();
+          } else {
+            decline();
+          }
+        }}
       >
         <View style={[styles.toggleKnob, isOn ? styles.toggleKnobOn : null]} />
       </Pressable>

@@ -239,3 +239,96 @@ export function isPersistedPersonalAnalyticsConsentState(
 export function resolveLoadedPersonalAnalyticsConsentState(stored: string | null): PersonalAnalyticsConsentState {
   return isPersistedPersonalAnalyticsConsentState(stored) ? stored : 'unset';
 }
+
+/**
+ * PostHog SDK lifecycle + the fixed event allowlist -- pure decision logic
+ * only (see docs/analytics-pivot.md section 3 and CLAUDE.md's "Privacy &
+ * legal guardrails"). The RN-bound wrappers around these functions live in
+ * ./posthog.ts (client construction/teardown) and ./personalAnalytics.ts
+ * (the `captureAllowed` wrapper every call site uses instead of the raw
+ * SDK) -- neither of those files can be loaded under plain node:test
+ * because they import posthog-react-native / react-native, so every
+ * consent-gating and allowlist decision they make is expressed here first
+ * and unit-tested directly (see test/analytics-core.test.ts).
+ *
+ * HARD CONTRACT (docs/analytics-pivot.md section 3 / CLAUDE.md): the SDK
+ * must not be constructed -- not even loaded -- until personal-analytics
+ * consent is exactly 'accepted', because construction itself triggers a
+ * network call (PostHog fetches remote config/flags on init). "Configured
+ * but not yet consented" must therefore behave identically to "not
+ * configured at all": zero bytes leave the device.
+ */
+
+/** The complete, fixed set of event names this app is ever allowed to send to PostHog. */
+export const PERSONAL_ANALYTICS_EVENT_ALLOWLIST = [
+  'app_open',
+  'screen_view',
+  'spot_view',
+  'navigate_pressed',
+  'spot_shared',
+  'alerts_opt_in',
+  'language_set',
+  'trip_mode_toggled'
+] as const;
+
+export type PersonalAnalyticsEventName = (typeof PERSONAL_ANALYTICS_EVENT_ALLOWLIST)[number];
+
+/** Narrows an arbitrary event-name string to one of the fixed allowlist members. */
+export function isAllowedPersonalAnalyticsEvent(event: string): event is PersonalAnalyticsEventName {
+  return (PERSONAL_ANALYTICS_EVENT_ALLOWLIST as readonly string[]).includes(event);
+}
+
+export type PersonalAnalyticsSendGateInput = {
+  consent: PersonalAnalyticsConsentState;
+  /** Whether a PostHog client instance currently exists (construction is itself consent-gated -- see below). */
+  clientReady: boolean;
+  event: string;
+};
+
+/**
+ * Single "may we send this personal-analytics event right now?" predicate,
+ * shared by every call site via ./personalAnalytics.ts's `captureAllowed`.
+ * Fail-closed: true only when consent is exactly 'accepted', a client
+ * instance currently exists, and the event name is one of the fixed eight.
+ * Every one of those three failing independently must produce the same
+ * silent no-op -- there is no partial-send state.
+ */
+export function mayCapturePersonalAnalyticsEvent(input: PersonalAnalyticsSendGateInput): boolean {
+  return input.consent === 'accepted' && input.clientReady && isAllowedPersonalAnalyticsEvent(input.event);
+}
+
+export type PersonalAnalyticsClientLifecycleInput = {
+  consent: PersonalAnalyticsConsentState;
+  /** Whether POSTHOG_PROJECT_TOKEN + POSTHOG_HOST are both present (see app.config.js's `extra`). */
+  configured: boolean;
+};
+
+export type PersonalAnalyticsClientAction = 'construct' | 'teardown' | 'none';
+
+/**
+ * Decides what should happen to the (at most one) PostHog client instance
+ * given the current consent state and whether a config was already
+ * constructed for a previous state. This is the pure heart of the
+ * consent-gated singleton in ./posthog.ts:
+ *
+ * - 'construct': consent is exactly 'accepted', config is present, and no
+ *   instance exists yet -- construct one now (this is the ONLY path that
+ *   is ever allowed to call `new PostHog(...)`, and it can only be reached
+ *   after consent is 'accepted').
+ * - 'teardown': an instance exists but consent is no longer 'accepted'
+ *   (withdrawal after prior acceptance, or consent unexpectedly reverting
+ *   to 'unset') -- the caller must optOut() + reset() the instance and
+ *   drop the reference, per docs/analytics-pivot.md section 2.3.
+ * - 'none': nothing to do -- either already in the right state (no
+ *   instance + not accepted, or an instance already exists + still
+ *   accepted), or accepted but not configured (stays disabled, silently,
+ *   per the missing-config contract in ./posthog.ts).
+ */
+export function resolvePersonalAnalyticsClientAction(
+  input: PersonalAnalyticsClientLifecycleInput,
+  hasInstance: boolean
+): PersonalAnalyticsClientAction {
+  if (input.consent === 'accepted' && input.configured && !hasInstance) return 'construct';
+  if (input.consent !== 'accepted' && hasInstance) return 'teardown';
+  return 'none';
+}

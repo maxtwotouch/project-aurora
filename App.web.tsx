@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -15,6 +15,8 @@ import { Fraunces_700Bold } from '@expo-google-fonts/fraunces/700Bold';
 import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
+import { captureAllowed } from './src/analytics/personalAnalytics';
+import { loadPersonalAnalyticsConsent } from './src/analytics/personalAnalyticsConsent';
 import { ConsentGate } from './src/components/ConsentGate';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
 import { PreviewModeBanner } from './src/components/PreviewModeBanner';
@@ -251,6 +253,16 @@ export default function App() {
   // to the system font (web's own font-display: swap equivalent) until
   // registration completes and the tree next re-renders.
   useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+  const navigationRef = useRef<any>(null);
+  const routeNameRef = useRef<string | undefined>(undefined);
+
+  // app_open: see App.tsx for the full rationale (one-shot check against
+  // the already-in-flight consent read, never a queue-and-send-later).
+  useEffect(() => {
+    void loadPersonalAnalyticsConsent().then(() => {
+      captureAllowed('app_open');
+    });
+  }, []);
 
   const forecast = useForecast();
   const { t } = useTranslation();
@@ -276,94 +288,121 @@ export default function App() {
               PreviewModeBanner's own header comment for why. */}
           <PreviewModeBanner />
           <View style={styles.navRoot}>
-            <NavigationContainer theme={navTheme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: palette.nightSoft
-            },
-            headerTintColor: palette.textPrimary
-          }}
-        >
-          <Stack.Screen name="Tabs" options={{ headerShown: false }}>
-            {({ navigation }) => (
-              <TabsRoot
-                onOpenSpot={(spotId) => {
-                  navigation.navigate('SpotDetail', { spotId });
+            <NavigationContainer
+              ref={navigationRef}
+              theme={navTheme}
+              onReady={() => {
+                routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+              }}
+              onStateChange={() => {
+                const previousScreen = routeNameRef.current;
+                const currentScreen = navigationRef.current?.getCurrentRoute()?.name;
+
+                if (previousScreen !== currentScreen && currentScreen) {
+                  // See App.tsx's onStateChange for the full rationale
+                  // (screen NAME only, consent-gated wrapper, no
+                  // PostHogProvider needed).
+                  captureAllowed(
+                    'screen_view',
+                    previousScreen ? { screen: currentScreen, previous_screen: previousScreen } : { screen: currentScreen }
+                  );
+                }
+                routeNameRef.current = currentScreen;
+              }}
+            >
+              <Stack.Navigator
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: palette.nightSoft
+                  },
+                  headerTintColor: palette.textPrimary
                 }}
-                onOpenSettings={() => navigation.navigate('Settings')}
-                rankedSpots={forecast.rankedSpots}
-                loading={forecast.loading}
-                error={forecast.error}
-                lastUpdatedAt={forecast.lastUpdatedAt}
-                dataQuality={forecast.dataQuality}
-                kp={forecast.kp}
-                topSpots={forecast.topSpots}
-                closeSpots={forecast.closeSpots}
-                spotsById={forecast.spotsById}
-                tonightScore={forecast.tonightScore}
-                tomorrowScore={forecast.tomorrowScore}
-                sightingPossibleFrom={forecast.sightingPossibleFrom}
-                darkness={forecast.darkness}
-                level={forecast.level}
-                nowcast={forecast.nowcast}
-                refresh={forecast.refresh}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="SpotDetail"
-            options={({ route, navigation }) => ({
-              title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={({ focused }: WebPressableState) => [styles.backButton, focused ? styles.focusRing : null]}
-                  onPress={() => navigation.goBack()}
+              >
+                <Stack.Screen name="Tabs" options={{ headerShown: false }}>
+                  {({ navigation }) => (
+                    <TabsRoot
+                      onOpenSpot={(spotId) => {
+                        navigation.navigate('SpotDetail', { spotId });
+                      }}
+                      onOpenSettings={() => navigation.navigate('Settings')}
+                      rankedSpots={forecast.rankedSpots}
+                      loading={forecast.loading}
+                      error={forecast.error}
+                      lastUpdatedAt={forecast.lastUpdatedAt}
+                      dataQuality={forecast.dataQuality}
+                      kp={forecast.kp}
+                      topSpots={forecast.topSpots}
+                      closeSpots={forecast.closeSpots}
+                      spotsById={forecast.spotsById}
+                      tonightScore={forecast.tonightScore}
+                      tomorrowScore={forecast.tomorrowScore}
+                      sightingPossibleFrom={forecast.sightingPossibleFrom}
+                      darkness={forecast.darkness}
+                      level={forecast.level}
+                      nowcast={forecast.nowcast}
+                      refresh={forecast.refresh}
+                    />
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="SpotDetail"
+                  options={({ route, navigation }) => ({
+                    title: spotsById[route.params.spotId]?.name ?? t('common.spotDetailsFallback'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={({ focused }: WebPressableState) => [
+                          styles.backButton,
+                          focused ? styles.focusRing : null
+                        ]}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
                 >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {({ route }) => (
-              <WebPage>
-                <SpotDetailScreen
-                  spot={spotsById[route.params.spotId]}
-                  result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
-                  forecast={forecast.forecastsBySpotId[route.params.spotId]}
-                />
-              </WebPage>
-            )}
-          </Stack.Screen>
-          <Stack.Screen
-            name="Settings"
-            options={({ navigation }) => ({
-              title: t('settings.title'),
-              headerBackVisible: false,
-              headerLeft: () => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.goBack')}
-                  style={({ focused }: WebPressableState) => [styles.backButton, focused ? styles.focusRing : null]}
-                  onPress={() => navigation.goBack()}
+                  {({ route }) => (
+                    <WebPage>
+                      <SpotDetailScreen
+                        spot={spotsById[route.params.spotId]}
+                        result={forecast.rankedSpots.find((r) => r.spotId === route.params.spotId)}
+                        forecast={forecast.forecastsBySpotId[route.params.spotId]}
+                      />
+                    </WebPage>
+                  )}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="Settings"
+                  options={({ navigation }) => ({
+                    title: t('settings.title'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={({ focused }: WebPressableState) => [
+                          styles.backButton,
+                          focused ? styles.focusRing : null
+                        ]}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
                 >
-                  <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
-                  <Text style={styles.backText}>{t('common.back')}</Text>
-                </Pressable>
-              )
-            })}
-          >
-            {() => (
-              <WebPage>
-                <SettingsScreen />
-              </WebPage>
-            )}
-          </Stack.Screen>
-        </Stack.Navigator>
+                  {() => (
+                    <WebPage>
+                      <SettingsScreen />
+                    </WebPage>
+                  )}
+                </Stack.Screen>
+              </Stack.Navigator>
             </NavigationContainer>
           </View>
         </View>

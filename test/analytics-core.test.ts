@@ -9,20 +9,29 @@ import {
   MAX_BATCH_SIZE,
   MAX_PENDING_BEFORE_LOAD,
   MAX_QUEUE_SIZE_BEFORE_FLUSH,
+  PERSONAL_ANALYTICS_EVENT_ALLOWLIST,
   bufferPendingEvent,
   dropQueueOnRevoke,
+  isAllowedPersonalAnalyticsEvent,
   isPersistedConsentState,
   isPersistedPersonalAnalyticsConsentState,
   isPersistedTripModeConsentState,
+  mayCapturePersonalAnalyticsEvent,
   mayFlush,
   pushToQueue,
   resolveLoadedConsentState,
   resolveLoadedPersonalAnalyticsConsentState,
   resolveLoadedTripModeConsentState,
   resolvePendingBeforeLoad,
+  resolvePersonalAnalyticsClientAction,
   takeNextBatch
 } from '../src/analytics/core.js';
-import type { ConsentState, PersonalAnalyticsConsentState, TripModeConsentState } from '../src/analytics/core.js';
+import type {
+  ConsentState,
+  PersonalAnalyticsConsentState,
+  PersonalAnalyticsEventName,
+  TripModeConsentState
+} from '../src/analytics/core.js';
 
 type Event = { type: 'spot_view' | 'navigate_pressed'; spotId: string };
 
@@ -484,5 +493,151 @@ describe('personalAnalytics consent: independence from BOTH usage consent and tr
       assert.equal(isPersistedConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
       assert.equal(isPersistedTripModeConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
     }
+  });
+});
+
+// PostHog SDK lifecycle + the fixed 8-event allowlist (src/analytics/posthog.ts,
+// src/analytics/personalAnalytics.ts, docs/analytics-pivot.md section 3). Both of
+// those files import posthog-react-native / expo-constants and cannot load under
+// plain node:test, so every gating decision they make is expressed here first and
+// exercised directly -- see each file's header comment for the "core owns the
+// decision, the sibling owns the side effect" split.
+describe('personalAnalytics: PERSONAL_ANALYTICS_EVENT_ALLOWLIST is exactly the 8 declared events', () => {
+  test('the allowlist has exactly 8 entries, matching docs/analytics-pivot.md section 3 / privacy-policy.md', () => {
+    assert.equal(PERSONAL_ANALYTICS_EVENT_ALLOWLIST.length, 8);
+    assert.deepEqual(
+      [...PERSONAL_ANALYTICS_EVENT_ALLOWLIST].sort(),
+      [
+        'alerts_opt_in',
+        'app_open',
+        'language_set',
+        'navigate_pressed',
+        'screen_view',
+        'spot_shared',
+        'spot_view',
+        'trip_mode_toggled'
+      ].sort()
+    );
+  });
+});
+
+describe('personalAnalytics: isAllowedPersonalAnalyticsEvent', () => {
+  test('every declared allowlist member is itself recognized as allowed', () => {
+    for (const event of PERSONAL_ANALYTICS_EVENT_ALLOWLIST) {
+      assert.equal(isAllowedPersonalAnalyticsEvent(event), true, `expected ${event} to be allowed`);
+    }
+  });
+
+  test('rejects event names outside the allowlist, including plausible-looking near misses', () => {
+    const rejected = [
+      // Nothing autocapture-shaped, nothing session-replay/error-capture-shaped,
+      // nothing that isn't one of the 8 exact names -- see CLAUDE.md's "no
+      // autocapture, no session replay, no error/crash capture".
+      '$pageview',
+      '$autocapture',
+      '$exception',
+      'location_requested', // the wizard's own stray event -- must never be allowed
+      'alert_preferences_changed', // ditto
+      'spot_viewed', // near-miss of spot_view
+      '',
+      'App_Open' // case-sensitive: exact names only
+    ];
+    for (const event of rejected) {
+      assert.equal(isAllowedPersonalAnalyticsEvent(event), false, `expected ${event} to be rejected`);
+    }
+  });
+});
+
+describe('personalAnalytics: mayCapturePersonalAnalyticsEvent (consent x client x allowlist -> send?)', () => {
+  const allowedEvent: PersonalAnalyticsEventName = 'spot_view';
+
+  test('false when consent is unset, regardless of client/event', () => {
+    assert.equal(mayCapturePersonalAnalyticsEvent({ consent: 'unset', clientReady: true, event: allowedEvent }), false);
+  });
+
+  test('false when consent is declined, regardless of client/event', () => {
+    assert.equal(
+      mayCapturePersonalAnalyticsEvent({ consent: 'declined', clientReady: true, event: allowedEvent }),
+      false
+    );
+  });
+
+  test('false when consent is accepted but no client instance exists yet (construction itself is consent-gated -- see posthog.ts)', () => {
+    assert.equal(
+      mayCapturePersonalAnalyticsEvent({ consent: 'accepted', clientReady: false, event: allowedEvent }),
+      false
+    );
+  });
+
+  test('false when consent is accepted and a client exists, but the event is not on the allowlist', () => {
+    assert.equal(
+      mayCapturePersonalAnalyticsEvent({ consent: 'accepted', clientReady: true, event: 'location_requested' }),
+      false
+    );
+  });
+
+  test('true only when consent is accepted, a client exists, AND the event is allowlisted', () => {
+    assert.equal(
+      mayCapturePersonalAnalyticsEvent({ consent: 'accepted', clientReady: true, event: allowedEvent }),
+      true
+    );
+  });
+
+  test('every one of the 8 allowlisted events sends when accepted + client ready, and none do otherwise', () => {
+    for (const event of PERSONAL_ANALYTICS_EVENT_ALLOWLIST) {
+      assert.equal(mayCapturePersonalAnalyticsEvent({ consent: 'accepted', clientReady: true, event }), true);
+      assert.equal(mayCapturePersonalAnalyticsEvent({ consent: 'accepted', clientReady: false, event }), false);
+      assert.equal(mayCapturePersonalAnalyticsEvent({ consent: 'declined', clientReady: true, event }), false);
+      assert.equal(mayCapturePersonalAnalyticsEvent({ consent: 'unset', clientReady: true, event }), false);
+    }
+  });
+});
+
+describe('personalAnalytics: resolvePersonalAnalyticsClientAction (SDK construction/teardown lifecycle)', () => {
+  test('never constructs before consent is accepted, even when configured -- the hard "zero bytes before accept" contract', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'unset', configured: true }, false), 'none');
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'declined', configured: true }, false), 'none');
+  });
+
+  test('constructs exactly once consent flips to accepted, given config is present and no instance exists yet', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'accepted', configured: true }, false), 'construct');
+  });
+
+  test('does not reconstruct if an instance already exists and consent is still accepted', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'accepted', configured: true }, true), 'none');
+  });
+
+  test('stays disabled (never constructs) when accepted but not configured -- missing config behaves like "not accepted"', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'accepted', configured: false }, false), 'none');
+  });
+
+  test('tears down (optOut + reset) when an instance exists and consent is withdrawn to declined', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'declined', configured: true }, true), 'teardown');
+  });
+
+  test('tears down if consent unexpectedly reverts to unset while an instance exists (fail closed, not just the declined path)', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'unset', configured: true }, true), 'teardown');
+  });
+
+  test('no-op once torn down (no instance, not accepted) -- does not re-request teardown', () => {
+    assert.equal(resolvePersonalAnalyticsClientAction({ consent: 'declined', configured: true }, false), 'none');
+  });
+
+  test('scenario: full lifecycle -- unset -> accepted (construct) -> declined (teardown) -> accepted again (construct)', () => {
+    let hasInstance = false;
+
+    let action = resolvePersonalAnalyticsClientAction({ consent: 'unset', configured: true }, hasInstance);
+    assert.equal(action, 'none');
+
+    action = resolvePersonalAnalyticsClientAction({ consent: 'accepted', configured: true }, hasInstance);
+    assert.equal(action, 'construct');
+    hasInstance = true;
+
+    action = resolvePersonalAnalyticsClientAction({ consent: 'declined', configured: true }, hasInstance);
+    assert.equal(action, 'teardown');
+    hasInstance = false;
+
+    action = resolvePersonalAnalyticsClientAction({ consent: 'accepted', configured: true }, hasInstance);
+    assert.equal(action, 'construct');
   });
 });

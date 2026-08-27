@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Theme } from '@react-navigation/native';
@@ -16,6 +16,8 @@ import { Fraunces_700Bold } from '@expo-google-fonts/fraunces/700Bold';
 import { Fraunces_900Black } from '@expo-google-fonts/fraunces/900Black';
 
 import spots from './src/data/spots.json';
+import { captureAllowed } from './src/analytics/personalAnalytics';
+import { loadPersonalAnalyticsConsent } from './src/analytics/personalAnalyticsConsent';
 import { ConsentGate } from './src/components/ConsentGate';
 import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/components/icons';
 import { PreviewModeBanner } from './src/components/PreviewModeBanner';
@@ -319,6 +321,23 @@ export default function App() {
   // navigation, etc. all trigger that naturally) -- a brief, deliberate
   // FOUT-style swap rather than a loading gate.
   const [fontsLoaded] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_900Black });
+  const navigationRef = useRef<any>(null);
+  const routeNameRef = useRef<string | undefined>(undefined);
+
+  // app_open: emitted exactly once per cold start (this effect only ever
+  // runs once -- App is the root component and is never remounted on
+  // background/foreground). Waits for the ALREADY-IN-FLIGHT personal-
+  // analytics consent read (kicked off at personalAnalyticsConsent.ts's
+  // own module load, not started here) to resolve before deciding --
+  // that's a single one-shot check, not a queue: if it resolves to
+  // anything other than 'accepted', this app open is simply never
+  // recorded, and nothing is buffered to send once/if the user accepts
+  // later (docs/analytics-pivot.md section 3).
+  useEffect(() => {
+    void loadPersonalAnalyticsConsent().then(() => {
+      captureAllowed('app_open');
+    });
+  }, []);
 
   const forecast = useForecast();
   const { t } = useTranslation();
@@ -357,7 +376,32 @@ export default function App() {
               screen -- see PreviewModeBanner's own header comment for why. */}
           <PreviewModeBanner />
           <View style={styles.navRoot}>
-            <NavigationContainer theme={navTheme}>
+            <NavigationContainer
+              ref={navigationRef}
+              theme={navTheme}
+              onReady={() => {
+                routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+              }}
+              onStateChange={() => {
+                const previousScreen = routeNameRef.current;
+                const currentScreen = navigationRef.current?.getCurrentRoute()?.name;
+
+                if (previousScreen !== currentScreen && currentScreen) {
+                  // screen_view: screen NAME only (docs/analytics-pivot.md
+                  // section 3) -- captureAllowed no-ops unless personal-
+                  // analytics consent is 'accepted'. No PostHogProvider is
+                  // needed for this: every call site here uses the
+                  // consent-gated wrapper directly rather than the SDK's own
+                  // React context/autocapture navigation integration, which
+                  // this app deliberately never enables.
+                  captureAllowed(
+                    'screen_view',
+                    previousScreen ? { screen: currentScreen, previous_screen: previousScreen } : { screen: currentScreen }
+                  );
+                }
+                routeNameRef.current = currentScreen;
+              }}
+            >
               <Stack.Navigator
                 screenOptions={{
                   headerStyle: {
