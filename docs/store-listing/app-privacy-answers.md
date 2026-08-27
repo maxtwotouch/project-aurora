@@ -58,19 +58,25 @@ purpose(s). The table below gives all four for every data type Apple lists.
 
 ### Location — Not Collected (current build)
 
-- No `expo-location` (or any geolocation) dependency exists in `package.json`; grepping
-  `src/` for `Geolocation`, `getCurrentPosition`, `expo-location`,
-  `requestForegroundPermissions`, or any `NSLocation*` Info.plist key returns nothing.
-  `app.json`'s `ios.infoPlist` has no location usage-description key at all (only
-  `ITSAppUsesNonExemptEncryption`).
+- `expo-location` **is** a dependency (`package.json`), used solely by
+  `src/hooks/useUserLocation.ts` — the existing, on-device-only "show my location on the
+  map" feature (wired into `MapScreen.native.tsx` since PR #76) that centers the map on the
+  user's own position, locally, for on-screen display only. The coordinates it reads are
+  never transmitted, stored, or logged: no backend endpoint accepts a user coordinate, and
+  nothing outside that hook's local map-centering use reads its output (see the hook's own
+  header comment: "ON-DEVICE ONLY... MUST NEVER be sent to a server, written to analytics,
+  logged, or persisted").
 - Every "distance" or "km" value shown in the UI (`common.distanceTromsoCenter`,
   `tonight.distanceCityCenter`, etc. in every `src/i18n/locales/*.json`) is computed from
   the **spot's own fixed coordinates** in `src/data/spots.json` (`lat`/`lon` per spot,
   plus each spot's static `distanceKm`) against a fixed reference point (Tromsø city
-  center) — never from the device's own position. There is no code path that reads or
-  could read the user's real location.
+  center) — never from the device's own position. This is a separate calculation from the
+  map's "show my location" feature above and does not use it.
 - **App Store Connect selection (this section applies to the current and next build only —
-  neither includes Trip mode; see below):** "Location" — Not Collected.
+  neither includes Trip mode; see below):** "Location" — Not Collected. The map's blue-dot
+  feature accesses precise location on-device, but nothing derived from it is ever
+  transmitted off the device, so no location data is "collected" in Apple's sense of the
+  term.
 
 ### Location — forward-looking note for Trip mode (not in this build; NOT a final answer)
 
