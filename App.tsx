@@ -227,14 +227,25 @@ function TabsRoot({
         },
         headerTintColor: palette.textPrimary,
         headerShown: true,
-        // The native stack this navigator sits inside already insets its screen
-        // content by the top safe area, so the default headerStatusBarHeight
-        // (== insets.top) reserved it a *second* time -- a ~notch-height dead
-        // band above the title (the "empty space at the top" report). Pinning it
-        // to 0 leaves the single stack-provided inset, so the title clears the
-        // status bar without the double count. (The preview banner cancels that
-        // same stack inset with its own negative margin -- see PreviewModeBanner.)
-        headerStatusBarHeight: 0,
+        // Do NOT pin headerStatusBarHeight to 0 here (a previous attempt did,
+        // on the theory that "the native stack this navigator sits inside
+        // already insets its screen content by the top safe area"). Traced
+        // through @react-navigation/native-stack's SceneView and
+        // @react-navigation/elements' HeaderShownContext: the Provider value
+        // reaching this header is `isParentHeaderShown || headerShown !==
+        // false`, and the enclosing <Stack.Screen name="Tabs"> below is
+        // rendered with `headerShown: false` and has no ancestor of its own
+        // with a header shown -- so that value is `false`. There is no parent
+        // reservation to avoid double-counting here; this tab header is the
+        // *only* thing that reserves the top safe-area inset for this screen
+        // (react-navigation's own guidance: hiding a header makes the screen
+        // responsible for its own top inset, the stack does not add one for
+        // you). Pinning headerStatusBarHeight to 0 stripped that single,
+        // correct reservation instead of removing a duplicate one -- leaving
+        // Header.js's default (@react-navigation/elements, already Dynamic-
+        // Island aware: it discounts insets.top by 5pt on devices where
+        // insets.top > 50, see getDefaultHeaderHeight/Header.js) to compute
+        // the right amount here, per device, without hardcoding one.
         headerTitle: ({ children }) => (
           <HeaderTitleText key={fontsLoaded ? 'fraunces' : 'system'}>{children}</HeaderTitleText>
         ),
