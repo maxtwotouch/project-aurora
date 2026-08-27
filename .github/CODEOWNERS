@@ -17,6 +17,10 @@
 # (gap found in PR #93 review; added at owner instruction 2026-08-20).
 /src/components/*Consent*                    @maxtwotouch
 /src/components/PersonalAnalyticsToggle.tsx  @maxtwotouch
+# Live location-collection wiring (docs/design-trip-tracking.md) —
+# protection-strengthening addition, owner-instructed pattern.
+/src/trip/                    @maxtwotouch
+/src/hooks/useTripPresence.ts @maxtwotouch
 /docs/privacy-policy.md                      @maxtwotouch
 /public/privacy.html                         @maxtwotouch
 /docs/store-listing/                         @maxtwotouch

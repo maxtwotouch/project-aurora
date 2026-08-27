@@ -23,6 +23,7 @@ import { AuroraIcon, LiveIcon, MapIcon, SpotsIcon, TonightIcon } from './src/com
 import { PreviewModeBanner } from './src/components/PreviewModeBanner';
 import { SettingsButton } from './src/components/SettingsButton';
 import { useForecast } from './src/hooks/useForecast';
+import { useTripPresence } from './src/hooks/useTripPresence';
 import { useTranslation } from './src/i18n/useTranslation';
 import { AllSpotsScreen } from './src/screens/AllSpotsScreen';
 import { AuroraMapScreen } from './src/screens/AuroraMapScreen';
@@ -338,6 +339,17 @@ export default function App() {
       captureAllowed('app_open');
     });
   }, []);
+
+  // Trip mode's foreground collection wiring (see src/hooks/useTripPresence.ts
+  // for the full gating/consent/sampling contract). Mounted once here, at the
+  // app root -- same "mount once, own its effects, render nothing" pattern as
+  // the app_open effect above. Native only for now: AppState only reports
+  // 'active'/'background'/'inactive' transitions reliably on native (react-
+  // native-web's AppState effectively never reports 'background'), and this
+  // hook's whole design hinges on detecting that transition to stop
+  // sampling -- see docs/design-trip-tracking.md's "no passive background
+  // tracking" gate. App.web.tsx intentionally does not call this hook.
+  useTripPresence();
 
   const forecast = useForecast();
   const { t } = useTranslation();
