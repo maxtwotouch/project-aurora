@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuroraAlertsSection } from '../components/AuroraAlertsSection';
 import { DesignPreviewToggle } from '../components/DesignPreviewToggle';
 import { LanguagePicker } from '../components/LanguagePicker';
+import { PersonalAnalyticsToggle } from '../components/PersonalAnalyticsToggle';
 import { TripModeConsentToggle } from '../components/TripModeConsentToggle';
 import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { PRIVACY_POLICY_URL } from '../constants/legal';
@@ -36,6 +37,7 @@ export function SettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>{t('settings.privacySection')}</Text>
         <UsageConsentToggle />
+        <PersonalAnalyticsToggle />
         <TripModeConsentToggle />
         <Pressable
           accessibilityRole="link"

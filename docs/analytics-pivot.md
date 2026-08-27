@@ -41,6 +41,15 @@ truthful policy, the app moves to person-level product analytics.
    On first launch after the pivot ships, all users see the new consent
    — previous acceptors are reset to unset for the person-level dimension;
    previous decliners stay declined.
+
+   *Clarification (recorded during PR 2 implementation, owner confirms by
+   merging):* "previous decliners stay declined" refers to the OLD
+   usage-counter dimension — their existing decline is preserved
+   untouched. The NEW person-level question is asked of everyone,
+   including previous decliners, because the scopes are independent and
+   unbundled; declining aggregate counters is not treated as an implicit
+   answer to a question that was never asked. Consent is never inferred,
+   in either direction.
 3. **Withdrawal:** toggle off in Settings stops collection immediately and
    triggers deletion of the person's PostHog data (their deletion API) —
    stated in the policy with the honest latency caveat.
