@@ -13,6 +13,13 @@
 /backend/src/**/stats*      @maxtwotouch
 /src/analytics/             @maxtwotouch
 /src/components/Consent*    @maxtwotouch
+# Consent UI beyond the Consent* prefix + the legal policy surface itself
+# (gap found in PR #93 review; added at owner instruction 2026-08-20).
+/src/components/*Consent*                    @maxtwotouch
+/src/components/PersonalAnalyticsToggle.tsx  @maxtwotouch
+/docs/privacy-policy.md                      @maxtwotouch
+/public/privacy.html                         @maxtwotouch
+/docs/store-listing/                         @maxtwotouch
 
 # PROPOSED (feat/usage-events, needs human confirmation before merge):
 /backend/src/usageStore*    @maxtwotouch
