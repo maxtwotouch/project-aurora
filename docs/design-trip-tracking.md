@@ -71,13 +71,14 @@ analogy (owner decision, 2026-08-18):
 - What crosses the network is IDENTICAL in both modes: the coarse
   spot-level events below. Sessions change when sampling is allowed, not
   what leaves the phone.
-- *Amendment (owner decision A, 2026-08-21, see `docs/analytics-pivot.md`):*
-  when the user has ALSO accepted person-level analytics, the same
-  spot-level arrival/dwell classifications are additionally captured as
-  person-level journey events in PostHog (spot id + hour, never
-  coordinates). The identity-free aggregate pipeline runs unchanged in
-  parallel and remains the only source for third-party/municipality
-  exports.
+- *Amendment (owner decision 2026-08-22, see `docs/analytics-pivot.md`):*
+  location-derived analytics are UNLINKED — visit summaries with dwell
+  buckets, on-device recommendation attribution, and coarse H3-res-7
+  zone_dwell discovery events (outside known spots and the urban zone,
+  dark hours only, max one per cell per night per device), all flowing
+  into this identity-free pipeline. Nothing location-derived is sent to
+  PostHog or tied to any person id. The earlier person-level
+  journey-events draft was superseded before ratification.
 
 The user-facing benefit (Apple requires location to serve the user, and
 recommends requesting authorization when the user engages the feature that
