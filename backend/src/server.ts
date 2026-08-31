@@ -19,6 +19,7 @@ import { registerStatsRoutes } from './stats.js';
 import { usageCounterStore } from './usageStore.js';
 import { checkAlertTriggers, loadAlertStateFromDisk } from './alerts.js';
 import { recordValidationTick, registerValidationRoutes } from './validation.js';
+import { registerVisionRoutes, startVisionPipeline } from './vision.js';
 
 export type BuildAppOptions = {
   adminToken?: string;
@@ -197,6 +198,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   registerEventRoutes(app);
   registerStatsRoutes(app, adminToken);
   registerValidationRoutes(app, adminToken);
+  // Vision shadow mode (docs/design-vision-alerts.md Phase 0): admin-only
+  // stats route; the pipeline itself is env-gated (VISION_ENABLED) and
+  // remains fully inert -- zero camera fetches -- until the owner flips it
+  // after UiT grants polling permission.
+  registerVisionRoutes(app, adminToken);
 
   return app;
 }
@@ -219,6 +225,10 @@ async function bootstrap() {
   // listening too, so a restart mid-evening doesn't lose the per-night
   // hysteresis/cap state (docs/design-aurora-alerts.md section 3).
   await loadAlertStateFromDisk();
+
+  // Vision shadow mode: no-op unless VISION_ENABLED is set (see vision.ts);
+  // owns its own interval + error isolation, must never affect startup.
+  startVisionPipeline();
 
   await app.listen({ host: config.host, port: config.port });
   app.log.info(`Backend listening on ${config.host}:${config.port}`);
