@@ -139,7 +139,8 @@
     width: 100%;
   }
 
-  .cta {
+  .cta-disabled { opacity: 0.75; cursor: default; pointer-events: none; }
+    .cta {
     display: inline-block;
     width: 100%;
     max-width: 320px;
@@ -211,17 +212,20 @@
 
   <div class="actions">
     <!--
-      TESTFLIGHT_URL PLACEHOLDER -- owner action required before this page
+      APP_STORE_URL PLACEHOLDER -- owner action required when the app ships
       is treated as final/published:
-      This app has no public store/TestFlight listing yet (see README.md's
-      "Ship To TestFlight Beta" -- it documents building a beta, not a
+      This app has no public App Store listing yet. The CTA below is a
+      deliberately non-clickable placeholder (owner decision 2026-09-08:
+      "just a placeholder for the actual app"). It must be
       public invite link). The href below is a placeholder and MUST be
-      replaced with the real public TestFlight (or App Store) URL by the
+      turned back into a link with the real App Store URL by the
       owner before this link is promoted in paid/printed channels. Search
-      this file for TESTFLIGHT_URL to find every place it's used.
+      this file for APP_STORE_URL to find every place it's used.
     -->
-    <a id="cta" class="cta" href="#testflight-link-todo" data-i18n="cta" data-testflight-url="#testflight-link-todo">Join the TestFlight beta</a>
-    <p class="cta-note" data-i18n="ctaNote">iOS beta invite — link coming soon</p>
+    <!-- APP_STORE_URL PLACEHOLDER: when the app is live, turn this <span>
+     back into an <a class="cta"> pointing at the App Store listing. -->
+<span id="cta" class="cta cta-disabled" data-i18n="cta" aria-disabled="true">Coming to the App Store</span>
+    <p class="cta-note" data-i18n="ctaNote">The app launches here soon</p>
     <a id="web-preview" class="secondary-link" href="/app" data-i18n="webPreview">Open the web preview</a>
   </div>
 
@@ -272,8 +276,8 @@
         bullet1: "Spot guidance with bus stops and parking",
         bullet2: "Live aurora forecast score, updated through the night",
         bullet3: "Available in five languages",
-        cta: "Join the TestFlight beta",
-        ctaNote: "iOS beta invite — link coming soon",
+        cta: "Coming to the App Store",
+        ctaNote: "The app launches here soon",
         webPreview: "Open the web preview",
         privacy: "Privacy policy"
       },
@@ -284,8 +288,8 @@
         bullet1: "Ortsempfehlungen mit Bushaltestellen und Parkmöglichkeiten",
         bullet2: "Live-Vorhersagewert für die Aurora, die ganze Nacht aktuell",
         bullet3: "Verfügbar in fünf Sprachen",
-        cta: "TestFlight-Beta beitreten",
-        ctaNote: "iOS-Beta-Einladung — Link folgt in Kürze",
+        cta: "Bald im App Store",
+        ctaNote: "Die App erscheint hier in Kürze",
         webPreview: "Web-Vorschau öffnen",
         privacy: "Datenschutzerklärung"
       },
@@ -296,8 +300,8 @@
         bullet1: "Sites recommandés avec arrêts de bus et stationnement",
         bullet2: "Score de prévision d'aurore en direct, mis à jour toute la nuit",
         bullet3: "Disponible en cinq langues",
-        cta: "Rejoindre la bêta TestFlight",
-        ctaNote: "Invitation bêta iOS — lien à venir",
+        cta: "Bientôt sur l’App Store",
+        ctaNote: "L’application arrive ici très bientôt",
         webPreview: "Ouvrir l'aperçu web",
         privacy: "Politique de confidentialité"
       },
@@ -308,8 +312,8 @@
         bullet1: "Recomendaciones de lugares con paradas de autobús y aparcamiento",
         bullet2: "Puntuación de previsión de aurora en vivo, actualizada toda la noche",
         bullet3: "Disponible en cinco idiomas",
-        cta: "Unirse a la beta de TestFlight",
-        ctaNote: "Invitación a la beta de iOS — enlace disponible pronto",
+        cta: "Próximamente en el App Store",
+        ctaNote: "La aplicación llegará aquí muy pronto",
         webPreview: "Abrir la vista previa web",
         privacy: "Política de privacidad"
       },
@@ -320,8 +324,8 @@
         bullet1: "地点指南，包含公交站和停车信息",
         bullet2: "实时极光预报分数，整夜更新",
         bullet3: "支持五种语言",
-        cta: "加入 TestFlight 测试版",
-        ctaNote: "iOS 测试版邀请链接即将推出",
+        cta: "即将上架 App Store",
+        ctaNote: "应用即将在此上线",
         webPreview: "打开网页预览版",
         privacy: "隐私政策"
       }
