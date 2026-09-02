@@ -1,10 +1,64 @@
-# Deploying the backend
+# Deploying
+
+## Frontend: Cloudflare Pages (static site)
+
+`aurora.hovding.dev` is **Cloudflare Pages, built from `main`** (owner-managed
+hosting -- the owner configured this directly in the Cloudflare dashboard;
+there is no GitHub Actions workflow for it in this repo, unlike the backend's
+Fly.io deploy below). The site is a single static build assembled by
+`npm run build:pages` (`scripts/build-pages.mjs`):
+
+- `/` -- the marketing landing page (`public/landing.html`), the canonical
+  destination for QR codes and other marketing links (see
+  `docs/marketing-channels.md`).
+- `/go` (and `/go.html`) -- kept working for already-printed QR codes; it's
+  now a thin redirect to `/` that preserves the `?src=` query string.
+- `/privacy.html` -- the privacy policy.
+- `/app/**` -- the Expo web export (a preview build of the app, browser-only;
+  not the primary distribution channel -- that's TestFlight/the App Store).
+  Built with its asset paths rooted at `/app` (`EXPO_WEB_BASE_URL=/app`, see
+  `app.config.js`), since it's served from a subpath, not the site root.
+
+### Exact Cloudflare Pages dashboard settings
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | None / "None" |
+| Build command | `npm run build:pages` |
+| Build output directory | `dist-pages` |
+| Root directory | `/` (repo root -- the build script needs the whole repo, not just `public/`) |
+| Node version | 22 (matches `.github/workflows/*.yml`'s `setup-node`) |
+| Production branch | `main` |
+
+No environment variables are required for this build -- `EXPO_WEB_BASE_URL`
+is set internally by `scripts/build-pages.mjs`, not by the Cloudflare
+dashboard, so no `/app` env var setup is needed there. The exported web
+build itself runs in the same "direct-API mode" as the GitHub Pages export
+(`.github/workflows/pages.yml`): no `EXPO_PUBLIC_USE_BACKEND` /
+`EXPO_PUBLIC_API_BASE_URL` are set, so the deployed `/app` build calls
+MET/NOAA directly from the browser and needs no backend deployed alongside
+it.
+
+To verify locally before relying on a Cloudflare build:
+
+```bash
+npm run build:pages
+cd dist-pages && python3 -m http.server 8080
+# / and /privacy.html work directly; /go.html works directly (pretty-URL
+# /go requires Cloudflare Pages' own redirect handling, not reproduced by
+# a plain static file server); /app/ serves the web build.
+```
+
+`dist-pages/` is gitignored and rebuilt from scratch on every run --
+nothing under it is ever committed.
+
+## Backend
 
 Provider-neutral notes for running `backend/` somewhere real. Nothing here is
 specific to any particular host -- pick whichever runs a Docker image or a
 long-lived Node process.
 
-## Option A: Docker
+### Option A: Docker
 
 The image is a multi-stage build (`deps` -> `build` -> `runtime`): it compiles
 TypeScript in a throwaway stage and ships only the compiled `dist/`, the JSON
@@ -30,7 +84,7 @@ curl http://localhost:8080/v1/health
 
 See `backend/.env.example` for every variable and its default.
 
-## Option B: plain Node
+### Option B: plain Node
 
 No Docker required -- this is the same thing the container does internally.
 
@@ -46,7 +100,7 @@ process manager, ...) should restart the process on crash and forward its
 stdout/stderr (the app logs via Fastify's built-in logger, one JSON line per
 request/event) to your log aggregator.
 
-## Environment variables
+### Environment variables
 
 All variables are optional; missing ones use the documented default. Invalid
 values for the numeric ones (e.g. a non-numeric `PORT`) fail startup fast with
@@ -69,7 +123,7 @@ a clear error instead of silently falling back -- see `backend/src/config.ts`.
 None of these have real values checked into the repo; `backend/.env.example`
 holds placeholders only (`ADMIN_TOKEN=change-me`, clearly fake).
 
-## Persisting `backend/data/`
+### Persisting `backend/data/`
 
 The server mirrors its latest snapshot to `backend/data/latest-snapshot.json`
 so a restart can serve stale-but-real data immediately, before the first live
@@ -88,7 +142,7 @@ Mount it as a volume so it survives container recreation/redeploys:
 The image ships with the git-tracked seed file already in that path, so a
 brand-new volume starts with real (if aging) data rather than an empty store.
 
-## Health checks
+### Health checks
 
 `GET /v1/health` is the endpoint for uptime/liveness checks. It returns
 `200` with `{ ok: true, ... }` once a snapshot has ever been built (including
@@ -98,7 +152,7 @@ Look at `stale` and `lastRefreshSucceeded` in the response to detect silent
 degradation (e.g. the background refresh has been failing repeatedly).
 The Docker image's own `HEALTHCHECK` hits this endpoint every 30s.
 
-## Decisions left to the owner
+### Decisions left to the owner
 
 This doc intentionally stops short of prescribing:
 
