@@ -29,6 +29,17 @@ backend/data/alerts-state.json
 backend/data/predictions.jsonl
 backend/data/observed.jsonl
 
+# Vision (camera-based aurora detection) Phase-0 shadow-mode logs + saved
+# training frames (backend/src/vision.ts). Same reasoning as the above:
+# locally-regenerated, ever-growing (pruned by VISION_RETENTION_DAYS /
+# VISION_FRAMES_BUDGET_MB), not seed files worth tracking. Contains no user
+# data -- only per-frame pixel-derived stats and re-encoded downscaled
+# stills of public UiT rooftop city cameras. VISION_ENABLED defaults off, so
+# these are empty/absent unless an operator explicitly opts in.
+backend/data/vision-stats.jsonl
+backend/data/vision-detections.jsonl
+backend/data/vision-frames/
+
 .worktrees/.worktrees/
 .worktrees/
 
