@@ -39,6 +39,10 @@ export function UsageConsentToggle() {
         accessibilityRole="switch"
         accessibilityState={{ checked: isOn }}
         accessibilityLabel={t('consent.toggleLabel')}
+        // The visible helper text, programmatically associated so a screen-
+        // reader user landing directly on the switch hears what they are
+        // consenting to (WCAG 1.3.1 fix). Same reviewed copy, no new text.
+        accessibilityHint={isOn ? t('consent.toggleOnHelper') : t('consent.toggleOffHelper')}
         style={({ pressed, focused }: WebPressableState) => [
           styles.toggleTrack,
           isOn ? styles.toggleTrackOn : null,
@@ -84,7 +88,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: palette.chipSurface,
     borderWidth: 1,
-    borderColor: palette.borderHairlineStrong,
+    // cardBorderStrong (#4d8887): ~4.0:1 vs card -- the OFF state's only
+    // >=3:1 boundary, so knob position is perceivable (WCAG 1.4.11 fix).
+    borderColor: palette.cardBorderStrong,
     padding: 2,
     justifyContent: 'center'
   },
@@ -112,7 +118,8 @@ const styles = StyleSheet.create({
   privacyLink: {
     alignSelf: 'flex-start',
     marginTop: 4,
-    paddingVertical: 2
+    minHeight: 44,
+    justifyContent: 'center'
   },
   privacyLinkText: {
     ...typography.caption,
