@@ -65,6 +65,9 @@ export function AuroraAlertsSection() {
           accessibilityRole="switch"
           accessibilityState={{ checked: isOn, disabled }}
           accessibilityLabel={t('alerts.toggleLabel')}
+        // Visible helper (incl. permission-denied state) associated with the
+          // switch for screen readers (WCAG 1.3.1).
+          accessibilityHint={helperText}
           disabled={disabled}
           style={({ pressed, focused }: WebPressableState) => [
             styles.toggleTrack,
@@ -162,7 +165,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: palette.chipSurface,
     borderWidth: 1,
-    borderColor: palette.borderHairlineStrong,
+    // cardBorderStrong: ~4.0:1 vs card so the OFF state's boundary meets
+    // WCAG 1.4.11 non-text contrast (knob position perceivable).
+    borderColor: palette.cardBorderStrong,
     padding: 2,
     justifyContent: 'center'
   },
