@@ -146,7 +146,8 @@
     "sourceLabel": "Fuente",
     "legendText": "Laboratorio meteorológico NO-SPACE de la UiT. Modo de imagen: {{mode}}.",
     "modeNowcast": "Nowcast",
-    "modeForecastHours": "Previsión +{{hours}} h"
+    "modeForecastHours": "Previsión +{{hours}} h",
+    "frameA11y": "Mapa de auroras sobre Tromsø: {{mode}}"
   },
   "liveCameras": {
     "eyebrow": "Cámaras en vivo",
@@ -171,7 +172,9 @@
     "unavailableTitle": "Imagen en vivo no disponible",
     "unavailableText": "{{name}} no devolvió ninguna imagen. Abra la página de origen para comprobar si el feed está fuera de línea.",
     "openSource": "Abrir fuente",
-    "liveFeedFallback": "Feed en vivo"
+    "liveFeedFallback": "Feed en vivo",
+    "closeFullscreen": "Cerrar la vista a pantalla completa",
+    "fullscreenImageA11y": "Imagen de la cámara en directo de {{name}}"
   },
   "mapScreen": {
     "distanceCityCenterShort": "{{km}} km del centro de la ciudad",
@@ -316,12 +319,30 @@
     "whatNeverIncludes": "Qué no incluye nunca: su ubicación exacta, identificadores publicitarios, seguimiento entre aplicaciones, grabaciones de sesión, ni la captura automática de todo lo que toca."
   },
   "tripMode": {
-    "toggleLabel": "Modo viaje",
-    "description": "Una forma independiente y opcional de ayudarle mientras sale — solo a nivel de lugar, nunca sus coordenadas exactas. Desactivado de forma predeterminada, y puede volver a desactivarlo cuando quiera.",
-    "whatLeaves": "Lo que sale de su teléfono: qué lugares visita y aproximadamente cuánto tiempo se queda, a qué lugar recomendado fue realmente, y zonas aproximadas donde se detiene un rato por la noche mientras explora — nunca su posición exacta, y nunca vinculado a usted.",
-    "toggleOnHelper": "Compartirá presencia a nivel de lugar en cuanto se activen las funciones del Modo viaje.",
-    "toggleOffHelper": "Desactivado. No se comparte nada.",
-    "comingSoonNote": "Este interruptor está listo con antelación — el Modo viaje en sí se activará cuando lleguen sus funciones en una futura actualización."
+    "title": "Modo Viaje",
+    "eyebrow": "En marcha",
+    "introBody": "Convierte tu ubicación en una guía en vivo para esta noche: los mejores lugares de auroras cerca de ti, a qué distancia están y cuándo estar allí. Tu ubicación solo se usa en tu teléfono.",
+    "startButton": "Iniciar Modo Viaje",
+    "endButton": "Terminar Modo Viaje",
+    "permissionDenied": "El Modo Viaje necesita acceso a la ubicación para encontrar lugares cerca de ti. Actívalo en los ajustes de tu teléfono.",
+    "locating": "Buscando tu posición…",
+    "yourArea": "Tu zona",
+    "bestNearby": "Mejor lugar cercano ahora",
+    "otherNearby": "Otros cercanos",
+    "tonightSection": "Esta noche",
+    "visitedSection": "Visitados en este viaje",
+    "visitedNone": "Aún no has visitado ningún lugar; aparecerán aquí cuando llegues.",
+    "distanceAway": "a {{km}} km",
+    "scoreLabel": "Puntuación de aurora {{score}}",
+    "bestWindow": "Mejor franja {{start}} – {{end}}",
+    "cloudLabel": "Nubes",
+    "kpLabel": "Kp",
+    "noForecast": "Pronóstico no disponible ahora mismo.",
+    "noNearby": "Todavía no hay lugares de auroras al alcance de tu posición.",
+    "activeSince": "Activo desde {{time}}",
+    "webNote": "El mapa no está disponible en la web; los lugares se listan por distancia.",
+    "mapA11y": "Mapa de lugares de auroras alrededor de tu posición",
+    "navigateTo": "Abrir navegación a {{name}}"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
@@ -329,13 +350,16 @@
   "settings": {
     "title": "Ajustes",
     "languageSection": "Idioma",
-    "privacySection": "Privacidad",
+    "privacySection": "Privacidad y datos",
     "aboutSection": "Acerca de",
     "aboutAppName": "Tromsø Northern Lights",
     "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
     "designPreviewSection": "Vista previa",
     "designPreviewLabel": "Vista previa del diseño (datos de ejemplo)",
-    "designPreviewHelper": "Muestra un pronóstico de ejemplo de temporada abierta en lugar de datos en vivo. Desactiva el seguimiento de uso mientras está activo."
+    "designPreviewHelper": "Muestra un pronóstico de ejemplo de temporada abierta en lugar de datos en vivo. Desactiva el seguimiento de uso mientras está activo.",
+    "tourismSection": "Información turística",
+    "productAnalyticsSection": "Analítica del producto",
+    "usageCountsSection": "Recuentos de uso anónimos"
   },
   "preview": {
     "banner": "Datos de ejemplo — no es un pronóstico real"
@@ -374,5 +398,29 @@
       "genericLine1": "¿Planeas un viaje para ver la aurora boreal en Tromsø?",
       "genericLine2": "Consulta el pronóstico de esta noche y el mejor lugar."
     }
+  },
+  "tourismConsent": {
+    "eyebrow": "Antes de empezar",
+    "title": "¿Ayudar a mejorar el turismo en Tromsø?",
+    "body": "Aurora puede usar tu ubicación para entender qué zonas y lugares de auroras se visitan realmente. Tu ubicación precisa se queda en tu teléfono: la app solo envía notas anónimas a nivel de zona, como «alguien pasó un rato en Ersfjordbotn esta tarde», nunca tus coordenadas ni quién eres. Solo mientras la app está abierta. Puedes decir que no y todo funciona igual.",
+    "acceptButton": "Permitir",
+    "declineButton": "Ahora no",
+    "footnote": "Puedes cambiarlo en cualquier momento en Ajustes.",
+    "toggleLabel": "Información turística",
+    "description": "Ayuda a Aurora a entender qué zonas y lugares de auroras se visitan. La ubicación se procesa en tu dispositivo: tu ubicación precisa nunca se envía a Aurora. Solo se aporta información anónima a nivel de lugar y zona, y solo mientras la app está abierta.",
+    "whatLeaves": "Lo que sale de tu teléfono: qué lugares visitas y aproximadamente cuánto tiempo te quedas, a qué lugar recomendado fuiste realmente, y zonas aproximadas donde te detienes un rato de noche mientras exploras; nunca tu posición exacta y nunca vinculado a ti.",
+    "toggleOnHelper": "Aportando visitas anónimas a nivel de lugar y zona mientras la app está abierta.",
+    "toggleOffHelper": "Desactivado. No se comparte ningún dato derivado de la ubicación.",
+    "permissionMissingHelper": "El acceso a la ubicación está desactivado para esta app, así que no se mide nada. Actívalo en los ajustes de tu teléfono para contribuir."
+  },
+  "tonightTripCard": {
+    "title": "¿Sales esta noche?",
+    "body": "Inicia el Modo Viaje para ver los mejores lugares cerca de ti, en vivo.",
+    "cta": "Iniciar Modo Viaje",
+    "activeTitle": "El Modo Viaje está activado",
+    "activeBody_one": "{{count}} lugar visitado hasta ahora.",
+    "activeBody_other": "{{count}} lugares visitados hasta ahora.",
+    "activeBodyNone": "Vigilando los lugares cerca de ti.",
+    "openCta": "Abrir Modo Viaje"
   }
 }

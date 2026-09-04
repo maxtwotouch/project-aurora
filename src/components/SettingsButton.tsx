@@ -2,6 +2,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, type WebPressableState } from '../theme/tokens';
 
 type Props = {
@@ -23,7 +24,7 @@ export function SettingsButton({ onPress, accessibilityLabel }: Props) {
       hitSlop={8}
       style={({ pressed, focused }: WebPressableState) => [
         styles.button,
-        focused ? styles.focusRing : null,
+        focused ? focusRing : null,
         pressed ? styles.pressed : null
       ]}
       onPress={onPress}
@@ -48,10 +49,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
     transform: [{ scale: 0.94 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

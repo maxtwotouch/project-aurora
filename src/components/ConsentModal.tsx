@@ -12,23 +12,33 @@ type Props = {
   onDecline: () => void;
   /**
    * Which i18n namespace this question's copy (eyebrow/title/body/accept/
-   * decline/footnote) comes from. 'consent' is the original aggregate
-   * usage-counter question; 'personalAnalyticsConsent' is the second,
-   * separately-actioned person-level analytics question added in the
-   * analytics pivot (docs/analytics-pivot.md PR 2) -- see ConsentGate for
-   * how the two are sequenced. Both namespaces are shaped identically
+   * decline/footnote) comes from. 'tourismConsent' is the first-asked
+   * question (native only -- see ConsentGate step 0); 'consent' is the
+   * original aggregate usage-counter question; 'personalAnalyticsConsent'
+   * is the person-level analytics question added in the analytics pivot
+   * (docs/analytics-pivot.md PR 2) -- see ConsentGate for how all three are
+   * sequenced. All three namespaces are shaped identically
    * (eyebrow/title/body/acceptButton/declineButton/footnote) by convention
    * so this component never needs question-specific branching beyond the
    * key prefix itself.
    */
-  copyKeyPrefix?: 'consent' | 'personalAnalyticsConsent';
+  copyKeyPrefix?: 'consent' | 'personalAnalyticsConsent' | 'tourismConsent';
   /**
    * Whether to show the language picker row. Only the first question a user
-   * sees needs it -- by the time a second, sequential question appears the
+   * sees needs it -- by the time a later, sequential question appears the
    * language has already been confirmed, and re-showing the same picker
    * would just be visual noise ahead of legally-relevant copy.
    */
   showLanguageRow?: boolean;
+  /**
+   * While true, both buttons are disabled and visibly busy (opacity 0.6) --
+   * used for the tourism-insights step's accept path, which awaits a
+   * location-permission prompt before recording the consent choice (see
+   * ConsentGate). Deliberately keeps the SAME shared `styles.button` for
+   * both buttons even while busy (no-dark-patterns invariant: neither
+   * button is ever singled out).
+   */
+  busy?: boolean;
 };
 
 /**
@@ -36,12 +46,12 @@ type Props = {
  * ConsentGate) rather than blocking data loading underneath -- the app is
  * usable the instant a choice is made either way.
  *
- * Reused for BOTH first-open questions (aggregate usage counters, then --
- * sequentially, once that one is answered -- person-level analytics; see
- * ConsentGate). The two questions are never combined into a single
+ * Reused for all three sequential first-open questions (tourism insights on
+ * native, then aggregate usage counters, then person-level analytics; see
+ * ConsentGate). The questions are never combined into a single
  * accept/decline pair: each render of this component asks exactly one
- * question and reports exactly one choice, so the two consents stay
- * unbundled per CLAUDE.md's "unbundled per purpose" requirement.
+ * question and reports exactly one choice, so all consents stay unbundled
+ * per CLAUDE.md's "unbundled per purpose" requirement.
  *
  * No dark patterns: both buttons share the exact same background, border,
  * size and font weight -- neither is filled/bright while the other is
@@ -49,7 +59,13 @@ type Props = {
  * primary-text distinction) so the two remain readable as separate
  * choices without implying either one is the "recommended" action.
  */
-export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', showLanguageRow = true }: Props) {
+export function ConsentModal({
+  onAccept,
+  onDecline,
+  copyKeyPrefix = 'consent',
+  showLanguageRow = true,
+  busy = false
+}: Props) {
   const { t } = useTranslation();
   const currentLanguage = getCurrentLanguage();
   const { height: windowHeight } = useWindowDimensions();
@@ -112,8 +128,11 @@ export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', s
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t(`${copyKeyPrefix}.acceptButton`)}
+            accessibilityState={{ disabled: busy, busy }}
+            disabled={busy}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
+              busy ? styles.buttonBusy : null,
               focused ? styles.focusRing : null,
               pressed ? styles.buttonPressed : null
             ]}
@@ -124,8 +143,11 @@ export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', s
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t(`${copyKeyPrefix}.declineButton`)}
+            accessibilityState={{ disabled: busy, busy }}
+            disabled={busy}
             style={({ pressed, focused }: WebPressableState) => [
               styles.button,
+              busy ? styles.buttonBusy : null,
               focused ? styles.focusRing : null,
               pressed ? styles.buttonPressed : null
             ]}
@@ -242,6 +264,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.985 }]
+  },
+  buttonBusy: {
+    opacity: 0.6
   },
   focusRing: {
     outlineWidth: 2,

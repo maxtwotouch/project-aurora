@@ -15,13 +15,13 @@ import {
   isAllowedPersonalAnalyticsEvent,
   isPersistedConsentState,
   isPersistedPersonalAnalyticsConsentState,
-  isPersistedTripModeConsentState,
+  isPersistedTourismConsentState,
   mayCapturePersonalAnalyticsEvent,
   mayFlush,
   pushToQueue,
   resolveLoadedConsentState,
   resolveLoadedPersonalAnalyticsConsentState,
-  resolveLoadedTripModeConsentState,
+  resolveLoadedTourismConsentState,
   resolvePendingBeforeLoad,
   resolvePersonalAnalyticsClientAction,
   takeNextBatch
@@ -30,7 +30,7 @@ import type {
   ConsentState,
   PersonalAnalyticsConsentState,
   PersonalAnalyticsEventName,
-  TripModeConsentState
+  TourismConsentState
 } from '../src/analytics/core.js';
 
 type Event = { type: 'spot_view' | 'navigate_pressed'; spotId: string };
@@ -299,59 +299,59 @@ describe('scenario: consent revoked mid-queue', () => {
   });
 });
 
-// Trip mode consent (src/analytics/tripModeConsent.ts) is a SECOND,
+// Tourism-insights consent (src/analytics/tourismConsent.ts) is a SECOND,
 // INDEPENDENT consent dimension from the usage-events consent tested above
-// -- see core.ts's TripModeConsentState doc comment. These tests mirror the
+// -- see core.ts's TourismConsentState doc comment. These tests mirror the
 // usage-consent coverage above 1:1 (default/accept/decline/toggle-off,
 // corrupt-value fallback) and add explicit independence checks, since
 // "never coupled to usage consent" is the entire point of having a second
 // dimension at all.
-describe('tripMode consent: isPersistedTripModeConsentState', () => {
+describe('tourism consent: isPersistedTourismConsentState', () => {
   test('accepts "accepted" and "declined"', () => {
-    assert.equal(isPersistedTripModeConsentState('accepted'), true);
-    assert.equal(isPersistedTripModeConsentState('declined'), true);
+    assert.equal(isPersistedTourismConsentState('accepted'), true);
+    assert.equal(isPersistedTourismConsentState('declined'), true);
   });
 
   test('rejects null, "unset", and any other string', () => {
-    assert.equal(isPersistedTripModeConsentState(null), false);
-    assert.equal(isPersistedTripModeConsentState('unset'), false);
-    assert.equal(isPersistedTripModeConsentState(''), false);
-    assert.equal(isPersistedTripModeConsentState('garbage'), false);
+    assert.equal(isPersistedTourismConsentState(null), false);
+    assert.equal(isPersistedTourismConsentState('unset'), false);
+    assert.equal(isPersistedTourismConsentState(''), false);
+    assert.equal(isPersistedTourismConsentState('garbage'), false);
   });
 });
 
-describe('tripMode consent: resolveLoadedTripModeConsentState (default "unset" + load transitions)', () => {
+describe('tourism consent: resolveLoadedTourismConsentState (default "unset" + load transitions)', () => {
   test('default state: nothing persisted (first open, or a failed read) resolves to unset', () => {
-    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+    assert.equal(resolveLoadedTourismConsentState(null), 'unset');
   });
 
   test('accept: a persisted "accepted" resolves to accepted', () => {
-    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTourismConsentState('accepted'), 'accepted');
   });
 
   test('decline: a persisted "declined" resolves to declined', () => {
-    assert.equal(resolveLoadedTripModeConsentState('declined'), 'declined');
+    assert.equal(resolveLoadedTourismConsentState('declined'), 'declined');
   });
 
   test('toggle-off-after-accept: simulating accept then decline persists the latest choice, not the first', () => {
     // No shared mutable state in core.ts -- each call is independent, so
     // "toggling" is just resolving the most recently persisted value.
-    const afterAccept = resolveLoadedTripModeConsentState('accepted');
+    const afterAccept = resolveLoadedTourismConsentState('accepted');
     assert.equal(afterAccept, 'accepted');
 
-    const afterDecline = resolveLoadedTripModeConsentState('declined');
+    const afterDecline = resolveLoadedTourismConsentState('declined');
     assert.equal(afterDecline, 'declined');
   });
 
   test('a corrupt/unrecognized persisted value falls back to unset (never accepted/declined)', () => {
-    assert.equal(resolveLoadedTripModeConsentState('yes-please'), 'unset');
+    assert.equal(resolveLoadedTourismConsentState('yes-please'), 'unset');
   });
 });
 
-describe('tripMode consent: independence from usage consent', () => {
+describe('tourism consent: independence from usage consent', () => {
   test('the same raw stored value is interpreted identically but by fully separate functions', () => {
     const usage: ConsentState = resolveLoadedConsentState('accepted');
-    const trip: TripModeConsentState = resolveLoadedTripModeConsentState('declined');
+    const trip: TourismConsentState = resolveLoadedTourismConsentState('declined');
 
     // Different inputs to each dimension produce different, uncoupled outputs --
     // nothing here reads or infers one from the other.
@@ -362,21 +362,21 @@ describe('tripMode consent: independence from usage consent', () => {
   test('accepting usage consent has no bearing on what trip mode resolves to, and vice versa', () => {
     // Usage consent accepted, trip mode never persisted (still unset).
     assert.equal(resolveLoadedConsentState('accepted'), 'accepted');
-    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+    assert.equal(resolveLoadedTourismConsentState(null), 'unset');
 
     // Trip mode accepted, usage consent never persisted (still unset).
-    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTourismConsentState('accepted'), 'accepted');
     assert.equal(resolveLoadedConsentState(null), 'unset');
 
     // Usage consent declined, trip mode accepted -- both directions independently non-default.
     assert.equal(resolveLoadedConsentState('declined'), 'declined');
-    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTourismConsentState('accepted'), 'accepted');
   });
 
-  test('isPersistedConsentState and isPersistedTripModeConsentState agree on validity (same tri-state shape) but are distinct functions', () => {
-    assert.notEqual(isPersistedConsentState, isPersistedTripModeConsentState as unknown as typeof isPersistedConsentState);
+  test('isPersistedConsentState and isPersistedTourismConsentState agree on validity (same tri-state shape) but are distinct functions', () => {
+    assert.notEqual(isPersistedConsentState, isPersistedTourismConsentState as unknown as typeof isPersistedConsentState);
     for (const value of ['accepted', 'declined', null, 'unset', 'garbage']) {
-      assert.equal(isPersistedConsentState(value), isPersistedTripModeConsentState(value));
+      assert.equal(isPersistedConsentState(value), isPersistedTourismConsentState(value));
     }
   });
 });
@@ -450,7 +450,7 @@ describe('personalAnalytics consent: independence from BOTH usage consent and tr
     // Personal analytics accepted; the other two dimensions never persisted (still unset).
     assert.equal(resolveLoadedPersonalAnalyticsConsentState('accepted'), 'accepted');
     assert.equal(resolveLoadedConsentState(null), 'unset');
-    assert.equal(resolveLoadedTripModeConsentState(null), 'unset');
+    assert.equal(resolveLoadedTourismConsentState(null), 'unset');
   });
 
   test('mutating usage consent has no bearing on what personal-analytics consent resolves to', () => {
@@ -459,13 +459,13 @@ describe('personalAnalytics consent: independence from BOTH usage consent and tr
   });
 
   test('mutating trip-mode consent has no bearing on what personal-analytics consent resolves to', () => {
-    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTourismConsentState('accepted'), 'accepted');
     assert.equal(resolveLoadedPersonalAnalyticsConsentState(null), 'unset');
   });
 
   test('all three dimensions can independently hold different, non-default values simultaneously', () => {
     const usage: ConsentState = resolveLoadedConsentState('accepted');
-    const trip: TripModeConsentState = resolveLoadedTripModeConsentState('declined');
+    const trip: TourismConsentState = resolveLoadedTourismConsentState('declined');
     const personalAnalytics: PersonalAnalyticsConsentState = resolveLoadedPersonalAnalyticsConsentState('accepted');
 
     assert.equal(usage, 'accepted');
@@ -477,21 +477,21 @@ describe('personalAnalytics consent: independence from BOTH usage consent and tr
     // on argument order or a shared module-level default.
     assert.equal(resolveLoadedConsentState('declined'), 'declined');
     assert.equal(resolveLoadedPersonalAnalyticsConsentState('declined'), 'declined');
-    assert.equal(resolveLoadedTripModeConsentState('accepted'), 'accepted');
+    assert.equal(resolveLoadedTourismConsentState('accepted'), 'accepted');
   });
 
-  test('isPersistedConsentState, isPersistedTripModeConsentState, and isPersistedPersonalAnalyticsConsentState agree on validity but are three distinct functions', () => {
+  test('isPersistedConsentState, isPersistedTourismConsentState, and isPersistedPersonalAnalyticsConsentState agree on validity but are three distinct functions', () => {
     assert.notEqual(
       isPersistedConsentState,
       isPersistedPersonalAnalyticsConsentState as unknown as typeof isPersistedConsentState
     );
     assert.notEqual(
-      isPersistedTripModeConsentState,
-      isPersistedPersonalAnalyticsConsentState as unknown as typeof isPersistedTripModeConsentState
+      isPersistedTourismConsentState,
+      isPersistedPersonalAnalyticsConsentState as unknown as typeof isPersistedTourismConsentState
     );
     for (const value of ['accepted', 'declined', null, 'unset', 'garbage']) {
       assert.equal(isPersistedConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
-      assert.equal(isPersistedTripModeConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
+      assert.equal(isPersistedTourismConsentState(value), isPersistedPersonalAnalyticsConsentState(value));
     }
   });
 });

@@ -21,6 +21,10 @@
 # protection-strengthening addition, owner-instructed pattern.
 /src/trip/                    @maxtwotouch
 /src/hooks/useTripPresence.ts @maxtwotouch
+# Trip Mode product UI renders live device position on-screen (never
+# transmitted) -- docs/decision-tourism-baseline.md, 2026-09-04.
+/src/components/trip/         @maxtwotouch
+/src/screens/TripModeScreen.tsx @maxtwotouch
 /docs/privacy-policy.md                      @maxtwotouch
 /public/privacy.html                         @maxtwotouch
 /docs/store-listing/                         @maxtwotouch

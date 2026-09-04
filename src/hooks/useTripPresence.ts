@@ -4,7 +4,8 @@ import type { AppStateStatus } from 'react-native';
 import * as Location from 'expo-location';
 
 import spotsData from '../data/spots.json';
-import { getTripModeConsent, useTripModeConsent } from '../analytics/tripModeConsent';
+import { getTourismConsent, useTourismConsent } from '../analytics/tourismConsent';
+import type { TourismConsentState } from '../analytics/tourismConsent';
 import { getStoredItem, setStoredItem } from '../lib/storage';
 import { solarElevationDeg } from '../scoring/solar';
 import { attributeArrival, resetAttributionStore } from '../trip/attributionStore';
@@ -21,6 +22,7 @@ import { enqueueTripEvents, flushFinalTripEvents } from '../trip/tripEventClient
 import type { TripEventIntent } from '../trip/tripEventClient';
 import { shouldFlushStopIntents } from '../trip/tripEventGate';
 import type { TripPresenceStopReason } from '../trip/tripEventGate';
+import { isTripSessionActive, noteTripArrival, useTripSession } from '../trip/tripSession';
 import { TROMSO_CENTER, TROMSO_URBAN_EXCLUSION_CELLS } from '../trip/urbanExclusion';
 import {
   DEFAULT_ZONE_MAX_GAP_MS,
@@ -32,20 +34,38 @@ import {
 import type { NightDedupeState, ZoneDwellState } from '../trip/zoneDiscovery';
 
 /**
- * Trip mode's foreground collection wiring (v1 -- see docs/design-trip-
- * tracking.md and docs/analytics-pivot.md's amendment; the background
- * nav-session mode from the design doc's section 3 "trip session" is
- * explicitly out of scope here, a later iteration). Mount once, at the app
- * root (see App.tsx) -- this hook renders nothing and returns nothing; it
- * exists purely for its effects.
+ * The shared foreground presence engine -- one `Location.watchPositionAsync`
+ * subscription that serves TWO independent roles at once (see
+ * docs/design-trip-tracking.md, docs/analytics-pivot.md's amendment, and
+ * src/trip/tripEventGate.ts's header for the full consent-layering
+ * rationale):
  *
- * GATING (all four must hold before any `expo-location` call happens):
- *   1. Trip-mode consent === 'accepted' (src/analytics/tripModeConsent.ts).
- *   2. The app is foregrounded (`AppState.currentState === 'active'`).
- *   3. Foreground location permission is granted (requested here, lazily,
- *      the first time (1) and (2) are both true -- "at the point of
- *      relevance" per Apple's own guidance, quoted in docs/design-trip-
- *      tracking.md section 3 -- never on cold start regardless of consent).
+ *   (a) BASELINE TOURISM MEASUREMENT -- the identity-free, aggregate
+ *       spot_presence/spot_presence_long/spot_visit/recommended_spot_visit/
+ *       zone_dwell pipeline this file has always driven, gated end-to-end on
+ *       tourism-insights consent (src/analytics/tourismConsent.ts).
+ *   (b) TRIP MODE'S OWN "NEARBY / VISITED THIS TRIP" FEATURE -- a product
+ *       feature (src/trip/tripSession.ts) that wants live position samples
+ *       of its own, entirely independent of whether tourism consent was
+ *       ever granted. An active trip session records arrivals into its own
+ *       in-memory `visitedSpotIds` list via `noteTripArrival` -- never
+ *       transmitted, never gated on any consent, discarded when the session
+ *       ends.
+ *
+ * Mount once, at the app root (see App.tsx) -- this hook renders nothing and
+ * returns nothing; it exists purely for its effects.
+ *
+ * GATING is two independent questions that must not be conflated:
+ *
+ *   1. MAY THE SAMPLER RUN AT ALL (`shouldRun()`, below)? Yes when
+ *      `(getTourismConsent() === 'accepted' || isTripSessionActive())` AND
+ *      the app is foregrounded AND foreground location permission is
+ *      granted (requested here, lazily, the first time `shouldRun()` is
+ *      true -- "at the point of relevance" per Apple's own guidance, quoted
+ *      in docs/design-trip-tracking.md section 3 -- never on cold start
+ *      regardless of consent or session state). Either tourism consent OR
+ *      an active trip session is sufficient to run the sampler -- neither
+ *      implies the other, and both can hold at once.
  *      PERMISSION-REVOCATION ASSUMPTION: revoking foreground location
  *      permission requires leaving this app (iOS Settings, or Android's
  *      equivalent) -- so the AppState background handler below already
@@ -53,22 +73,30 @@ import type { NightDedupeState, ZoneDwellState } from '../trip/zoneDiscovery';
  *      goes to revoke it), and the foreground re-check in `start()` covers
  *      the return trip; Android's "only this time" one-shot grant, which
  *      CAN auto-revoke without the user visiting Settings, is caught the
- *      same way: the next `start()` (next foreground, or the next Trip-mode
+ *      same way: the next `start()` (next foreground, or the next
  *      re-evaluation) re-checks `getForegroundPermissionsAsync()` before
  *      trusting it. `watchPositionAsync`'s own `errorHandler` below is an
  *      additional, defensive `permission-lost` stop for the rarer case
  *      where a running subscription itself errors out.
- *   4. `EXPO_PUBLIC_USE_BACKEND`/`EXPO_PUBLIC_API_BASE_URL` are configured
- *      (checked deeper, inside tripEventClient.ts -- collection can still
- *      run locally without a configured backend, but nothing is ever
- *      queued to send; see that module).
- * Any one of (1)-(3) becoming false immediately stops the watcher via
- * `stop(reason)` -- see that function below, and tripEventGate.ts's
- * `shouldFlushStopIntents` for the reason-keyed flush/discard decision this
- * hook defers to (a `consent-revoked` stop DISCARDS its closing summary
- * outright rather than sending it, per the "consent off stops collection
- * immediately" fix; every other reason still flushes it, since consent is
- * still 'accepted' in those cases -- only the watcher itself is stopping).
+ *   2. MAY A SAMPLE BE EMITTED OVER THE NETWORK? Decided SOLELY by tourism
+ *      consent, via `enqueueTripEvents` -> `mayEmitTripEvents`
+ *      (tripEventGate.ts) -- an active trip session never opens this gate.
+ *      Sampling that runs purely to support a trip session with tourism
+ *      consent off therefore never sends anything; the gate stays closed
+ *      the entire time.
+ *      `EXPO_PUBLIC_USE_BACKEND`/`EXPO_PUBLIC_API_BASE_URL` are also
+ *      checked, deeper, inside tripEventClient.ts -- collection can still
+ *      run locally without a configured backend, but nothing is ever queued
+ *      to send; see that module.
+ *
+ * Any change relevant to `shouldRun()` (tourism consent, trip session
+ * active-ness, or AppState) is re-evaluated -- see the "Re-evaluation
+ * effect" below, and tripEventGate.ts's `shouldFlushStopIntents` for the
+ * reason-keyed flush/discard decision the `stop()` function defers to (a
+ * `consent-revoked` stop DISCARDS its closing summary outright rather than
+ * sending it, per the "consent off stops collection immediately" fix; every
+ * other reason flushes it only while consent is still 'accepted' -- see
+ * that function's own doc comment).
  *
  * SAMPLING PARAMETERS (battery-conscious, documented per the task):
  *   - `Location.Accuracy.Balanced` (~100m, WiFi/cell-assisted rather than
@@ -122,6 +150,17 @@ function isDark(timestampMs: number): boolean {
   return solarElevationDeg(timestampMs, TROMSO_CENTER.lat, TROMSO_CENTER.lon) < -6;
 }
 
+/**
+ * May the sampler run right now? True when tourism consent is accepted OR a
+ * trip session is active, AND the app is foregrounded -- see the module
+ * header's "GATING" section 1. Reads live module state directly (no hook
+ * closures) so it can be called identically from `start()`, the
+ * re-evaluation effect, and the AppState listener without going stale.
+ */
+function shouldRun(): boolean {
+  return (getTourismConsent() === 'accepted' || isTripSessionActive()) && AppState.currentState === 'active';
+}
+
 function parseStoredZoneDedupe(raw: string | null): NightDedupeState {
   if (!raw) return INITIAL_NIGHT_DEDUPE_STATE;
   try {
@@ -142,7 +181,8 @@ function parseStoredZoneDedupe(raw: string | null): NightDedupeState {
 }
 
 export function useTripPresence(): void {
-  const { state: tripModeConsent, loaded: tripModeConsentLoaded } = useTripModeConsent();
+  const { state: tourismConsent, loaded: tourismConsentLoaded } = useTourismConsent();
+  const tripSession = useTripSession();
 
   const geofencesRef = useRef<SpotGeofence[]>(spotsToGeofences(spotsData as SpotJson[]));
   const presenceStateRef = useRef<PresenceState>(INITIAL_PRESENCE_STATE);
@@ -151,9 +191,14 @@ export function useTripPresence(): void {
   const watcherRef = useRef<{ remove: () => void } | null>(null);
   const runningRef = useRef(false);
   // Guards against a start()/stop() racing an in-flight watchPositionAsync
-  // call (e.g. consent flips off while permission/subscription setup is
+  // call (e.g. gating flips off while permission/subscription setup is
   // still awaiting native calls).
   const startTokenRef = useRef(0);
+  // Tracks the previous tourism-consent value across the re-evaluation
+  // effect so it can tell "consent was just revoked" apart from "a trip
+  // session just ended" -- both can leave `shouldRun()` false, but they
+  // resolve to different stop reasons (see that effect below).
+  const previousTourismConsentRef = useRef<TourismConsentState>(tourismConsent);
 
   useEffect(() => {
     let cancelled = false;
@@ -184,11 +229,15 @@ export function useTripPresence(): void {
       presenceStateRef.current = presenceResult.state;
       outgoing.push(...presenceResult.intents);
 
-      // Recommendation attribution: attempt attribution on every fresh
-      // arrival (spot_presence), per docs/analytics-pivot.md's amendment
-      // item 2 -- "compares on arrival".
+      // Recommendation attribution (identity-free pipeline) AND Trip Mode's
+      // own visited-list bookkeeping (in-memory, never transmitted) both key
+      // off the same fresh-arrival signal -- per docs/analytics-pivot.md's
+      // amendment item 2 ("compares on arrival") and tripSession.ts's own
+      // "record an arrival" contract. `noteTripArrival` is a no-op while no
+      // session is active, so it is always safe to call.
       for (const intent of presenceResult.intents) {
         if (intent.type === 'spot_presence') {
+          noteTripArrival(intent.spotId);
           const attributed = attributeArrival(intent.spotId, sample.timestampMs);
           if (attributed) outgoing.push(attributed);
         }
@@ -215,25 +264,25 @@ export function useTripPresence(): void {
   );
 
   /**
-   * Stops the watcher (if any) and settles the current visit, per the
-   * task's "Consent off / app background / permission missing -> no
-   * watcher, state reset via resetPresence + endPresenceSession flush"
-   * instruction -- with the reason-keyed flush/discard split from the
-   * post-review fix (see tripEventGate.ts's `shouldFlushStopIntents` for
-   * the decision itself, and flushFinalTripEvents's doc comment in
-   * tripEventClient.ts for the invariant this branch upholds):
+   * Stops the watcher (if any) and settles the current visit. The
+   * flush/discard decision for the resulting closing summary is
+   * `shouldFlushStopIntents(reason, getTourismConsent())` (tripEventGate.ts)
+   * -- LIVE tourism consent, not a snapshot, because a stop can happen while
+   * sampling ran purely to support a trip session with consent off:
    *
    *   - `'consent-revoked'`: endPresenceSession still runs (so local state
-   *     resets cleanly either way), but its resulting intents are
-   *     DISCARDED -- never queued, never sent -- because consent
-   *     withdrawal must stop collection immediately. Also resets the
-   *     attribution store (item 5 of the wiring task) -- see
-   *     attributionStore.ts's own comment on why the OTHER reasons below
-   *     must NOT do this (the 12h attribution window is meant to survive
-   *     exactly a background/foreground gap).
-   *   - `'background' | 'permission-lost' | 'unmount'`: consent is still
-   *     'accepted' in every one of these cases -- only the watcher itself
-   *     is stopping -- so the closing summary is flushed as before.
+   *     resets cleanly either way), but its resulting intents are always
+   *     DISCARDED -- never queued, never sent -- because consent withdrawal
+   *     must stop collection immediately. Also resets the attribution store
+   *     -- see attributionStore.ts's own comment on why the OTHER reasons
+   *     below must NOT do this (the 12h attribution window is meant to
+   *     survive exactly a background/foreground gap).
+   *   - `'trip-ended' | 'background' | 'permission-lost' | 'unmount'`: the
+   *     closing summary is flushed only if tourism consent is STILL
+   *     'accepted' at this moment -- if the sampler was only ever running
+   *     for a trip session (consent never accepted, or already withdrawn),
+   *     there is nothing to flush and `shouldFlushStopIntents` returns
+   *     false regardless of reason.
    */
   const stop = useCallback((reason: TripPresenceStopReason) => {
     startTokenRef.current += 1; // invalidate any in-flight start()
@@ -250,15 +299,15 @@ export function useTripPresence(): void {
     // just forget the in-progress cell.
     zoneStateRef.current = INITIAL_ZONE_DWELL_STATE;
 
-    if (intents.length > 0 && shouldFlushStopIntents(reason)) {
+    if (intents.length > 0 && shouldFlushStopIntents(reason, getTourismConsent())) {
       flushFinalTripEvents(intents);
     }
-    // else (consent-revoked): the closing summary is intentionally dropped
-    // here -- see shouldFlushStopIntents's doc comment. tripEventClient.ts's
-    // own subscribeTripModeConsent handler independently clears anything
-    // already sitting in its queue the moment consent flips, so revoked
-    // consent drops BOTH the trailing summary (here) and any prior
-    // not-yet-sent queued items (there).
+    // else: the closing summary is intentionally dropped here -- see
+    // shouldFlushStopIntents's doc comment. tripEventClient.ts's own
+    // subscribeTourismConsent handler independently clears anything already
+    // sitting in its queue the moment consent flips, so revoked consent
+    // drops BOTH the trailing summary (here) and any prior not-yet-sent
+    // queued items (there).
 
     if (reason === 'consent-revoked') {
       resetAttributionStore();
@@ -267,16 +316,17 @@ export function useTripPresence(): void {
 
   const start = useCallback(async () => {
     if (runningRef.current) return;
-    if (getTripModeConsent() !== 'accepted') return;
-    if (AppState.currentState !== 'active') return;
+    if (!shouldRun()) return;
 
     const token = ++startTokenRef.current;
 
-    // Requested lazily, at the point of relevance (Trip mode is on AND the
-    // app is in the foreground) -- never on cold start, and never re-shown
-    // once the OS has recorded a decision (requestForegroundPermissionsAsync
-    // itself is a no-op prompt-wise once 'granted'/'denied' is already
-    // settled). Mirrors useUserLocation.ts's own lazy-request pattern.
+    // Requested lazily, at the point of relevance (`shouldRun()` is true)
+    // -- never on cold start, and never re-shown once the OS has recorded a
+    // decision (requestForegroundPermissionsAsync itself is a no-op
+    // prompt-wise once 'granted'/'denied' is already settled). Mirrors
+    // useUserLocation.ts's own lazy-request pattern. ConsentGate already
+    // requests this permission at onboarding (making this a no-op there);
+    // Trip Mode's own screen also requests it before starting a session.
     let permission: Location.LocationPermissionResponse;
     try {
       permission = await Location.getForegroundPermissionsAsync();
@@ -289,10 +339,10 @@ export function useTripPresence(): void {
     if (permission.status !== Location.PermissionStatus.GRANTED) return;
 
     // Re-check nothing changed while the permission round-trip was in
-    // flight (consent withdrawn, app backgrounded, or a newer start() call
-    // superseded this one).
+    // flight (gating flipped off, or a newer start() call superseded this
+    // one).
     if (token !== startTokenRef.current) return;
-    if (getTripModeConsent() !== 'accepted' || AppState.currentState !== 'active') return;
+    if (!shouldRun()) return;
 
     let subscription: Location.LocationSubscription;
     try {
@@ -305,18 +355,16 @@ export function useTripPresence(): void {
         handleSample,
         // Defensive `permission-lost` stop for a running subscription that
         // itself errors out (e.g. permission revoked out from under an
-        // active watch) -- see the GATING section's "PERMISSION-REVOCATION
+        // active watch) -- see the module header's "PERMISSION-REVOCATION
         // ASSUMPTION" note above for why this is a defensive backstop, not
-        // the primary detection path. Consent is still 'accepted' here, so
-        // this flushes the closing summary like any other non-revocation
-        // stop (shouldFlushStopIntents('permission-lost') === true).
+        // the primary detection path.
         () => stop('permission-lost')
       );
     } catch {
       return;
     }
 
-    if (token !== startTokenRef.current || getTripModeConsent() !== 'accepted' || AppState.currentState !== 'active') {
+    if (token !== startTokenRef.current || !shouldRun()) {
       subscription.remove();
       return;
     }
@@ -325,16 +373,34 @@ export function useTripPresence(): void {
     runningRef.current = true;
   }, [handleSample, stop]);
 
-  // Re-evaluate whenever Trip-mode consent (or its loaded-ness) changes.
+  // Re-evaluation effect (replaces the old consent-only effect): re-runs
+  // whenever tourism consent (or its loaded-ness) or trip-session
+  // active-ness changes.
   useEffect(() => {
-    if (!tripModeConsentLoaded) return;
-    if (tripModeConsent === 'accepted') {
+    if (!tourismConsentLoaded) return;
+
+    const previousTourismConsent = previousTourismConsentRef.current;
+    previousTourismConsentRef.current = tourismConsent;
+    const tourismConsentJustRevoked = previousTourismConsent === 'accepted' && tourismConsent !== 'accepted';
+
+    if (shouldRun()) {
       void start();
-    } else {
-      stop('consent-revoked');
+      // Special case: consent was just revoked but a trip session is still
+      // active, so `shouldRun()` stays true and the watcher must keep
+      // running for the session's sake -- emission is already closed by the
+      // gate (mayEmitTripEvents) and tripEventClient.ts's own subscription
+      // drops whatever is queued, but the local attribution store must
+      // still be reset here, same as a `consent-revoked` stop would do, per
+      // attributionStore.ts's contract.
+      if (tourismConsentJustRevoked) {
+        resetAttributionStore();
+      }
+      return;
     }
+
+    stop(tourismConsentJustRevoked ? 'consent-revoked' : 'trip-ended');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripModeConsent, tripModeConsentLoaded]);
+  }, [tourismConsent, tourismConsentLoaded, tripSession.active]);
 
   // Foreground/background transitions. NOTE (post-review, keep these two
   // AppState listeners disjoint): this hook and tripEventClient.ts EACH
@@ -349,7 +415,7 @@ export function useTripPresence(): void {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next: AppStateStatus) => {
       if (next === 'active') {
-        if (tripModeConsentLoaded && tripModeConsent === 'accepted') {
+        if (shouldRun()) {
           void start();
         }
       } else {
@@ -358,13 +424,10 @@ export function useTripPresence(): void {
     });
     return () => subscription.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [start, stop, tripModeConsent, tripModeConsentLoaded]);
+  }, [start, stop, tourismConsent, tourismConsentLoaded, tripSession.active]);
 
   // Unmount: stop cleanly (should not normally happen -- this hook is
   // mounted once at the app root -- but covers hot reload / test teardown).
-  // Consent is still 'accepted' at this point (unmount isn't a consent
-  // change), so this flushes the closing summary like any other
-  // non-revocation stop.
   useEffect(() => {
     return () => {
       stop('unmount');

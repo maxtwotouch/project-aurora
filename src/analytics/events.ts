@@ -23,10 +23,8 @@ import {
  *   resolves.
  * - Only { type, spotId } is ever sent -- no timestamps (the server buckets
  *   by hour on arrival), no device/session info, nothing else.
- * - 'spot_shared' is intentionally never emitted by any call site in this
- *   codebase today -- there is no share action in the app. The type stays
- *   here only for parity with the backend's UsageEventType union; wire it
- *   up if/when a real share action is added, not before.
+ * - 'spot_shared' is emitted by the share action (src/components/
+ *   ShareButton.tsx) -- spot id only, like the other two.
  * - Failures are dropped silently: no retries, no retry storms, never
  *   surfaced to the user, never allowed to block the UI.
  * - If consent is withdrawn (toggled off) after events were queued but

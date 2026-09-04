@@ -146,7 +146,8 @@
     "sourceLabel": "来源",
     "legendText": "UiT的NO-SPACE空间天气实验室。画面模式：{{mode}}。",
     "modeNowcast": "实况",
-    "modeForecastHours": "预报 +{{hours}}小时"
+    "modeForecastHours": "预报 +{{hours}}小时",
+    "frameA11y": "特罗姆瑟上空极光地图：{{mode}}"
   },
   "liveCameras": {
     "eyebrow": "实时摄像头",
@@ -171,7 +172,9 @@
     "unavailableTitle": "实时画面不可用",
     "unavailableText": "{{name}}未返回图像。请打开来源页面确认数据源是否离线。",
     "openSource": "打开来源",
-    "liveFeedFallback": "实时画面"
+    "liveFeedFallback": "实时画面",
+    "closeFullscreen": "关闭全屏视图",
+    "fullscreenImageA11y": "{{name}} 的实时摄像头画面"
   },
   "mapScreen": {
     "distanceCityCenterShort": "距市中心 {{km}} 公里",
@@ -316,12 +319,30 @@
     "whatNeverIncludes": "绝不包含：您的精确位置、广告标识符、跨应用跟踪、会话录制，或对您点击的所有内容进行自动采集。"
   },
   "tripMode": {
-    "toggleLabel": "出行模式",
-    "description": "一种独立、可选的方式，在您外出时提供帮助——仅精确到地点级别，绝不记录您的精确坐标。默认关闭，您可以随时再次关闭。",
-    "whatLeaves": "从您的手机发出的内容：您访问的地点及大致停留时长、您实际前往的推荐地点，以及您夜间探索时短暂停留过的大致区域——绝不是您的精确位置，也绝不会与您本人关联。",
-    "toggleOnHelper": "出行模式功能上线后，将共享地点级别的到访情况。",
-    "toggleOffHelper": "已关闭。不共享任何内容。",
-    "comingSoonNote": "此开关已提前准备就绪——出行模式本身将在其功能随后续更新上线后启用。"
+    "title": "出行模式",
+    "eyebrow": "准备出发",
+    "introBody": "把你的位置变成今晚的实时向导：附近最佳极光观测点、距离多远、何时抵达最合适。你的位置只在手机上使用。",
+    "startButton": "开始出行模式",
+    "endButton": "结束出行模式",
+    "permissionDenied": "出行模式需要位置权限才能查找你附近的观测点。请在手机设置中开启。",
+    "locating": "正在获取你的位置…",
+    "yourArea": "你所在的区域",
+    "bestNearby": "当前附近最佳",
+    "otherNearby": "附近其他观测点",
+    "tonightSection": "今晚",
+    "visitedSection": "本次出行已到访",
+    "visitedNone": "尚未到访任何观测点——抵达后会显示在这里。",
+    "distanceAway": "距离 {{km}} 公里",
+    "scoreLabel": "极光评分 {{score}}",
+    "bestWindow": "最佳时段 {{start}} – {{end}}",
+    "cloudLabel": "云量",
+    "kpLabel": "Kp",
+    "noForecast": "目前无法获取预报。",
+    "noNearby": "你的位置附近暂时没有可到达的极光观测点。",
+    "activeSince": "自 {{time}} 起启用",
+    "webNote": "网页版不提供地图——观测点按距离列出。",
+    "mapA11y": "你所在位置周围的极光观测点地图",
+    "navigateTo": "打开前往 {{name}} 的导航"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
@@ -329,13 +350,16 @@
   "settings": {
     "title": "设置",
     "languageSection": "语言",
-    "privacySection": "隐私",
+    "privacySection": "隐私与数据",
     "aboutSection": "关于",
     "aboutAppName": "Tromsø Northern Lights",
     "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
     "designPreviewSection": "预览",
     "designPreviewLabel": "设计预览（示例数据）",
-    "designPreviewHelper": "显示极光季节的示例预报，而非实时数据。开启期间将停用使用情况跟踪。"
+    "designPreviewHelper": "显示极光季节的示例预报，而非实时数据。开启期间将停用使用情况跟踪。",
+    "tourismSection": "旅游洞察",
+    "productAnalyticsSection": "产品分析",
+    "usageCountsSection": "匿名使用统计"
   },
   "preview": {
     "banner": "示例数据 — 非真实预报"
@@ -374,5 +398,29 @@
       "genericLine1": "计划去特罗姆瑟看极光吗？",
       "genericLine2": "查看今晚的预报和最佳观赏地点吧。"
     }
+  },
+  "tourismConsent": {
+    "eyebrow": "开始之前",
+    "title": "帮助改善特罗姆瑟的旅游体验？",
+    "body": "Aurora 可以使用你的位置来了解人们实际到访了哪些区域和极光观测点。你的精确位置只保存在手机上——应用只会发送匿名的区域级信息，例如“今晚有人在 Ersfjordbotn 停留了一会儿”，绝不会发送你的坐标，也不会透露你是谁。仅在应用打开时进行。你可以拒绝，一切功能照常可用。",
+    "acceptButton": "允许",
+    "declineButton": "暂不",
+    "footnote": "你可以随时在设置中更改。",
+    "toggleLabel": "旅游洞察",
+    "description": "帮助 Aurora 了解哪些区域和极光观测点正在被到访。位置信息在你的设备上处理——你的精确位置绝不会发送给 Aurora。只会贡献匿名的观测点和区域级信息，且仅在应用打开时进行。",
+    "whatLeaves": "离开你手机的信息：你到访了哪些观测点、大致停留多久、你实际前往了哪个推荐观测点，以及夜间探索时停留一段时间的粗略区域——绝不包含你的精确位置，也绝不与你关联。",
+    "toggleOnHelper": "应用打开时贡献匿名的观测点和区域级到访信息。",
+    "toggleOffHelper": "已关闭。不会共享任何基于位置的数据。",
+    "permissionMissingHelper": "此应用的位置权限已关闭，因此不会进行任何测量。请在手机设置中开启以参与贡献。"
+  },
+  "tonightTripCard": {
+    "title": "今晚要出发吗？",
+    "body": "开启出行模式，实时查看你附近的最佳观测点。",
+    "cta": "开始出行模式",
+    "activeTitle": "出行模式已开启",
+    "activeBody_one": "目前已到访 {{count}} 个观测点。",
+    "activeBody_other": "目前已到访 {{count}} 个观测点。",
+    "activeBodyNone": "正在留意你附近的观测点。",
+    "openCta": "打开出行模式"
   }
 }

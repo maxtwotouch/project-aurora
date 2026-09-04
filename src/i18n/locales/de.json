@@ -146,7 +146,8 @@
     "sourceLabel": "Quelle",
     "legendText": "NO-SPACE Weather Lab an der UiT. Bildmodus: {{mode}}.",
     "modeNowcast": "Nowcast",
-    "modeForecastHours": "Vorhersage +{{hours}} Std."
+    "modeForecastHours": "Vorhersage +{{hours}} Std.",
+    "frameA11y": "Polarlichtkarte über Tromsø: {{mode}}"
   },
   "liveCameras": {
     "eyebrow": "Live-Kameras",
@@ -171,7 +172,9 @@
     "unavailableTitle": "Live-Bild nicht verfügbar",
     "unavailableText": "{{name}} hat kein Bild geliefert. Öffnen Sie die Quellseite, um zu prüfen, ob der Feed offline ist.",
     "openSource": "Quelle öffnen",
-    "liveFeedFallback": "Live-Feed"
+    "liveFeedFallback": "Live-Feed",
+    "closeFullscreen": "Vollbildansicht schließen",
+    "fullscreenImageA11y": "Live-Kamerabild von {{name}}"
   },
   "mapScreen": {
     "distanceCityCenterShort": "{{km}} km vom Stadtzentrum",
@@ -316,12 +319,30 @@
     "whatNeverIncludes": "Was das niemals einschließt: Ihren genauen Standort, Werbe-IDs, app-übergreifendes Tracking, Sitzungsaufzeichnungen oder die automatische Erfassung von allem, was Sie antippen."
   },
   "tripMode": {
-    "toggleLabel": "Trip-Modus",
-    "description": "Eine separate, optionale Möglichkeit, Ihnen unterwegs zu helfen — nur ortsbezogen, nie Ihre genauen Koordinaten. Standardmäßig deaktiviert, und Sie können es jederzeit wieder ausschalten.",
-    "whatLeaves": "Was Ihr Telefon verlässt: welche Orte Sie besuchen und wie lange Sie ungefähr bleiben, zu welchem empfohlenen Ort Sie tatsächlich gegangen sind, sowie grobe Bereiche, in denen Sie sich nachts beim Erkunden länger aufhalten — nie Ihre genaue Position, und nie mit Ihnen verknüpft.",
-    "toggleOnHelper": "Wird ortsbezogene Anwesenheit teilen, sobald die Funktionen des Trip-Modus verfügbar sind.",
-    "toggleOffHelper": "Aus. Es wird nichts geteilt.",
-    "comingSoonNote": "Dieser Schalter ist schon vorbereitet — der Trip-Modus selbst wird aktiv, sobald seine Funktionen in einem kommenden Update erscheinen."
+    "title": "Trip-Modus",
+    "eyebrow": "Unterwegs",
+    "introBody": "Mach aus deinem Standort einen Live-Guide für heute Nacht: die besten Polarlicht-Spots in deiner Nähe, wie weit sie entfernt sind und wann du dort sein solltest. Dein Standort wird nur auf deinem Handy verwendet.",
+    "startButton": "Trip-Modus starten",
+    "endButton": "Trip-Modus beenden",
+    "permissionDenied": "Der Trip-Modus braucht Standortzugriff, um Spots in deiner Nähe zu finden. Schalte ihn in den Einstellungen deines Handys ein.",
+    "locating": "Position wird ermittelt…",
+    "yourArea": "Deine Umgebung",
+    "bestNearby": "Bester Spot in der Nähe",
+    "otherNearby": "Weitere in der Nähe",
+    "tonightSection": "Heute Nacht",
+    "visitedSection": "Auf diesem Trip besucht",
+    "visitedNone": "Noch keine Spots besucht — sie erscheinen hier, sobald du ankommst.",
+    "distanceAway": "{{km}} km entfernt",
+    "scoreLabel": "Polarlicht-Score {{score}}",
+    "bestWindow": "Bestes Zeitfenster {{start}} – {{end}}",
+    "cloudLabel": "Wolken",
+    "kpLabel": "Kp",
+    "noForecast": "Vorhersage derzeit nicht verfügbar.",
+    "noNearby": "Noch keine Polarlicht-Spots in Reichweite deiner Position.",
+    "activeSince": "Aktiv seit {{time}}",
+    "webNote": "Die Karte ist im Web nicht verfügbar — Spots werden stattdessen nach Entfernung aufgelistet.",
+    "mapA11y": "Karte der Polarlicht-Spots rund um deine Position",
+    "navigateTo": "Navigation zu {{name}} öffnen"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
@@ -329,13 +350,16 @@
   "settings": {
     "title": "Einstellungen",
     "languageSection": "Sprache",
-    "privacySection": "Datenschutz",
+    "privacySection": "Datenschutz & Daten",
     "aboutSection": "Über die App",
     "aboutAppName": "Tromsø Northern Lights",
     "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
     "designPreviewSection": "Vorschau",
     "designPreviewLabel": "Design-Vorschau (Beispieldaten)",
-    "designPreviewHelper": "Zeigt eine Beispielprognose für die Aurora-Saison anstelle von Live-Daten. Deaktiviert die Nutzungserfassung, solange aktiv."
+    "designPreviewHelper": "Zeigt eine Beispielprognose für die Aurora-Saison anstelle von Live-Daten. Deaktiviert die Nutzungserfassung, solange aktiv.",
+    "tourismSection": "Tourismus-Einblicke",
+    "productAnalyticsSection": "Produktanalyse",
+    "usageCountsSection": "Anonyme Nutzungszahlen"
   },
   "preview": {
     "banner": "Beispieldaten — keine echte Prognose"
@@ -374,5 +398,29 @@
       "genericLine1": "Planst du eine Polarlicht-Reise nach Tromsø?",
       "genericLine2": "Sieh dir die heutige Vorhersage und den besten Ort an."
     }
+  },
+  "tourismConsent": {
+    "eyebrow": "Bevor es losgeht",
+    "title": "Tourismus in Tromsø verbessern helfen?",
+    "body": "Aurora kann deinen Standort nutzen, um zu verstehen, welche Gebiete und Polarlicht-Spots tatsächlich besucht werden. Dein genauer Standort bleibt auf deinem Handy — die App sendet nur anonyme Hinweise auf Gebietsebene wie „jemand war heute Abend eine Weile in Ersfjordbotn“, nie deine Koordinaten und nie, wer du bist. Nur solange die App geöffnet ist. Du kannst Nein sagen, und alles funktioniert genauso.",
+    "acceptButton": "Erlauben",
+    "declineButton": "Jetzt nicht",
+    "footnote": "Du kannst das jederzeit in den Einstellungen ändern.",
+    "toggleLabel": "Tourismus-Einblicke",
+    "description": "Hilf Aurora zu verstehen, welche Gebiete und Polarlicht-Spots besucht werden. Der Standort wird auf deinem Gerät verarbeitet — dein genauer Standort wird nie an Aurora gesendet. Es werden nur anonyme Informationen auf Spot- und Gebietsebene beigetragen, und nur solange die App geöffnet ist.",
+    "whatLeaves": "Was dein Handy verlässt: welche Spots du besuchst und ungefähr wie lange du bleibst, welchen empfohlenen Spot du tatsächlich aufgesucht hast, und grobe Gebiete, in denen du nachts beim Erkunden eine Weile verweilst — nie deine genaue Position und nie mit dir verknüpft.",
+    "toggleOnHelper": "Anonyme Besuche auf Spot- und Gebietsebene werden beigetragen, solange die App geöffnet ist.",
+    "toggleOffHelper": "Aus. Es werden keine standortbezogenen Daten geteilt.",
+    "permissionMissingHelper": "Der Standortzugriff ist für diese App ausgeschaltet, daher wird nichts gemessen. Schalte ihn in den Einstellungen deines Handys ein, um beizutragen."
+  },
+  "tonightTripCard": {
+    "title": "Heute Nacht unterwegs?",
+    "body": "Starte den Trip-Modus für die besten Spots in deiner Nähe — live.",
+    "cta": "Trip-Modus starten",
+    "activeTitle": "Trip-Modus ist an",
+    "activeBody_one": "Bisher {{count}} Spot besucht.",
+    "activeBody_other": "Bisher {{count}} Spots besucht.",
+    "activeBodyNone": "Behält die Spots in deiner Nähe im Blick.",
+    "openCta": "Trip-Modus öffnen"
   }
 }

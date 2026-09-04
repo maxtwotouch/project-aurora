@@ -6,6 +6,7 @@ import { ScoreBadge } from './ScoreBadge';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { motion, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type { SpotImageCredit } from '../data/spotExtras';
@@ -98,7 +99,7 @@ export function SpotHeroImage({ image, name, score, onError }: Props) {
           onPress={() => {
             void Linking.openURL(image.sourceUrl);
           }}
-          style={({ pressed, focused }: WebPressableState) => [styles.creditRow, focused ? styles.creditFocusRing : null, pressed ? styles.creditPressed : null]}
+          style={({ pressed, focused }: WebPressableState) => [styles.creditRow, focused ? focusRing : null, pressed ? styles.creditPressed : null]}
         >
           <Text style={styles.creditText} numberOfLines={1}>
             {creditLabel}
@@ -158,11 +159,6 @@ const styles = StyleSheet.create({
   creditPressed: {
     opacity: 0.7
   },
-  creditFocusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   creditText: {
     ...typography.caption,
     color: palette.textMuted,

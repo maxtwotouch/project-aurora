@@ -14,6 +14,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { dressLevelFromColdScore } from '../scoring/score';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
@@ -193,7 +194,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
             accessibilityLabel={t('common.openNavigationTo', { name: spot.name })}
             style={({ pressed, focused }: WebPressableState) => [
               styles.navigateBtn,
-              focused ? styles.focusRing : null,
+              focused ? focusRing : null,
               pressed ? styles.buttonPressed : null
             ]}
             onPress={navigateToSpot}
@@ -216,7 +217,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
                 <Text style={styles.description}>{t('spotDetail.mapPreviewSimplified')}</Text>
                 <Pressable
                   accessibilityRole="button"
-                  style={({ focused }: WebPressableState) => [styles.webMapBtn, focused ? styles.focusRing : null]}
+                  style={({ focused }: WebPressableState) => [styles.webMapBtn, focused ? focusRing : null]}
                   onPress={navigateToSpot}
                 >
                   <Text style={styles.webMapBtnText}>{t('spotDetail.openInGoogleMaps')}</Text>
@@ -304,7 +305,7 @@ function JumpButton({ label, onPress }: { label: string; onPress: () => void }) 
       accessibilityRole="link"
       style={({ pressed, focused }: WebPressableState) => [
         styles.jumpButton,
-        focused ? styles.focusRing : null,
+        focused ? focusRing : null,
         pressed ? styles.buttonPressed : null
       ]}
       onPress={onPress}
@@ -466,11 +467,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scale: 0.985 }]
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   navigateBtn: {
     minHeight: 48,
     borderRadius: radius.md,

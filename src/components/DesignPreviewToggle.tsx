@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePreviewMode } from '../preview/previewMode';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
@@ -31,7 +32,7 @@ export function DesignPreviewToggle() {
         style={({ pressed, focused }: WebPressableState) => [
           styles.toggleTrack,
           enabled ? styles.toggleTrackOn : null,
-          focused ? styles.focusRing : null,
+          focused ? focusRing : null,
           pressed ? styles.togglePressed : null
         ]}
         onPress={() => setEnabled(!enabled)}
@@ -92,10 +93,5 @@ const styles = StyleSheet.create({
   },
   toggleKnobOn: {
     transform: [{ translateX: 18 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

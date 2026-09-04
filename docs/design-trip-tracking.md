@@ -4,6 +4,16 @@ Status: **Decision #1 approved by owner with amendments (2026-08-18)** —
 this revision incorporates them and is the working privacy specification.
 Implementation order is fixed by the ship gates in section 6.
 
+**Amendment (owner decision 2026-09-04, see
+`docs/decision-tourism-baseline.md`):** the consent that gates this pipeline
+is the *tourism-insights* consent, asked at first launch and independent of
+Trip Mode; Trip Mode is now a user-facing product feature (Start/End) that
+does not gate collection. Wherever this document says 'while Trip mode is
+on' read 'while tourism insights is on and the app is in the foreground'.
+Ship gate 6.2's 'NOT in the first-open modal' is superseded. Everything else
+— coarsen on device, no identifiers, no passive background tracking —
+stands.
+
 ## 1. What we need to know (product + municipality)
 
 - Which viewpoints fill up, and when (congestion forming).
@@ -12,12 +22,12 @@ Implementation order is fixed by the ship gates in section 6.
 - Statistics Tromsø kommune can use — never row-level data.
 
 Terminology rule (owner amendment): results are **"observed presence among
-consenting Trip Mode users"**, never "visitor counts". The sample is
-app-users × analytics-consenting × Trip-mode-on × app-foregrounded, and
+consenting users"**, never "visitor counts". The sample is
+app-users × tourism-consenting × app-foregrounded, and
 that selection bias can vary by spot (famous spots vs remote ones attract
 different usage). Trends and distributions are analysable; absolute counts
 are not representative until validated. Reports to the municipality say
-"Grøtfjord represented 27% of observed Trip Mode presence events", not
+"Grøtfjord represented 27% of observed presence events", not
 "Grøtfjord had 600 visitors".
 
 ## 2. What we may NOT build (hard constraints)
@@ -53,30 +63,39 @@ review:
 
 ## 3. The design: coarsen on device, count on server
 
-**Trip mode** is a persistent opt-in (consent once in Settings, stays on
-until turned off) with session-based collection — the Google-Maps-navigation
-analogy (owner decision, 2026-08-18):
+**Tourism insights** is a persistent opt-in (asked once at first launch,
+changeable in Settings, stays on until turned off) — amended 2026-09-04 from
+the original "Trip mode" consent-in-Settings framing. **Trip Mode** is the
+product feature: a session the user starts from the Tonight screen and ends
+when done (your area on a map, nearest spots and scores, Navigate, tonight's
+conditions, spots visited this trip). It uses location on-device for the
+feature and neither gates nor triggers collection. The Google-Maps-navigation
+analogy (owner decision, 2026-08-18) still frames the collection model:
 
-- **Baseline (consented, app in use):** whenever the app is foregrounded,
-  position is classified locally and presence events fire per the rules
-  below.
-- **Trip session (the navigation analogy):** starting a trip to a spot
-  (e.g. tapping Navigate with Trip mode on) begins an ACTIVE session.
-  Like a navigation app, sampling continues while the session runs even if
-  the user switches to their maps app mid-drive — the iOS-standard pattern
-  (when-in-use permission + location background mode, with the OS's
-  location indicator visible throughout the session). The session ends on
-  arrival-plus-dwell, manual stop, or timeout. "Collect all the time"
-  means all the time *during a trip* — never all the time *in life*.
-- What crosses the network is IDENTICAL in both modes: the coarse
-  spot-level events below. Sessions change when sampling is allowed, not
-  what leaves the phone.
+- **Baseline (tourism-consented, app in use):** whenever the app is
+  foregrounded, position is classified locally and presence events fire per
+  the rules below. This is what ships (2026-09-04).
+- **Trip session (the navigation analogy — designed, NOT implemented):**
+  the original design allowed sampling to continue during an ACTIVE trip
+  session even if the user switches to their maps app mid-drive — the
+  iOS-standard pattern (when-in-use permission + location background mode,
+  with the OS's location indicator visible throughout the session), ending
+  on arrival-plus-dwell, manual stop, or timeout. "Collect all the time"
+  means all the time *during a trip* — never all the time *in life*. The
+  shipped Trip Mode does NOT do this: sampling stops on backgrounding
+  regardless of Trip Mode. Background continuation needs a new owner
+  decision (`docs/decision-tourism-baseline.md` section 7).
+- What crosses the network is IDENTICAL whether or not Trip Mode is
+  running: the coarse spot-level events below. Trip Mode changes what the
+  user sees, not what leaves the phone; the backend does not know whether
+  Trip Mode was active.
 - *Amendment (owner decision 2026-08-22, see `docs/analytics-pivot.md`):*
   location-derived analytics are UNLINKED — visit summaries with dwell
   buckets, on-device recommendation attribution, and coarse H3-res-7
   zone_dwell discovery events (outside known spots and the urban zone,
   dark hours only, max one per cell per night per device), all flowing
-  into this identity-free pipeline. Nothing location-derived is sent to
+  into this identity-free pipeline, gated on the tourism-insights consent
+  (2026-09-04; previously the Trip-mode consent). Nothing location-derived is sent to
   PostHog or tied to any person id. The earlier person-level
   journey-events draft was superseded before ratification.
 
@@ -88,7 +107,7 @@ needs it):
 - On arrival: an "arrived at <spot>" context card — tonight's score for
   *this* spot, best viewing direction, remaining best-window time.
 
-While Trip mode is on (baseline foreground use, or an active trip session):
+While tourism insights is on and the app is in the foreground:
 
 1. The phone uses **precise location locally** (Core Location / fused
    provider) and compares it against the 28 spot coordinates
@@ -108,13 +127,14 @@ While Trip mode is on (baseline foreground use, or an active trip session):
    not at exit):**
    - enter radius → emit `spot_presence {spotId, utcHour}`;
    - 20 minutes *continuously inside* → emit `spot_presence_long
-     {spotId, utcHour}` (so a long visit is recorded even if Trip mode or
-     the app closes before the user leaves);
+     {spotId, utcHour}` (so a long visit is recorded even if the app
+     closes before the user leaves);
    - leave radius → forget the local state.
    The client keeps ephemeral state (`enteredSpot`, `enteredAt`,
    `presenceSent`, `longPresenceSent`) solely to prevent duplicate emission
    — it lives on-device only, is never transmitted, and is **reset when
-   Trip mode ends** so no local visit history accumulates.
+   sampling stops (background, consent off)** so no local visit history
+   accumulates.
 4. The backend counts events in the existing aggregate counter store
    (`type|spotId|utcHour`), inheriting retention (`USAGE_RETENTION_DAYS`)
    and small-cell suppression (`STATS_MIN_CELL`). No new storage class.
@@ -150,13 +170,19 @@ anonymisation guidance is being updated in 2026 — gate 6.6 tracks it.
 
 ## 6. Ship gates — ALL owner-merged, ALL before any collection code
 
-1. `docs/privacy-policy.md`: Trip mode section — what it is, exactly what
+1. `docs/privacy-policy.md`: Tourism insights section (originally "Trip
+   mode") — what it is, exactly what
    leaves the device, what never does, the separate opt-in, withdrawal,
    retention/deletion (Apple review guidelines require the policy to cover
    collection, uses, retention/deletion, and consent revocation).
-2. Consent UI (protected paths): distinct Trip-mode toggle, default off,
-   honest copy, 5 languages. NOT bundled into usage-stats consent, NOT in
-   the first-open modal — Settings, at point of relevance.
+2. Consent UI (protected paths): distinct tourism-insights toggle, default
+   off, honest copy, 5 languages. NOT bundled into usage-stats consent.
+   *Superseded 2026-09-04 (`docs/decision-tourism-baseline.md`):* the
+   original "NOT in the first-open modal — Settings, at point of relevance"
+   is replaced; the tourism question is the first step of the first-open
+   consent flow (own step, own answer, decline as easy as accept), with the
+   Settings toggle for later changes. The OS location permission is still
+   requested at the point of relevance (on Allow, or on Start Trip Mode).
 3. App Store privacy answers: **do not hard-code the final answer in this
    doc** (owner amendment). The app *accesses* precise location for local
    processing; the developer *collects* only the coarse derived event —
@@ -220,3 +246,4 @@ rule.
 | 4 | Collection scope | REVISED 2026-08-18: app-in-use baseline + active trip sessions (navigation pattern, when-in-use + background location mode during session only). No passive background, ever. Store-answer/App-Review note: UIBackgroundModes location must be declared and justified via the session framing — folds into ship gate 6.3. |
 | 5 | Trip-mode user benefit | Arrival context card |
 | 6 | Municipality sharing | Deferred to 7.7; fixed-dimension export only, never `/v1/stats`; gates 6.5+6.6 mandatory first |
+| 7 | Consent placement + Trip Mode split | 2026-09-04, see `docs/decision-tourism-baseline.md`: tourism-insights consent asked at first launch (supersedes gate 6.2), foreground-only baseline, Trip Mode is a product feature that does not gate collection, everyone re-asked once |

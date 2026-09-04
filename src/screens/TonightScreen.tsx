@@ -21,11 +21,13 @@ import { QuickNavChips } from '../components/tonight/QuickNavChips';
 import { SpotListSection } from '../components/tonight/SpotListSection';
 import { decisionKey, isLikelyDaytime } from '../components/tonight/decision';
 import { ShareButton } from '../components/ShareButton';
+import { TripModeCard } from '../components/trip/TripModeCard';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
 import type { ShareTonightState } from '../share/shareMessage';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type {
@@ -41,6 +43,7 @@ import type {
 
 type Props = {
   onOpenSpot: (spotId: string) => void;
+  onOpenTripMode: () => void;
   loading: boolean;
   error: string | null;
   lastUpdatedAt: string | null;
@@ -60,6 +63,7 @@ type Props = {
 
 export function TonightScreen({
   onOpenSpot,
+  onOpenTripMode,
   loading,
   error,
   lastUpdatedAt,
@@ -218,6 +222,32 @@ export function TonightScreen({
         onOpenSpot={onOpenSpot}
       />
 
+      {/* Trip Mode's entry point -- directly after the hero, ahead of every
+          other secondary section, so "heading out" is the first thing
+          offered once the hero's own recommendation has been read. Shares
+          the hero's own entrance animation (rise + fade) rather than the
+          later stagger wave (secondaryAnim/listAnim), since it visually
+          continues straight off the hero rather than belonging to the
+          "supporting detail" sections below it. */}
+      <Animated.View
+        style={[
+          styles.tripModeCardWrap,
+          {
+            opacity: heroAnim,
+            transform: [
+              {
+                translateY: heroAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [riseFrom(18), 0]
+                })
+              }
+            ]
+          }
+        ]}
+      >
+        <TripModeCard onPress={onOpenTripMode} />
+      </Animated.View>
+
       {/* Compact, secondary "send tonight to a friend" action -- sits right
           under the hero (the one dominant recommendation) rather than
           inside it, so it never competes with BestSpotPanel's primary
@@ -279,7 +309,7 @@ export function TonightScreen({
           <Text style={styles.error}>{error}</Text>
           <Pressable
             accessibilityRole="button"
-            style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
+            style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? focusRing : null, pressed ? styles.buttonPressed : null]}
             onPress={() => void refresh()}
           >
             <Text style={styles.retryButtonText}>{t('common.tryAgain')}</Text>
@@ -311,6 +341,10 @@ const styles = StyleSheet.create({
   shareRow: {
     alignItems: 'flex-end',
     marginBottom: space.lg
+  },
+  tripModeCardWrap: {
+    // TripModeCard supplies its own marginBottom -- this wrapper exists
+    // purely to carry the entrance animation, not additional spacing.
   },
   atmosphereTop: {
     position: 'absolute',
@@ -370,10 +404,5 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

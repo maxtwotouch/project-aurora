@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { buildShareMessage, type ShareTonightState } from '../share/shareMessage';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
@@ -103,7 +104,7 @@ export function ShareButton({ state, spotId }: Props) {
       style={({ pressed, focused }: WebPressableState) => [
         styles.button,
         Platform.OS === 'web' ? styles.buttonHover : null,
-        focused ? styles.focusRing : null,
+        focused ? focusRing : null,
         pressed ? styles.buttonPressed : null
       ]}
       onPress={() => void handlePress()}
@@ -136,10 +137,5 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

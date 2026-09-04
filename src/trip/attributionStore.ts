@@ -4,7 +4,7 @@
  * Tonight screen (records "shown") and the presence hook (records
  * "arrived"), the two independent call sites that never otherwise share a
  * module. Same "module owns the one mutable `let`" pattern already used by
- * src/analytics/consent.ts / tripModeConsent.ts for their own single-value
+ * src/analytics/consent.ts / tourismConsent.ts for their own single-value
  * state, applied here to `AttributionState | null` instead of a consent
  * enum.
  *

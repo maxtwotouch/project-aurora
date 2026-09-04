@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ScoreBadge } from '../components/ScoreBadge';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useTranslation } from '../i18n/useTranslation';
 import { getStoredItem, setStoredItem } from '../lib/storage';
@@ -54,6 +55,7 @@ const LOCATION_AUTO_PROMPT_STORAGE_KEY = 'aurora.locationAutoPromptDone.v1';
 
 export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const sheetAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<Spot | null>(null);
   const mapRef = useRef<MapView | null>(null);
@@ -102,6 +104,11 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
   };
 
   useEffect(() => {
+    if (reducedMotion) {
+      sheetAnim.setValue(1);
+      return;
+    }
+
     sheetAnim.setValue(0);
     Animated.timing(sheetAnim, {
       toValue: 1,
@@ -109,7 +116,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
       easing: Easing.out(Easing.exp),
       useNativeDriver: true
     }).start();
-  }, [selected, sheetAnim]);
+  }, [selected, sheetAnim, reducedMotion]);
 
   useEffect(() => {
     setSelected((current) => current ?? defaultSpot);
@@ -220,7 +227,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
             {locationStatus === 'denied' ? t('map.location.deniedNote') : t('map.location.unavailableNote')}
           </Text>
           {locationStatus === 'denied' ? (
-            <Pressable onPress={() => void Linking.openSettings()}>
+            <Pressable accessibilityRole="button" hitSlop={10} onPress={() => void Linking.openSettings()}>
               <Text style={styles.locationNoteLink}>{t('map.location.openSettings')}</Text>
             </Pressable>
           ) : null}
@@ -258,13 +265,13 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           </View>
 
           <View style={styles.actions}>
-            <Pressable style={styles.ghostButton} onPress={() => setSelected(null)}>
+            <Pressable accessibilityRole="button" style={styles.ghostButton} onPress={() => setSelected(null)}>
               <Text style={styles.ghostButtonText}>{t('mapScreen.clear')}</Text>
             </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={() => onOpenSpot(selected.id)}>
+            <Pressable accessibilityRole="button" style={styles.secondaryButton} onPress={() => onOpenSpot(selected.id)}>
               <Text style={styles.secondaryButtonText}>{t('mapScreen.details')}</Text>
             </Pressable>
-            <Pressable style={styles.primaryButton} onPress={() => navigateToSpot(selected)}>
+            <Pressable accessibilityRole="button" style={styles.primaryButton} onPress={() => navigateToSpot(selected)}>
               <Text style={styles.primaryButtonText}>{t('common.navigate')}</Text>
             </Pressable>
           </View>
@@ -415,7 +422,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#355468',
+    borderColor: palette.cardBorderStrong,
     backgroundColor: '#132836'
   },
   ghostButtonText: {
