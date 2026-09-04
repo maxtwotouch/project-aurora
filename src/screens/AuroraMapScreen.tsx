@@ -6,6 +6,7 @@ import {
   Image,
   LayoutChangeEvent,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -70,6 +71,31 @@ export function AuroraMapScreen({ kp }: Props) {
       setHourOffset(AVAILABLE_HOUR_OFFSETS[next]);
     }
   };
+
+  // react-native-web does not implement accessibilityActions, so on web the
+  // slider is stepped with the arrow/Home/End keys instead (WCAG 2.1.1).
+  // `onKeyDown` is a react-native-web-only View prop, hence the typed spread.
+  const webScrubberKeyProps =
+    Platform.OS === 'web'
+      ? ({
+          tabIndex: 0,
+          onKeyDown: (event: { key: string; preventDefault: () => void }) => {
+            const next =
+              event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                ? Math.min(maxIndex, selectedIndex + 1)
+                : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                  ? Math.max(0, selectedIndex - 1)
+                  : event.key === 'Home'
+                    ? 0
+                    : event.key === 'End'
+                      ? maxIndex
+                      : null;
+            if (next === null) return;
+            event.preventDefault();
+            setHourOffset(AVAILABLE_HOUR_OFFSETS[next]);
+          }
+        } as object)
+      : null;
 
   const onTimelineLayout = (event: LayoutChangeEvent) => {
     const width = Math.max(1, event.nativeEvent.layout.width);
@@ -289,6 +315,7 @@ export function AuroraMapScreen({ kp }: Props) {
           aria-valuetext={currentOffsetLabel}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={onScrubberAccessibilityAction}
+          {...webScrubberKeyProps}
         >
           <View
             style={[styles.timelineFill, { width: `${(selectedIndex / maxIndex) * 100}%` }]}

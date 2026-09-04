@@ -227,7 +227,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
             {locationStatus === 'denied' ? t('map.location.deniedNote') : t('map.location.unavailableNote')}
           </Text>
           {locationStatus === 'denied' ? (
-            <Pressable accessibilityRole="link" hitSlop={10} onPress={() => void Linking.openSettings()}>
+            <Pressable accessibilityRole="button" hitSlop={10} onPress={() => void Linking.openSettings()}>
               <Text style={styles.locationNoteLink}>{t('map.location.openSettings')}</Text>
             </Pressable>
           ) : null}
