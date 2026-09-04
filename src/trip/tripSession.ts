@@ -10,7 +10,7 @@
  *   - What a session DOES change is whether the presence engine is allowed
  *     to sample location for the feature's own sake (nearby spots, "visited
  *     this trip"), even when tourism consent is off -- see
- *     src/hooks/useTourismPresence.ts's run condition.
+ *     src/hooks/useTripPresence.ts's `shouldRun()` condition.
  *
  * PRIVACY: in-memory only, never persisted, never transmitted. The visited
  * list holds spot ids (never coordinates) and is discarded the moment the

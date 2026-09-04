@@ -32,7 +32,9 @@ import type { TripEventIntent } from '../src/trip/tripEventWire.js';
 // type NoForbidden = Extract<WireKeys, Forbidden> extends never ? true : false;
 // const _wireHasNoForbiddenKeys: NoForbidden = true;
 //
-// (Left as a comment, not live code: see "type-level check availability"
+// (Left as a comment here; the LIVE compile-time version of this exact check is
+// `WIRE_PAYLOAD_HAS_NO_FORBIDDEN_KEYS` in src/trip/tripEventWire.ts, which
+// `npm run typecheck` does cover. See "type-level check availability"
 // below for why -- tsconfig.json excludes `test/`, so this block is never
 // actually type-checked by `npm run typecheck` today. If it were live code
 // under an included tsconfig, a change to TripEventWirePayload that added

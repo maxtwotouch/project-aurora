@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -87,19 +87,18 @@ export function TripModeScreen({ spots, rankedSpots, spotsById, kp, nowcast, loa
   );
 
   const handleStart = async () => {
-    if (Platform.OS === 'web') {
-      // The browser's own permission prompt happens inside
-      // location.requestLocation() itself -- no separate expo-location call
-      // needed (or reliably available) on web.
-      setPermissionDenied(false);
-      beginTripSession();
-      captureAllowed('trip_mode_toggled', { enabled: true });
-      void location.requestLocation();
+    // Same order of operations on every platform: the session only begins
+    // once the OS/browser has actually granted when-in-use location
+    // (expo-location's web implementation drives the browser's own prompt),
+    // so a declined prompt never leaves a session "active" with no position.
+    let status: Location.PermissionStatus;
+    try {
+      ({ status } = await Location.requestForegroundPermissionsAsync());
+    } catch {
+      setPermissionDenied(true);
       return;
     }
-
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') {
+    if (status === Location.PermissionStatus.GRANTED) {
       setPermissionDenied(false);
       beginTripSession();
       captureAllowed('trip_mode_toggled', { enabled: true });

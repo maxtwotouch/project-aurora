@@ -24,7 +24,12 @@ export type { UserLocationCoords, UserLocationEvent, UserLocationState, UserLoca
  * The latter is a deliberate, narrow exception: it still only ever fires
  * once per install (never on every mount/tab revisit) and only from a
  * clean 'idle' status, so it never nags or fires alongside/after a button
- * press. Never call this from an unconditional mount effect.
+ * press. Never call this from an unconditional mount effect. Trip Mode's
+ * screen (src/screens/TripModeScreen.tsx) adds one more sanctioned pattern:
+ * a 60 s refresh interval that runs ONLY while the user has explicitly
+ * started a Trip Mode session AND that screen is focused -- permission was
+ * granted at Start, so the interval never prompts, and it is torn down on
+ * blur/unmount/End.
  *
  * The pure status/coords transition table lives in ./userLocationReducer.ts
  * (no expo-location/react-native import there), so it's covered by
