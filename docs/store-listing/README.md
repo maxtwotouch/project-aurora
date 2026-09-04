@@ -67,7 +67,8 @@ across locales.
    own instruction) before the Privacy Policy URL is submitted — Apple reviewers do open
    the privacy policy link and check it says who operates the app.
 4. **"Last updated" date** in `docs/privacy-policy.md` / `public/privacy.html` (currently
-   a placeholder) — set at actual publication.
+   2026-09-04, the tourism-insights decision date) — bump at actual publication if the
+   text changes again before then.
 5. **App Privacy questionnaire answers** — drafted in full in `app-privacy-answers.md`;
    the owner (or whoever has App Store Connect access) still has to click through the
    actual questionnaire UI and enter them, since this is a UI flow, not a file upload.
@@ -105,9 +106,9 @@ across locales.
 
 Full line-by-line mapping (with file references) is in `app-privacy-answers.md`. Summary:
 
-- **Data collected: only "Product Interaction" (analytics-style usage counts), and only
-  if the user opts in.** Everything else in Apple's category list is answered "Not
-  Collected."
+- **Data collected: "Product Interaction" (analytics-style usage counts) and "Coarse
+  Location" (tourism-insights events), each only if the user opts in to that specific
+  choice.** Everything else in Apple's category list is answered "Not Collected."
 - **Purpose:** App Functionality / Analytics (understanding which viewing spots are
   useful — including sharing aggregate counts with Tromsø kommune per
   `docs/privacy-usage-events.md`).
@@ -117,10 +118,12 @@ Full line-by-line mapping (with file references) is in `app-privacy-answers.md`.
 - **Used for tracking (Apple's ATT definition — linking data across apps/websites owned
   by other companies, or for third-party advertising): No.** No third-party SDKs, no ad
   network, no cross-app/cross-site linkage of any kind.
-- **Location: Not Collected.** The app never requests device/GPS location (no
-  `expo-location` dependency, no permission prompt anywhere in `src/`) — every displayed
-  "distance" is computed from the fixed spot coordinates in `src/data/spots.json` against
-  a fixed reference point, not from the user's device.
+- **Location: Coarse Location — Collected, not linked, not for tracking, purpose
+  Analytics; Precise Location — Not Collected.** The app uses `expo-location`
+  (when-in-use, foreground only) on-device for Trip Mode and, if the user said yes to
+  tourism insights at first launch, to derive coarse spot-/zone-level events; the precise
+  coordinate never leaves the device. See `app-privacy-answers.md` "Location" and
+  "Google Play Data Safety", and `docs/decision-tourism-baseline.md`.
 - **Identifiers, Contact Info, User Content, Browsing/Search History, Financial Info,
   Health/Fitness, Diagnostics, Purchases, Sensitive Info: Not Collected.**
 - This maps precisely to what `docs/privacy-policy.md` and `docs/privacy-usage-events.md`

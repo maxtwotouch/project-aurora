@@ -55,7 +55,7 @@ FIVE LANGUAGES
 The app is fully available in English, German, French, Spanish, and Chinese (Simplified), switchable at any time from Settings — useful if you're traveling and want the interface in your own language, or handing the phone to a friend.
 
 PRIVACY BY DEFAULT
-The app works fully without any account, login, or setup, and never asks for your GPS location — every "distance" shown is calculated from a spot's fixed coordinates, not from tracking you. If you choose to, you can opt in to sharing anonymous, aggregated counts (which spots people view or navigate to, bucketed by hour) so we and Tromsø kommune can see which spots are actually useful. Declining changes nothing about how the app works, and you can turn sharing on or off at any time in Settings. There are no third-party trackers or advertising SDKs in this app.
+The app works fully without any account, login, or setup. Location is optional — it is used on your phone for Trip Mode, and, only if you say yes, to contribute anonymous, area-level tourism insights; your precise location is never sent. If you choose to, you can opt in to sharing anonymous, aggregated counts (which spots people view or navigate to, bucketed by hour) so we and Tromsø kommune can see which spots are actually useful. Declining changes nothing about how the app works, and you can turn sharing on or off at any time in Settings. There are no third-party trackers or advertising SDKs in this app.
 
 DATA SOURCES
 Weather from MET Norway (the Norwegian Meteorological Institute) and geomagnetic activity from NOAA's Space Weather Prediction Center, refreshed regularly through the night.

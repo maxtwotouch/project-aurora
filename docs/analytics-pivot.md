@@ -19,7 +19,7 @@ truthful policy, the app moves to person-level product analytics.
 
 **Does not change:**
 - **Precise location never reaches any server** — ours or PostHog's. The
-  Trip-mode presence pipeline stays exactly as specified in
+  tourism presence pipeline stays exactly as specified in
   `docs/design-trip-tracking.md`: identity-free, spot-level, aggregate,
   in OUR backend only. Presence events are never sent to PostHog and never
   joined with the PostHog identifier. (This preserves the municipality
@@ -67,7 +67,7 @@ truthful policy, the app moves to person-level product analytics.
   (either would need its own policy language and a fresh decision).
 - Event allowlist starts small: app_open, screen_view (screen name only),
   spot_view, navigate_pressed, spot_shared, alerts_opt_in, language_set,
-  trip_mode_toggled (the toggle state only).
+  trip_mode_toggled (Trip Mode session start/end — state only).
 
   **Amendment (owner decision, 2026-08-22 — supersedes the earlier
   "decision A" person-level journey-events draft, which was never
@@ -81,14 +81,15 @@ truthful policy, the app moves to person-level product analytics.
      dwell_bucket}` (dwell buckets <5m / 5–15m / 15–30m / 30–60m / 60m+)
      — into the identity-free backend pipeline (`/v1/events` aggregate
      counters). NOT sent to PostHog; no person id, no device id, no
-     coordinates. Gated on Trip-mode consent.
+     coordinates. Gated on the tourism-insights consent (2026-09-04;
+     previously the Trip-mode consent).
   2. **Recommendation effectiveness (unlinked, attributed on-device):**
      the device stores the last-shown recommendation locally, compares on
      arrival, and emits only the outcome — `recommended_spot_visit
      {spot_id, recommendation_id, time_bucket}` — same identity-free
      pipeline. No journey reconstruction server-side.
   3. **Spot discovery (unlinked, coarse zones):** to find NEW aurora
-     hotspots outside the 28 curated spots: when a Trip-mode-consented
+     hotspots outside the 28 curated spots: when a tourism-consenting
      device dwells ≥15 min in one H3 **resolution-7** cell (~5 km² hexes —
      deliberately too coarse to identify a cabin or address) that is
      outside every known spot geofence AND outside the excluded urban
@@ -113,15 +114,18 @@ truthful policy, the app moves to person-level product analytics.
   route to public Vegvesen traffic-counter data.
 
   Consent & policy: all three event types are location-derived and gated
-  on Trip-mode consent (collection purpose unchanged: aggregate tourism
-  statistics). `zone_dwell` extends what the policy enumerates, so the
-  policy and Trip-mode consent copy must be updated in the implementation
-  PR set BEFORE any code emits it. Because zone cells are strictly
-  coarser/less sensitive than the already-consented spot-level events and
-  the purpose is unchanged, existing Trip-mode consents remain valid (no
-  re-consent reset) — owner confirms this position by merging; if
-  preferred, flipping to a re-consent reset is a one-line change in the
-  implementation PR.
+  on the tourism-insights consent (collection purpose unchanged: aggregate
+  tourism statistics). `zone_dwell` extends what the policy enumerates, so
+  the policy and consent copy must be updated in the implementation PR set
+  BEFORE any code emits it. The 2026-08-22 position was that, because zone
+  cells are strictly coarser/less sensitive than the already-consented
+  spot-level events and the purpose is unchanged, existing Trip-mode
+  consents remained valid with no re-consent reset. *Superseded
+  2026-09-04 (`docs/decision-tourism-baseline.md`):* the collection window
+  widened from "while Trip mode is on" to "whenever the app is in the
+  foreground", which is a scope expansion, so the old Trip-mode consent key
+  is never read again and everyone is asked the tourism-insights question
+  once at next launch.
 
 - No precise coordinates, no IP-based geolocation enrichment (disable
   GeoIP person properties), no third-party IDs (IDFA/GAID never requested
@@ -143,10 +147,12 @@ truthful policy, the app moves to person-level product analytics.
 
 ## 5. Interplay with existing commitments
 
-- `docs/design-trip-tracking.md` is unchanged and its gates still apply to
-  presence data. The two pipelines are separate by construction and must
-  stay that way; any future proposal to join them is a new owner decision
-  with its own policy rewrite.
+- `docs/design-trip-tracking.md` still governs presence data, as amended
+  by `docs/decision-tourism-baseline.md` (2026-09-04: tourism-insights
+  consent at first launch, foreground-only baseline, Trip Mode as a product
+  feature). The two pipelines are separate by construction and must stay
+  that way; any future proposal to join them is a new owner decision with
+  its own policy rewrite.
 - The differential-privacy plan for published aggregates (gate 6.6) is
   unaffected — it governs what leaves the organisation, which remains
   aggregate-only.

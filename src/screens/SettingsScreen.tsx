@@ -5,7 +5,7 @@ import { AuroraAlertsSection } from '../components/AuroraAlertsSection';
 import { DesignPreviewToggle } from '../components/DesignPreviewToggle';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { PersonalAnalyticsToggle } from '../components/PersonalAnalyticsToggle';
-import { TripModeConsentToggle } from '../components/TripModeConsentToggle';
+import { TourismConsentToggle } from '../components/TourismConsentToggle';
 import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { PRIVACY_POLICY_URL } from '../constants/legal';
 import { useTranslation } from '../i18n/useTranslation';
@@ -37,9 +37,16 @@ export function SettingsScreen() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>{t('settings.privacySection')}</Text>
-        <UsageConsentToggle />
+
+        <Text style={styles.subSectionTitle}>{t('settings.tourismSection')}</Text>
+        <TourismConsentToggle />
+
+        <Text style={styles.subSectionTitle}>{t('settings.productAnalyticsSection')}</Text>
         <PersonalAnalyticsToggle />
-        <TripModeConsentToggle />
+
+        <Text style={styles.subSectionTitle}>{t('settings.usageCountsSection')}</Text>
+        <UsageConsentToggle />
+
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={t('consent.privacyPolicyLink')}
@@ -96,6 +103,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.eyebrow,
     color: palette.auroraMint
+  },
+  // Small-caps sub-heading within a card section (e.g. the three privacy
+  // sub-sections) -- a smaller, muted variant of `sectionTitle` above:
+  // same uppercase/letter-spacing small-caps treatment, but visually
+  // subordinate to the card's own section title.
+  subSectionTitle: {
+    ...typography.eyebrow,
+    fontSize: 10,
+    lineHeight: 13,
+    color: palette.textMuted,
+    marginTop: space.sm,
+    marginBottom: space.xxs
   },
   linkRow: {
     marginTop: space.sm,

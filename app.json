@@ -51,7 +51,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Used to show where you are relative to aurora spots on the map. Never sent off your device."
+          "locationWhenInUsePermission": "Used on your phone to show where you are relative to aurora spots and to power Trip Mode. If you turn on Tourism insights, only anonymous spot- and area-level information is shared — never your precise location."
         }
       ],
       [

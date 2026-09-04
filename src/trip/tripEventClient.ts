@@ -1,16 +1,16 @@
 /**
- * The parallel send path for Trip-mode location-derived events -- see
+ * The parallel send path for tourism/location-derived events -- see
  * tripEventGate.ts's header for why this cannot just be
  * src/analytics/events.ts's `track()` (that function hard-codes the
- * separate usage-events consent dimension; this one is gated on Trip-mode
- * consent alone).
+ * separate usage-events consent dimension; this one is gated on
+ * tourism-insights consent alone).
  *
  * Reuses the generic, already-unit-tested queue primitives from
  * src/analytics/core.ts (`pushToQueue`/`takeNextBatch`/`dropQueueOnRevoke`
  * are generic over `T` and reference no particular consent dimension) so
  * batching/cap behavior stays identical to the usage-events pipeline without
  * duplicating it. The consent GATE itself is `mayEmitTripEvents` from
- * ./tripEventGate.ts, keyed on Trip-mode consent instead.
+ * ./tripEventGate.ts, keyed on tourism-insights consent instead.
  *
  * PRIVACY: every payload sent here is exactly one of the intent shapes
  * defined in presenceCore.ts / recommendationAttribution.ts /
@@ -22,20 +22,8 @@
  * aggregate pipeline src/analytics/events.ts posts to (docs/analytics-
  * pivot.md section 3's amendment: "NOT sent to PostHog").
  *
- * BACKEND ALLOWLIST STATUS (read before assuming these are live): as of this
- * PR, backend/src/types.ts's `UsageEventType` is still exactly
- * `'spot_view' | 'navigate_pressed' | 'spot_shared'` -- none of the five
- * trip event types below exist in the backend allowlist yet. (docs/design-
- * trip-tracking.md's ship gate 6.4, "the two new types" for spot_presence/
- * spot_presence_long, was never actually shipped before this PR either, and
- * the analytics-pivot amendment adds three more on top of that.) Until the
- * parallel backend-allowlist PR lands, backend/src/events.ts's
- * `parseEvents` rejects the ENTIRE batch (HTTP 400) the moment it sees one
- * unrecognized `type` -- but `flush()`/`flushFinalTripEvents()` below never
- * inspect the response (matching src/analytics/events.ts's own
- * fire-and-forget pattern, which also ignores the response), so that 400 is
- * silently absorbed: no retry, no crash, no user-visible effect, just event
- * loss until the backend PR ships.
+ * BACKEND ALLOWLIST STATUS: backend/src/events.ts allowlists all five trip
+ * event types (shipped in #103).
  *
  * WIRE FORMAT: the `timeBucket` -> `utcHour` translation and the
  * `recommendationId` pattern check now live in ./tripEventWire.ts (pure, no
@@ -53,7 +41,7 @@
 import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
 
-import { getTripModeConsent, isTripModeConsentLoaded, subscribeTripModeConsent } from '../analytics/tripModeConsent';
+import { getTourismConsent, isTourismConsentLoaded, subscribeTourismConsent } from '../analytics/tourismConsent';
 import { dropQueueOnRevoke, pushToQueue, takeNextBatch } from '../analytics/core';
 import { mayEmitTripEvents } from './tripEventGate';
 import { toWireBatch } from './tripEventWire';
@@ -77,7 +65,7 @@ function isConfigured(): boolean {
 }
 
 function currentGateInput() {
-  return { loaded: isTripModeConsentLoaded(), tripModeConsent: getTripModeConsent(), configured: isConfigured() };
+  return { loaded: isTourismConsentLoaded(), tourismConsent: getTourismConsent(), configured: isConfigured() };
 }
 
 function ensureFlushTimer(): void {
@@ -125,9 +113,9 @@ async function postBatch(batch: readonly TripEventIntent[]): Promise<void> {
 
 /**
  * Queues one or more trip-event intents for sending. No-ops entirely unless
- * Trip-mode consent is currently 'accepted' and the backend is configured --
- * the presence hook never needs to check consent itself, same "single gate"
- * pattern as `track()` in src/analytics/events.ts.
+ * tourism-insights consent is currently 'accepted' and the backend is
+ * configured -- the presence hook never needs to check consent itself, same
+ * "single gate" pattern as `track()` in src/analytics/events.ts.
  */
 export function enqueueTripEvents(intents: readonly TripEventIntent[]): void {
   if (intents.length === 0) return;
@@ -167,9 +155,10 @@ async function flush(): Promise<void> {
  * Force-flushes a small set of intents immediately, BYPASSING the current
  * consent re-check -- used ONLY for the closing `spot_visit` summary
  * `endPresenceSession` produces at a deliberate stop, and ONLY when the
- * caller (useTripPresence.ts's `stop()`) has already determined Trip-mode
- * consent is STILL 'accepted' at that moment (stop reasons `background`,
- * `permission-lost`, `unmount` -- see tripEventGate.ts's
+ * caller (useTripPresence.ts's `stop()`) has already determined
+ * tourism-insights consent is STILL 'accepted' at that moment (stop reasons
+ * `background`, `permission-lost`, `unmount`, or a `trip-ended` stop that
+ * happened while consent was also accepted -- see tripEventGate.ts's
  * `shouldFlushStopIntents`). That summary describes a visit that happened
  * WHILE consent was 'accepted', and presenceCore.ts's own design already
  * treats an explicit session end as "a confirming instant" for exactly this
@@ -184,32 +173,33 @@ async function flush(): Promise<void> {
  * trip-tracking.md section 5 / docs/analytics-pivot.md section 2: "toggle
  * off in Settings stops collection immediately") -- an earlier version of
  * this wiring routed every stop reason through this bypass, which meant
- * toggling Trip mode off could still fire one more POST after revocation.
- * useTripPresence.ts's `stop()` now decides whether to call this at all via
- * `shouldFlushStopIntents(reason)` BEFORE reaching this function; a
- * `consent-revoked` stop discards its `endPresenceSession` intents outright
- * and never calls this. Still requires `isConfigured()` (an infra check,
- * not a consent check) -- that alone is not sufficient permission to send.
+ * withdrawing tourism consent could still fire one more POST after
+ * revocation. useTripPresence.ts's `stop()` now decides whether to call this
+ * at all via `shouldFlushStopIntents(reason, tourismConsent)` BEFORE
+ * reaching this function; a `consent-revoked` stop discards its
+ * `endPresenceSession` intents outright and never calls this. Still requires
+ * `isConfigured()` (an infra check, not a consent check) -- that alone is
+ * not sufficient permission to send.
  */
 export function flushFinalTripEvents(intents: readonly TripEventIntent[]): void {
   if (intents.length === 0 || !isConfigured()) return;
   void postBatch(intents);
 }
 
-// Drop everything queued (but not yet sent) the moment Trip-mode consent is
-// no longer 'accepted' -- mirrors src/analytics/events.ts's subscribeConsent
-// handler, but keyed on Trip-mode consent. This is what satisfies "revoked
-// consent means already-queued items must not post either": combined with
-// `enqueueTripEvents`/`flush()`'s own `mayEmitTripEvents` gate (which
-// re-checks the LIVE consent value via `getTripModeConsent()`, not a stale
-// closure), no ordering assumption between this subscription firing and any
-// other consent listener is required for correctness -- a queued item is
-// either dropped here, or refused by the gate the next time anything tries
-// to flush it, whichever happens first. Deliberately does NOT affect
-// flushFinalTripEvents(), which bypasses this queue entirely (see that
-// function's own doc comment for the invariant governing when it may be
-// called at all).
-subscribeTripModeConsent((state) => {
+// Drop everything queued (but not yet sent) the moment tourism-insights
+// consent is no longer 'accepted' -- mirrors src/analytics/events.ts's
+// subscribeConsent handler, but keyed on tourism-insights consent. This is
+// what satisfies "revoked consent means already-queued items must not post
+// either": combined with `enqueueTripEvents`/`flush()`'s own
+// `mayEmitTripEvents` gate (which re-checks the LIVE consent value via
+// `getTourismConsent()`, not a stale closure), no ordering assumption
+// between this subscription firing and any other consent listener is
+// required for correctness -- a queued item is either dropped here, or
+// refused by the gate the next time anything tries to flush it, whichever
+// happens first. Deliberately does NOT affect flushFinalTripEvents(), which
+// bypasses this queue entirely (see that function's own doc comment for the
+// invariant governing when it may be called at all).
+subscribeTourismConsent((state) => {
   if (state === 'accepted') return;
 
   queue = dropQueueOnRevoke();

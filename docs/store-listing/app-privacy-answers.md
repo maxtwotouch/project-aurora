@@ -23,13 +23,14 @@ purpose(s). The table below gives all four for every data type Apple lists.
 ### Usage Data (Apple's category; specifically "Product Interaction")
 
 - **Collected: Yes — but only if the user opts in.**
-- **What exactly:** Two event types, `spot_view` and `navigate_pressed` (a third,
-  `spot_shared`, is defined in the type union but never emitted by any call site today —
-  see `src/analytics/events.ts`'s own comment: "'spot_shared' is intentionally never
-  emitted by any call site in this codebase today... wire it up if/when a real share
-  action is added, not before"). Each event is exactly `{ type, spotId }` — no timestamp
-  finer than the server-assigned UTC hour bucket, no session ID, nothing else
-  (`backend/src/events.ts` `parseEvents()` rejects anything with extra/different fields).
+- **What exactly:** Eight event types are allowlisted by `backend/src/events.ts`. Three
+  are usage events under this consent — `spot_view`, `navigate_pressed`, `spot_shared`
+  (the last is emitted by `src/components/ShareButton.tsx`) — each exactly `{ type,
+  spotId }`, no timestamp finer than the server-assigned UTC hour bucket, no session ID,
+  nothing else (`parseEvents()` rejects anything with extra/different fields). The other
+  five — `spot_presence`, `spot_presence_long`, `spot_visit`, `recommended_spot_visit`,
+  `zone_dwell` — are the location-derived tourism-insights events, gated on a separate
+  consent and declared under **Location** below, not here.
 - **Linked to identity: No.** There is no user identifier anywhere in the schema, request,
   or response. `POST /v1/events` is unauthenticated and stateless; the response is `204 No
   Content` (`backend/src/events.ts`). Nothing is keyed by device, session, or any
@@ -56,76 +57,96 @@ purpose(s). The table below gives all four for every data type Apple lists.
 - **App Store Connect selection:** declare "Usage Data" (or "Product Interaction" under
   Apple's current taxonomy) as collected; "Linked to You" = No; "Used for Tracking" = No.
 
-### Location — Not Collected (current build)
+### Location — Coarse Location: Collected (this build)
 
-- `expo-location` **is** a dependency (`package.json`), used solely by
-  `src/hooks/useUserLocation.ts` — the existing, on-device-only "show my location on the
-  map" feature (wired into `MapScreen.native.tsx` since PR #76) that centers the map on the
-  user's own position, locally, for on-screen display only. The coordinates it reads are
-  never transmitted, stored, or logged: no backend endpoint accepts a user coordinate, and
-  nothing outside that hook's local map-centering use reads its output (see the hook's own
-  header comment: "ON-DEVICE ONLY... MUST NEVER be sent to a server, written to analytics,
-  logged, or persisted").
-- Every "distance" or "km" value shown in the UI (`common.distanceTromsoCenter`,
-  `tonight.distanceCityCenter`, etc. in every `src/i18n/locales/*.json`) is computed from
-  the **spot's own fixed coordinates** in `src/data/spots.json` (`lat`/`lon` per spot,
-  plus each spot's static `distanceKm`) against a fixed reference point (Tromsø city
-  center) — never from the device's own position. This is a separate calculation from the
-  map's "show my location" feature above and does not use it.
-- **App Store Connect selection (this section applies to the current and next build only —
-  neither includes Trip mode; see below):** "Location" — Not Collected. The map's blue-dot
-  feature accesses precise location on-device, but nothing derived from it is ever
-  transmitted off the device, so no location data is "collected" in Apple's sense of the
-  term.
+The build that ships `docs/decision-tourism-baseline.md` (owner decision 2026-09-04) wires
+the on-device presence engine (`src/trip/*`, `src/hooks/useTripPresence.ts`) to
+`POST /v1/events`. The distinction that drives the answer, and that the owner drew during
+design review, is **accesses vs. collects**:
 
-### Location — forward-looking note for Trip mode (not in this build; NOT a final answer)
+- The app **accesses precise location** on the device — `expo-location`, when-in-use
+  permission only, Balanced accuracy (~100 m), 50 m / 60 s throttles, **foreground only**
+  (the watcher is torn down on backgrounding; nothing runs when the app is backgrounded or
+  terminated; no `UIBackgroundModes`, no always-permission, no TaskManager task). It is
+  used for two things, both on-device: (1) Trip Mode, a product feature (your area on a
+  map, nearest spots and distances, Navigate), and (2) if the user has said yes to
+  tourism insights, comparing the position locally against the fixed spot geofences in
+  `src/data/spots.json` and, outside them, an H3 resolution-7 zone cell. The precise
+  coordinate is discarded on-device and never transmitted, stored, or logged (see the
+  `never`-typed key assertions and runtime payload scan in `test/`).
+- The developer/backend **collects only the coarse derived event** —
+  `{type, spotId | h3Cell, utcHour, dwellBucket?, recommendationId?}` — and only when
+  tourism insights is on. Five event types: `spot_presence`, `spot_presence_long`,
+  `spot_visit`, `recommended_spot_visit`, `zone_dwell`. No coordinates, no accuracy, no
+  device/person identifier, nothing finer than the hour; folded immediately into the same
+  `type|spotId|hourBucket` counters as the usage events (`backend/src/usageStore.ts`),
+  same retention and suppression. Never sent to PostHog.
+- **Opt-in at first launch.** On iOS/Android the tourism-insights question ("Help improve
+  tourism in Tromsø?" — Allow / Not now) is the first of three sequential consent steps
+  (`ConsentGate` → `ConsentModal`, `src/analytics/tourismConsent.ts`, key
+  `aurora.tourismConsent.v1`, default `'unset'`, treated as declined). Declined = nothing
+  measured, nothing sent. The OS location prompt is requested on Allow (or on Start Trip
+  Mode). Changeable in Settings › Privacy & data › Tourism insights; off = collection stops
+  immediately and the unsent queue is dropped. Not asked on web; web collects nothing.
+- **Trip Mode alone collects nothing.** With tourism insights off, Trip Mode samples
+  locally for the feature and transmits nothing (`mayEmitTripEvents` in
+  `src/trip/tripEventGate.ts` is gated on the tourism consent only). The backend has no
+  notion of whether Trip Mode was active.
 
-`docs/design-trip-tracking.md` (ship gate 6.3) specifies that Trip mode's App Store privacy
-answer must **not** be hard-coded in advance — it must be checked against the live App Store
-Connect questionnaire, against the actual shipped implementation, at the time a build
-containing Trip mode is first submitted. This section documents the distinction the owner
-drew during design review so whoever fills in that questionnaire later starts from the right
-frame, not a final answer:
+**App Store Connect selection:** **Location → Coarse Location — Collected: Yes; Linked to
+you: No; Used for tracking: No; Purpose: Analytics.** Precise Location — Not Collected
+(accessed on-device only; nothing derived at coordinate precision leaves the device).
+Apple's questionnaire asks about collection, not device access, so the coarse derived
+event is what is declared; verify the live form wording at submission time, as the exact
+category labels change between App Store Connect releases.
 
-- The app **accesses** precise location (foreground-only, while Trip mode is on) for
-  **on-device** processing — comparing the device's position locally against the fixed spot
-  coordinates in `src/data/spots.json` to know which named spot, if any, the device is near.
-  This location value is never transmitted.
-- The developer/backend **collects** only the coarse, derived events this on-device
-  comparison produces — never coordinates. Per `docs/analytics-pivot.md`'s 2026-08-22
-  amendment, this is now three related-but-unlinked event shapes, all flowing into the same
-  identity-free pipeline as the existing usage events above:
-  - `{spotId, utcHour}` presence and 20-minute long-presence events (unchanged from the
-    original design), plus a per-visit summary — `{spotId, timeBucket, dwellBucket}` — with
-    a coarse dwell bucket, not an exact duration;
-  - `{spotId, recommendationId, timeBucket}` recommendation-outcome events, attributed
-    entirely on-device (the app compares its own "shown" and "arrived" state locally; the
-    server never joins the two);
-  - `{h3Cell, timeBucket, dwellBucket}` coarse zone-discovery events — an H3 resolution-7 map
-    cell id (~5 km², deliberately too coarse to identify a cabin or address), for cells
-    outside every known spot and outside the excluded Tromsø urban zone, during dark hours
-    only, at most one per cell per night per device (enforced on-device).
-- Apple's questionnaire asks about *collection*, not *device access*, for most data types,
-  but explicitly separates "used for app functionality without leaving the device" language
-  for some categories — the exact selection (e.g. "Location" collected = Yes vs. a
-  functionality-only carve-out) depends on the current wording of that questionnaire at
-  submission time, which can change between App Store Connect releases.
-- Expected shape, subject to that live check: **Location → Coarse Location; Collected: Yes,
-  when the user has opted into Trip mode (off by default); Linked to user: No; Used for
-  tracking: No; Purpose(s): Analytics, and App Functionality (for the on-device "arrived at
-  spot" card)** — covering all three event shapes above, since none of them carry a
-  device/person identifier or coordinates — see `docs/design-trip-tracking.md` sections 3
-  and 6 and `docs/analytics-pivot.md`'s 2026-08-22 amendment.
-- **Hard ship gate:** this answer must be verified against the live App Store Connect
-  questionnaire, and reconciled with the actual implementation at that time, **before any
-  build containing Trip mode collection code — including the visit-summary,
-  recommendation-outcome, or zone-discovery events above — is submitted.** It does **not**
-  apply to the current build or the next planned build — neither ships Trip mode,
-  geofencing, or any location code (per `docs/design-trip-tracking.md` ship gates, this doc,
-  the privacy policy, and the consent UI are the only things shipping ahead of any
-  collection code; `src/trip/presenceCore.ts`, `recommendationAttribution.ts`, and
-  `zoneDiscovery.ts` are pure, unwired logic modules with no `expo-location` import, no
-  analytics-emission call site, and no UI — see each file's own header comment).
+- *Why Analytics and not also App Functionality:* the coarse events serve aggregate
+  tourism statistics only. Trip Mode (the app-functionality use) consumes the precise
+  position on-device and collects nothing — it is covered by the "accessed, not collected"
+  distinction above, not by a declared purpose.
+- *Why not "Linked to you":* no identifier of any kind accompanies a tourism event (same
+  reasoning as Usage Data above); the server cannot tell two events from the same device
+  apart from two devices.
+- *Why not "Used for tracking":* the only recipient is our own backend; no cross-app or
+  ad linkage.
+
+### Google Play Data Safety
+
+Play's form asks per data type whether it is collected and/or shared, whether it is
+optional, whether it is encrypted in transit, whether users can request deletion, and the
+purpose(s). For this build:
+
+- **Location → Approximate location: Collected — Yes. Shared — No. Optional — Yes** (the
+  user can use the app without it; the tourism-insights question is default-off and Trip
+  Mode is opt-in per session). **Purposes: App functionality** (Trip Mode — position used
+  on-device to show nearby spots) **and Analytics** (tourism insights — the coarse derived
+  events above). Note Play's "collected" definition includes data transmitted off the
+  device; the coarse event is the only thing transmitted.
+- **Location → Precise location: Not collected.** Accessed on-device for the two uses
+  above; never transmitted. Play's definition of "collected" excludes on-device-only
+  processing, so this is honest as "not collected", but do not claim the ephemeral-only
+  exemption for approximate location — the coarse event is stored server-side in
+  aggregate for `USAGE_RETENTION_DAYS`.
+- **Data encrypted in transit: Yes** — `POST /v1/events` goes over HTTPS to
+  `EXPO_PUBLIC_API_BASE_URL`.
+- **Users can request deletion:** answer honestly — collection stops immediately via the
+  Settings toggle and any unsent queue is dropped, but there is no per-user record to
+  delete: events are folded into identity-free aggregate counters on arrival, so deletion
+  of "your" data is not applicable (the policy says this plainly under "Tourism insights →
+  Consent and withdrawal"). Select the deletion answer that matches this — do not claim a
+  deletion mechanism that does not exist, and do not claim an ephemeral-processing
+  exemption.
+- **Usage/App activity (App interactions): Collected — Yes, optional, not shared,
+  purpose Analytics** — the three usage-counter types under the anonymous-usage consent
+  (see "Usage Data" above).
+- Person-level product analytics (PostHog) has its own Data Safety answers (Device or other
+  IDs + App interactions, linked, not shared, purpose Analytics) — see the Identifiers /
+  Product Interaction section below; the tourism pipeline never feeds it.
+- **Permissions declaration:** the build requests `ACCESS_FINE_LOCATION` /
+  `ACCESS_COARSE_LOCATION` (when-in-use) only. **No** `ACCESS_BACKGROUND_LOCATION`, no
+  foreground service — so Play's "location permissions" declaration form for background
+  location is not triggered. If that ever changes it needs a new owner decision first
+  (`docs/decision-tourism-baseline.md` section 7).
 
 ### Identifiers / Product Interaction — forward-looking note for person-level analytics (PostHog) (not in this build; NOT a final answer for the current or next build)
 
@@ -180,10 +201,11 @@ above, which still applies as written.
   or the person, and none of which ever leave the device:
   - `aurora.language.v1` — the chosen UI language (`src/i18n/index.ts`)
   - `aurora.analyticsConsent.v1` — `'accepted' | 'declined'` (`src/analytics/consent.ts`)
-  - `aurora.tripModeConsent.v1` — `'accepted' | 'declined'`, a completely independent
-    consent choice from the one above (`src/analytics/tripModeConsent.ts`); Trip mode
-    itself has no collection code yet (see the forward-looking Location note below), this
-    key currently only records the toggle's on/off state
+  - `aurora.tourismConsent.v1` — `'accepted' | 'declined'`, a completely independent
+    consent choice from the one above (`src/analytics/tourismConsent.ts`): the
+    tourism-insights consent that gates the location-derived events declared under
+    "Location" above. (The earlier `aurora.tripModeConsent.v1` key is no longer read —
+    everyone is re-asked, per `docs/decision-tourism-baseline.md`.)
   - `aurora.personalAnalyticsConsent.v1` — `'accepted' | 'declined'`, a third, completely
     independent consent choice from both of the above
     (`src/analytics/personalAnalyticsConsent.ts`; see the forward-looking Identifiers /
@@ -260,7 +282,8 @@ first-party code:
   `src/` imports or initializes it. The SDK dependency itself, and its consent-gated
   initialization, are PR 3.
 - **Conclusion:** the only data this app's own code ever transmits off-device is (a) the
-  opt-in usage events described above, to our own backend, and (b) ordinary weather/
+  opt-in usage events and, under their own separate opt-in, the coarse tourism-insights
+  events described above, both to our own backend, and (b) ordinary weather/
   space-weather API requests to MET Norway / NOAA (or to our own backend proxying them),
   which carry no user data — they're plain `GET` requests for public forecast data, not
   requests parameterized by anything about the user (see `src/api/yr.ts` / `src/api/kp.ts`
@@ -289,13 +312,12 @@ first-party code:
   aggregate product/planning use (and, per policy, aggregate sharing with Tromsø kommune,
   which is still aggregate-only, never linked to an individual — see
   `docs/privacy-usage-events.md`'s "Access control" section).
-- **Why declare "Location: Not Collected" instead of "Coarse Location"?** Because, in the
-  current and next build, no location of any kind — coarse or precise — is ever read from
-  the device. It would be a category error to declare *any* location collection when the
-  "distance" figures shown are pre-computed static data about the spots themselves, not
-  derived from the user in any way, at any precision. This changes only once a future build
-  actually ships Trip mode — see the forward-looking note above, which is explicitly not a
-  final answer for that future build.
+- **Why declare "Coarse Location: Collected" rather than "Precise Location" or "Not
+  Collected"?** "Not Collected" would underclaim: with tourism insights on, coarse
+  location-derived events (spot / ~5 km² zone cell + UTC hour) really are transmitted and
+  retained in aggregate. "Precise Location" would overclaim: the coordinate is read and
+  discarded on-device and never leaves it — Apple's questionnaire is about what the
+  developer collects, not what the app accesses. See the "Location" section above.
 
 ## Cross-check against the public privacy policy
 

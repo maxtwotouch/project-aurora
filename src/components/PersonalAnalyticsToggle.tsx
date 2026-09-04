@@ -8,15 +8,15 @@ import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
 /**
- * Person-level product analytics' Settings toggle -- a THIRD, INDEPENDENT
- * opt-in from both UsageConsentToggle (aggregate usage counters) and
- * TripModeConsentToggle above/below it (see
+ * Person-level product analytics' Settings toggle -- a consent dimension
+ * INDEPENDENT from both UsageConsentToggle (aggregate usage counters) and
+ * TourismConsentToggle above/below it (see
  * ../analytics/personalAnalyticsConsent.ts, docs/analytics-pivot.md PR 2).
  *
- * Unlike TripModeConsentToggle, this dimension IS also asked about in the
- * first-open flow (see ConsentGate) -- this toggle is the "change your mind
- * afterwards" surface, mirroring UsageConsentToggle's role for the
- * aggregate pipeline, not the only place the question is ever asked.
+ * This dimension IS also asked about in the first-open flow (see
+ * ConsentGate) -- this toggle is the "change your mind afterwards" surface,
+ * mirroring UsageConsentToggle's role for the aggregate pipeline, not the
+ * only place the question is ever asked.
  *
  * Turning this off must stop any further collection immediately and
  * trigger deletion of the person's data with PostHog once the SDK exists

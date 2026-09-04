@@ -32,6 +32,7 @@ import { MapScreen } from './src/screens/MapScreen.native';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { SpotDetailScreen } from './src/screens/SpotDetailScreen.native';
 import { TonightScreen } from './src/screens/TonightScreen';
+import { TripModeScreen } from './src/screens/TripModeScreen';
 import { palette } from './src/theme/palette';
 import { space } from './src/theme/tokens';
 import { fraunces } from './src/theme/type';
@@ -50,6 +51,7 @@ type RootStackParamList = {
   Tabs: undefined;
   SpotDetail: { spotId: string };
   Settings: undefined;
+  TripMode: undefined;
 };
 
 type TabsParamList = {
@@ -94,6 +96,7 @@ function HeaderTitleText({ children }: { children?: React.ReactNode }) {
 
 type TabsRootProps = {
   onOpenSpot: (spotId: string) => void;
+  onOpenTripMode: () => void;
   rankedSpots: SpotScoreResult[];
   loading: boolean;
   error: string | null;
@@ -116,6 +119,7 @@ type TabsRootProps = {
 
 function TabsRoot({
   onOpenSpot,
+  onOpenTripMode,
   rankedSpots,
   loading,
   error,
@@ -267,6 +271,7 @@ function TabsRoot({
         {() => (
           <TonightScreen
             onOpenSpot={onOpenSpot}
+            onOpenTripMode={onOpenTripMode}
             loading={loading}
             error={error}
             lastUpdatedAt={lastUpdatedAt}
@@ -434,6 +439,7 @@ export default function App() {
                       onOpenSpot={(spotId) => {
                         navigation.navigate('SpotDetail', { spotId });
                       }}
+                      onOpenTripMode={() => navigation.navigate('TripMode')}
                       onOpenSettings={() => navigation.navigate('Settings')}
                       fontsLoaded={fontsLoaded}
                       rankedSpots={forecast.rankedSpots}
@@ -500,6 +506,36 @@ export default function App() {
                   })}
                 >
                   {() => <SettingsScreen />}
+                </Stack.Screen>
+                <Stack.Screen
+                  name="TripMode"
+                  options={({ navigation }) => ({
+                    title: t('tripMode.title'),
+                    headerBackVisible: false,
+                    headerLeft: () => (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.goBack')}
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={palette.textPrimary} />
+                        <Text style={styles.backText}>{t('common.back')}</Text>
+                      </Pressable>
+                    )
+                  })}
+                >
+                  {({ navigation }) => (
+                    <TripModeScreen
+                      spots={typedSpots}
+                      rankedSpots={forecast.rankedSpots}
+                      spotsById={forecast.spotsById}
+                      kp={forecast.kp}
+                      nowcast={forecast.nowcast}
+                      loading={forecast.loading}
+                      onOpenSpot={(spotId) => navigation.navigate('SpotDetail', { spotId })}
+                    />
+                  )}
                 </Stack.Screen>
               </Stack.Navigator>
             </NavigationContainer>

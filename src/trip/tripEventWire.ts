@@ -89,3 +89,42 @@ export function toWireBatch(intents: readonly TripEventIntent[]): TripEventWireP
   }
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// COMPILE-TIME PRIVACY ASSERTION (checked by `npm run typecheck`, which does
+// cover src/ -- test/ is excluded from tsc, so this lives here on purpose).
+// If any of these keys is ever added to a wire payload variant, the
+// conditional type below collapses to `never` and the `= true` assignment
+// stops compiling. Runtime coverage of the same boundary lives in
+// test/tourismPrivacy.test.ts.
+// ---------------------------------------------------------------------------
+type KeysOfUnion<T> = T extends unknown ? keyof T : never;
+type ForbiddenWireKey =
+  | 'lat'
+  | 'latitude'
+  | 'lon'
+  | 'lng'
+  | 'longitude'
+  | 'coords'
+  | 'coordinates'
+  | 'accuracy'
+  | 'altitude'
+  | 'speed'
+  | 'heading'
+  | 'timestamp'
+  | 'timestampMs'
+  | 'userId'
+  | 'user_id'
+  | 'distinctId'
+  | 'distinct_id'
+  | 'deviceId'
+  | 'device_id'
+  | 'installId'
+  | 'install_id'
+  | 'sessionId'
+  | 'session_id'
+  | 'anonymousId'
+  | 'ip';
+export const WIRE_PAYLOAD_HAS_NO_FORBIDDEN_KEYS: Extract<KeysOfUnion<TripEventWirePayload>, ForbiddenWireKey> extends never
+  ? true
+  : never = true;

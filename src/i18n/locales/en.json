@@ -319,12 +319,30 @@
     "whatNeverIncludes": "What this never includes: your exact location, advertising IDs, cross-app tracking, session recordings, or automatic capture of everything you tap."
   },
   "tripMode": {
-    "toggleLabel": "Trip mode",
-    "description": "A separate, optional way to help while you're heading out — spot-level only, never your exact coordinates. Off by default, and you can turn it off again anytime.",
-    "whatLeaves": "What leaves your phone: which spots you visit and roughly how long you stay, which recommended spot you actually went to, and coarse areas where you stop for a while at night while exploring — never your exact position, and never linked to you.",
-    "toggleOnHelper": "Will share spot-level presence once Trip mode features launch.",
-    "toggleOffHelper": "Off. Nothing is shared.",
-    "comingSoonNote": "This toggle is ready ahead of time — Trip mode itself activates when its features arrive in an upcoming update."
+    "title": "Trip Mode",
+    "eyebrow": "Heading out",
+    "introBody": "Turn your location into a live guide for tonight: the best aurora spots near you, how far away they are, and when to be there. Your location is only used on your phone.",
+    "startButton": "Start Trip Mode",
+    "endButton": "End Trip Mode",
+    "permissionDenied": "Trip Mode needs location access to find spots near you. Turn it on in your phone's settings.",
+    "locating": "Finding your position…",
+    "yourArea": "Your area",
+    "bestNearby": "Best nearby now",
+    "otherNearby": "Other nearby",
+    "tonightSection": "Tonight",
+    "visitedSection": "Visited this trip",
+    "visitedNone": "No spots visited yet — they'll appear here as you arrive.",
+    "distanceAway": "{{km}} km away",
+    "scoreLabel": "Aurora score {{score}}",
+    "bestWindow": "Best window {{start}} – {{end}}",
+    "cloudLabel": "Cloud",
+    "kpLabel": "Kp",
+    "noForecast": "Forecast unavailable right now.",
+    "noNearby": "No aurora spots within reach of your position yet.",
+    "activeSince": "Active since {{time}}",
+    "webNote": "The map is not available on web — spots are listed by distance instead.",
+    "mapA11y": "Map of aurora spots around your position",
+    "navigateTo": "Open navigation to {{name}}"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
@@ -332,13 +350,16 @@
   "settings": {
     "title": "Settings",
     "languageSection": "Language",
-    "privacySection": "Privacy",
+    "privacySection": "Privacy & data",
     "aboutSection": "About",
     "aboutAppName": "Tromsø Northern Lights",
     "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
     "designPreviewSection": "Preview",
     "designPreviewLabel": "Design preview (sample data)",
-    "designPreviewHelper": "Shows a sample open-season forecast instead of live data. Turns off usage tracking while on."
+    "designPreviewHelper": "Shows a sample open-season forecast instead of live data. Turns off usage tracking while on.",
+    "tourismSection": "Tourism insights",
+    "productAnalyticsSection": "Product analytics",
+    "usageCountsSection": "Anonymous usage counts"
   },
   "preview": {
     "banner": "Sample data — not a real forecast"
@@ -377,5 +398,29 @@
       "genericLine1": "Thinking about the northern lights in Tromsø?",
       "genericLine2": "Check tonight's forecast and the best viewing spot."
     }
+  },
+  "tourismConsent": {
+    "eyebrow": "Before you start",
+    "title": "Help improve tourism in Tromsø?",
+    "body": "Aurora can use your location to understand which areas and northern-lights spots people actually visit. Your precise location stays on your phone — the app only sends anonymous, area-level notes like \"someone spent a while at Ersfjordbotn this evening\", never your coordinates and never who you are. Only while the app is open. You can say no and everything works the same.",
+    "acceptButton": "Allow",
+    "declineButton": "Not now",
+    "footnote": "You can change this any time in Settings.",
+    "toggleLabel": "Tourism insights",
+    "description": "Help Aurora understand which areas and aurora spots are being visited. Location is processed on your device — your precise location is never sent to Aurora. Only anonymous spot- and area-level information is contributed, and only while the app is open.",
+    "whatLeaves": "What leaves your phone: which spots you visit and roughly how long you stay, which recommended spot you actually went to, and coarse areas where you stop for a while at night while exploring — never your exact position, and never linked to you.",
+    "toggleOnHelper": "Contributing anonymous spot- and area-level visits while the app is open.",
+    "toggleOffHelper": "Off. No location-derived data is shared.",
+    "permissionMissingHelper": "Location access is off for this app, so nothing is being measured. Turn it on in your phone's settings to contribute."
+  },
+  "tonightTripCard": {
+    "title": "Heading out tonight?",
+    "body": "Start Trip Mode for the best spots near you, live.",
+    "cta": "Start Trip Mode",
+    "activeTitle": "Trip Mode is on",
+    "activeBody_one": "{{count}} spot visited so far.",
+    "activeBody_other": "{{count}} spots visited so far.",
+    "activeBodyNone": "Watching for the spots near you.",
+    "openCta": "Open Trip Mode"
   }
 }
