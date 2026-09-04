@@ -146,7 +146,8 @@
     "sourceLabel": "Source",
     "legendText": "NO-SPACE weather lab at UiT. Frame mode: {{mode}}.",
     "modeNowcast": "Nowcast",
-    "modeForecastHours": "Forecast +{{hours}}h"
+    "modeForecastHours": "Forecast +{{hours}}h",
+    "frameA11y": "Aurora map over Tromsø: {{mode}}"
   },
   "liveCameras": {
     "eyebrow": "Live cameras",
@@ -171,7 +172,9 @@
     "unavailableTitle": "Live image unavailable",
     "unavailableText": "{{name}} did not return an image. Open the source page to check whether the feed is offline.",
     "openSource": "Open source",
-    "liveFeedFallback": "Live feed"
+    "liveFeedFallback": "Live feed",
+    "closeFullscreen": "Close full-screen view",
+    "fullscreenImageA11y": "Live camera image from {{name}}"
   },
   "mapScreen": {
     "distanceCityCenterShort": "{{km}} km from city center",

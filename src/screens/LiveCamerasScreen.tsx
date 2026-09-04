@@ -4,11 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { liveCameras, type LiveCamera } from '../data/liveCameras';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
+import { focusRing } from '../theme/focusRing';
 import { palette } from '../theme/palette';
+import { type WebPressableState } from '../theme/tokens';
 
 export function LiveCamerasScreen() {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const tabBarSpace = useBottomTabBarSpace();
   const [refreshToken, setRefreshToken] = useState<number>(Date.now());
   const [fullscreen, setFullscreen] = useState<{ uri: string; name: string } | null>(null);
@@ -93,13 +97,17 @@ export function LiveCamerasScreen() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t('liveCameras.expandCamera', { name: camera.name })}
-                    style={({ pressed }) => [pressed ? styles.mediaPressed : null]}
+                    style={({ pressed, focused }: WebPressableState) => [
+                      focused ? focusRing : null,
+                      pressed ? styles.mediaPressed : null
+                    ]}
                     onPress={() => setFullscreen({ uri: `${camera.imageUrl}?t=${refreshToken}`, name: camera.name })}
                   >
                     <Image
                       source={{ uri: `${camera.imageUrl}?t=${refreshToken}` }}
                       style={styles.image}
                       resizeMode="cover"
+                      aria-hidden
                       onError={() => {
                         setFailedCameraIds((current) => ({ ...current, [camera.id]: true }));
                       }}
@@ -121,7 +129,11 @@ export function LiveCamerasScreen() {
 
           <Pressable
             accessibilityRole="button"
-            style={({ pressed }) => [styles.sourceButton, pressed ? styles.buttonPressed : null]}
+            style={({ pressed, focused }: WebPressableState) => [
+              styles.sourceButton,
+              focused ? focusRing : null,
+              pressed ? styles.buttonPressed : null
+            ]}
             onPress={() => void Linking.openURL(cameras[0].sourceUrl)}
           >
             <Text style={styles.sourceButtonText}>{t('liveCameras.openSourcePage')}</Text>
@@ -129,16 +141,40 @@ export function LiveCamerasScreen() {
         </View>
       ))}
 
-      <Modal visible={Boolean(fullscreen)} transparent animationType="fade" onRequestClose={() => setFullscreen(null)}>
+      <Modal
+        visible={Boolean(fullscreen)}
+        transparent
+        animationType={reducedMotion ? 'none' : 'fade'}
+        onRequestClose={() => setFullscreen(null)}
+      >
         <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setFullscreen(null)} />
+          <Pressable
+            style={styles.modalBackdrop}
+            aria-hidden
+            onPress={() => setFullscreen(null)}
+          />
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{fullscreen?.name ?? t('liveCameras.liveFeedFallback')}</Text>
-            <Pressable onPress={() => setFullscreen(null)} style={styles.closeBtn}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('liveCameras.closeFullscreen')}
+              hitSlop={8}
+              style={({ focused }: WebPressableState) => [styles.closeBtn, focused ? focusRing : null]}
+              onPress={() => setFullscreen(null)}
+            >
               <Ionicons name="close" size={22} color={palette.textPrimary} />
             </Pressable>
           </View>
-          {fullscreen ? <Image source={{ uri: fullscreen.uri }} style={styles.fullscreenImage} resizeMode="contain" /> : null}
+          {fullscreen ? (
+            <Image
+              source={{ uri: fullscreen.uri }}
+              style={styles.fullscreenImage}
+              resizeMode="contain"
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel={t('liveCameras.fullscreenImageA11y', { name: fullscreen.name })}
+            />
+          ) : null}
         </View>
       </Modal>
     </ScrollView>
@@ -154,7 +190,11 @@ function CameraUnavailable({ camera, compact = false }: { camera: LiveCamera; co
       <Text style={styles.unavailableText}>{t('liveCameras.unavailableText', { name: camera.name })}</Text>
       <Pressable
         accessibilityRole="button"
-        style={({ pressed }) => [styles.unavailableButton, pressed ? styles.buttonPressed : null]}
+        style={({ pressed, focused }: WebPressableState) => [
+          styles.unavailableButton,
+          focused ? focusRing : null,
+          pressed ? styles.buttonPressed : null
+        ]}
         onPress={() => void Linking.openURL(camera.sourceUrl)}
       >
         <Text style={styles.unavailableButtonText}>{t('liveCameras.openSource')}</Text>
@@ -379,7 +419,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#355468',
+    borderColor: palette.cardBorderStrong,
     backgroundColor: '#132836'
   },
   sourceButtonText: {

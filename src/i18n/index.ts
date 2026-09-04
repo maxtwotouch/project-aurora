@@ -4,7 +4,7 @@ import * as Localization from 'expo-localization';
 
 import { captureAllowed } from '../analytics/personalAnalytics';
 import { getStoredItem, setStoredItem } from '../lib/storage';
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './languages';
+import { SUPPORTED_LANGUAGES, htmlLangFor, type SupportedLanguage } from './languages';
 import en from './locales/en.json';
 import de from './locales/de.json';
 import fr from './locales/fr.json';
@@ -74,6 +74,20 @@ void i18next.use(initReactI18next).init({
 });
 
 /**
+ * Keeps the document's `lang` attribute in sync with the active i18next
+ * language on web -- screen readers pick pronunciation rules from the
+ * document language (WCAG 3.1.1). No-ops on native (and in any environment
+ * without a DOM); the static `public/*.html` pages set their own `lang`.
+ */
+function syncDocumentLang(lng: string): void {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  document.documentElement.setAttribute('lang', htmlLangFor(normalizeToSupportedLanguage(lng)));
+}
+
+i18next.on('languageChanged', syncDocumentLang);
+syncDocumentLang(i18next.language);
+
+/**
  * Persisted manual language choice (see the language picker in
  * AllSpotsScreen) always wins over the device-detected locale once it has
  * loaded. Fails closed to the device/fallback language on any storage
@@ -121,5 +135,5 @@ export function getCurrentLanguage(): SupportedLanguage {
 // analytics/consent.ts's `void loadConsent()` pattern below.
 void loadPersistedLanguage();
 
-export { SUPPORTED_LANGUAGES, LANGUAGE_NATIVE_LABELS, type SupportedLanguage } from './languages';
+export { SUPPORTED_LANGUAGES, LANGUAGE_NATIVE_LABELS, htmlLangFor, type SupportedLanguage } from './languages';
 export default i18next;

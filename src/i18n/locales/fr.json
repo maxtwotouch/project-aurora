@@ -146,7 +146,8 @@
     "sourceLabel": "Source",
     "legendText": "Laboratoire météo NO-SPACE à l'UiT. Mode d'image : {{mode}}.",
     "modeNowcast": "Nowcast",
-    "modeForecastHours": "Prévision +{{hours}} h"
+    "modeForecastHours": "Prévision +{{hours}} h",
+    "frameA11y": "Carte des aurores au-dessus de Tromsø : {{mode}}"
   },
   "liveCameras": {
     "eyebrow": "Caméras en direct",
@@ -171,7 +172,9 @@
     "unavailableTitle": "Image en direct indisponible",
     "unavailableText": "{{name}} n'a pas renvoyé d'image. Ouvrez la page source pour vérifier si le flux est hors ligne.",
     "openSource": "Ouvrir la source",
-    "liveFeedFallback": "Flux en direct"
+    "liveFeedFallback": "Flux en direct",
+    "closeFullscreen": "Fermer le plein écran",
+    "fullscreenImageA11y": "Image de la caméra en direct : {{name}}"
   },
   "mapScreen": {
     "distanceCityCenterShort": "{{km}} km du centre-ville",

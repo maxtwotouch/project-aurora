@@ -5,7 +5,9 @@ import { DataQualityBanner } from '../components/DataQualityBanner';
 import { SpotCard } from '../components/SpotCard';
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
 import { useTranslation } from '../i18n/useTranslation';
+import { focusRing } from '../theme/focusRing';
 import { palette } from '../theme/palette';
+import { type WebPressableState } from '../theme/tokens';
 import type { AppDataQuality, Spot, SpotScoreResult } from '../types';
 
 type Props = {
@@ -65,9 +67,11 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
         <View style={styles.segmentedControl}>
           <Pressable
             accessibilityRole="button"
-            style={({ pressed }) => [
+            aria-selected={sortMode === 'top'}
+            style={({ pressed, focused }: WebPressableState) => [
               styles.segmentButton,
               sortMode === 'top' ? styles.segmentButtonActive : null,
+              focused ? focusRing : null,
               pressed ? styles.segmentButtonPressed : null
             ]}
             onPress={() => setSortMode('top')}
@@ -78,9 +82,11 @@ export function AllSpotsScreen({ rankedSpots, spotsById, dataQuality, loading, r
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            style={({ pressed }) => [
+            aria-selected={sortMode === 'nearby'}
+            style={({ pressed, focused }: WebPressableState) => [
               styles.segmentButton,
               sortMode === 'nearby' ? styles.segmentButtonActive : null,
+              focused ? focusRing : null,
               pressed ? styles.segmentButtonPressed : null
             ]}
             onPress={() => setSortMode('nearby')}
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#142734',
     borderWidth: 1,
-    borderColor: '#284657'
+    borderColor: palette.cardBorderStrong
   },
   segmentButtonPressed: {
     opacity: 0.9,

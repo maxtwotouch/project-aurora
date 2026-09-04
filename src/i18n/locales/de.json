@@ -146,7 +146,8 @@
     "sourceLabel": "Quelle",
     "legendText": "NO-SPACE Weather Lab an der UiT. Bildmodus: {{mode}}.",
     "modeNowcast": "Nowcast",
-    "modeForecastHours": "Vorhersage +{{hours}} Std."
+    "modeForecastHours": "Vorhersage +{{hours}} Std.",
+    "frameA11y": "Polarlichtkarte über Tromsø: {{mode}}"
   },
   "liveCameras": {
     "eyebrow": "Live-Kameras",
@@ -171,7 +172,9 @@
     "unavailableTitle": "Live-Bild nicht verfügbar",
     "unavailableText": "{{name}} hat kein Bild geliefert. Öffnen Sie die Quellseite, um zu prüfen, ob der Feed offline ist.",
     "openSource": "Quelle öffnen",
-    "liveFeedFallback": "Live-Feed"
+    "liveFeedFallback": "Live-Feed",
+    "closeFullscreen": "Vollbildansicht schließen",
+    "fullscreenImageA11y": "Live-Kamerabild von {{name}}"
   },
   "mapScreen": {
     "distanceCityCenterShort": "{{km}} km vom Stadtzentrum",

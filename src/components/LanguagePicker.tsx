@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { getCurrentLanguage, setLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NATIVE_LABELS } from '../i18n';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
@@ -40,7 +41,7 @@ export function LanguagePicker() {
               style={({ pressed, focused }: WebPressableState) => [
                 styles.chip,
                 isActive ? styles.chipActive : null,
-                focused ? styles.focusRing : null,
+                focused ? focusRing : null,
                 pressed ? styles.chipPressed : null
               ]}
               onPress={() => void setLanguage(code)}
@@ -92,11 +93,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scale: 0.985 }]
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   chipText: {
     ...typography.bodySmall,
     fontWeight: '700',

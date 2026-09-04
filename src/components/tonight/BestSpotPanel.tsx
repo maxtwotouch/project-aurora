@@ -2,6 +2,7 @@ import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { useTranslation } from '../../i18n/useTranslation';
 import { palette } from '../../theme/palette';
+import { focusRing } from '../../theme/focusRing';
 import { radius, space, type WebPressableState } from '../../theme/tokens';
 import { typography } from '../../theme/type';
 import type { Spot, SpotScoreResult } from '../../types';
@@ -41,7 +42,7 @@ export function BestSpotPanel({ bestSpot, bestSpotData, isWideWeb, onOpenSpot }:
               style={({ pressed, focused }: WebPressableState) => [
                 styles.secondaryButton,
                 Platform.OS === 'web' ? styles.secondaryButtonHover : null,
-                focused ? styles.focusRing : null,
+                focused ? focusRing : null,
                 pressed ? styles.buttonPressed : null
               ]}
               onPress={() => onOpenSpot(bestSpot.spotId)}
@@ -54,7 +55,7 @@ export function BestSpotPanel({ bestSpot, bestSpotData, isWideWeb, onOpenSpot }:
               style={({ pressed, focused }: WebPressableState) => [
                 styles.primaryButton,
                 Platform.OS === 'web' ? styles.primaryButtonHover : null,
-                focused ? styles.focusRing : null,
+                focused ? focusRing : null,
                 pressed ? styles.buttonPressed : null
               ]}
               onPress={navigateToBestSpot}
@@ -140,11 +141,6 @@ const styles = StyleSheet.create({
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   helper: {
     ...typography.body,
     color: palette.textSecondary

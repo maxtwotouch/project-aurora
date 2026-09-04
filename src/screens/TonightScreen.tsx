@@ -26,6 +26,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
 import type { ShareTonightState } from '../share/shareMessage';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { motion, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type {
@@ -279,7 +280,7 @@ export function TonightScreen({
           <Text style={styles.error}>{error}</Text>
           <Pressable
             accessibilityRole="button"
-            style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
+            style={({ pressed, focused }: WebPressableState) => [styles.retryButton, focused ? focusRing : null, pressed ? styles.buttonPressed : null]}
             onPress={() => void refresh()}
           >
             <Text style={styles.retryButtonText}>{t('common.tryAgain')}</Text>
@@ -370,10 +371,5 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

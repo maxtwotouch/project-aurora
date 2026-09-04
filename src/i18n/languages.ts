@@ -18,3 +18,8 @@ export const LANGUAGE_NATIVE_LABELS: Record<SupportedLanguage, string> = {
   es: 'Español',
   zh: '中文'
 };
+
+/** BCP 47 tag for the HTML `lang` attribute. The single Chinese catalog is Simplified, so it is tagged `zh-Hans` rather than bare `zh`. */
+export function htmlLangFor(language: SupportedLanguage): string {
+  return language === 'zh' ? 'zh-Hans' : language;
+}

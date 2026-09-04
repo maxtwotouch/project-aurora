@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScoreBadge } from './ScoreBadge';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type { Spot, SpotScoreResult } from '../types';
@@ -55,7 +56,7 @@ export function SpotCard({ spot, result, onPress }: Props) {
       style={({ pressed, focused }: WebPressableState) => [
         styles.card,
         Platform.OS === 'web' ? styles.cardHover : null,
-        focused ? styles.focusRing : null,
+        focused ? focusRing : null,
         pressed ? styles.cardPressed : null
       ]}
       onPress={onPress}
@@ -128,11 +129,6 @@ const styles = StyleSheet.create({
     opacity: 0.92,
     transform: [{ scale: 0.988 }]
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

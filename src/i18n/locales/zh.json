@@ -146,7 +146,8 @@
     "sourceLabel": "来源",
     "legendText": "UiT的NO-SPACE空间天气实验室。画面模式：{{mode}}。",
     "modeNowcast": "实况",
-    "modeForecastHours": "预报 +{{hours}}小时"
+    "modeForecastHours": "预报 +{{hours}}小时",
+    "frameA11y": "特罗姆瑟上空极光地图：{{mode}}"
   },
   "liveCameras": {
     "eyebrow": "实时摄像头",
@@ -171,7 +172,9 @@
     "unavailableTitle": "实时画面不可用",
     "unavailableText": "{{name}}未返回图像。请打开来源页面确认数据源是否离线。",
     "openSource": "打开来源",
-    "liveFeedFallback": "实时画面"
+    "liveFeedFallback": "实时画面",
+    "closeFullscreen": "关闭全屏视图",
+    "fullscreenImageA11y": "{{name}} 的实时摄像头画面"
   },
   "mapScreen": {
     "distanceCityCenterShort": "距市中心 {{km}} 公里",

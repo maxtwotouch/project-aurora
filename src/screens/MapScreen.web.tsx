@@ -5,6 +5,7 @@ import { ScoreBadge } from '../components/ScoreBadge';
 import { useTranslation } from '../i18n/useTranslation';
 import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type { Spot, SpotScoreResult } from '../types';
@@ -55,7 +56,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
               styles.webItem,
               isActive ? styles.webItemActive : null,
               hovered ? styles.webItemHover : null,
-              focused ? styles.focusRing : null
+              focused ? focusRing : null
             ]}
             onPress={() => setSelected(spot)}
           >
@@ -88,7 +89,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           style={({ hovered, focused }: WebPressableState) => [
             styles.btn,
             hovered ? styles.btnHover : null,
-            focused ? styles.focusRing : null
+            focused ? focusRing : null
           ]}
           onPress={() => setSelected(null)}
         >
@@ -99,7 +100,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
           style={({ hovered, focused }: WebPressableState) => [
             styles.btn,
             hovered ? styles.btnHover : null,
-            focused ? styles.focusRing : null
+            focused ? focusRing : null
           ]}
           onPress={() => onOpenSpot(selected.id)}
         >
@@ -111,7 +112,7 @@ export function MapScreen({ spots, rankedSpots, onOpenSpot }: Props) {
             styles.btn,
             styles.btnPrimary,
             hovered ? styles.btnPrimaryHover : null,
-            focused ? styles.focusRing : null
+            focused ? focusRing : null
           ]}
           onPress={() => navigateToSpot(selected)}
         >
@@ -198,11 +199,6 @@ const styles = StyleSheet.create({
   webItemHover: {
     backgroundColor: palette.chipSurfaceActive
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   webItemName: {
     ...typography.bodyStrong,
     color: palette.textPrimary

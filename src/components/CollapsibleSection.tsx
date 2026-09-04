@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { palette } from '../theme/palette';
+import { focusRingInset } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
@@ -25,7 +26,7 @@ export function CollapsibleSection({ title, eyebrow, meta, defaultOpen = false, 
         accessibilityLabel={title}
         style={({ pressed, focused }: WebPressableState) => [
           styles.header,
-          focused ? styles.focusRing : null,
+          focused ? focusRingInset : null,
           pressed ? styles.headerPressed : null
         ]}
         onPress={() => setOpen((current) => !current)}
@@ -74,11 +75,6 @@ const styles = StyleSheet.create({
   headerPressed: {
     opacity: 0.92
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: -2
-  } as any,
   copy: {
     flex: 1,
     minWidth: 0
