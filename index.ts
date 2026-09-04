@@ -1,3 +1,9 @@
+// FIRST import, on purpose: patches Hermes's UTF-8-only TextDecoder so that
+// h3-js (pulled in transitively via App -> useTripPresence -> src/trip/*)
+// can evaluate without throwing `RangeError: Unknown encoding: utf-16le`.
+// See src/lib/textDecoderShim.ts. Keep this above every other import.
+import './src/lib/textDecoderShim';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';
