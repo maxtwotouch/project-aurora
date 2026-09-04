@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { LANGUAGE_NATIVE_LABELS, SUPPORTED_LANGUAGES } from '../i18n/languages';
 import { getCurrentLanguage, setLanguage } from '../i18n';
@@ -52,11 +52,23 @@ type Props = {
 export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', showLanguageRow = true }: Props) {
   const { t } = useTranslation();
   const currentLanguage = getCurrentLanguage();
+  const { height: windowHeight } = useWindowDimensions();
 
   return (
-    <View style={styles.overlay} pointerEvents="box-none">
-      <View style={styles.backdrop} pointerEvents="auto" />
-      <View style={styles.card}>
+    // RN Modal (not a plain overlay View) so assistive tech treats this as
+    // truly modal: native VoiceOver/TalkBack confine navigation to it, and
+    // react-native-web renders a focus trap + aria-modal. onRequestClose is
+    // a deliberate no-op -- a consent choice is mandatory; there is no
+    // dismiss path that leaves the question unanswered (WCAG 2.4.3 fix).
+    <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={() => undefined}>
+      <View style={styles.overlay} pointerEvents="box-none">
+        <View style={styles.backdrop} pointerEvents="auto" />
+        {/* The card scrolls: at large font scales (or short landscape
+            viewports) the content can exceed the screen, and since the
+            modal blocks the app, unreachable Accept/Decline buttons would
+            gate the app permanently (WCAG 1.4.4/1.4.10 fix). */}
+        <View style={[styles.card, { maxHeight: windowHeight - space.lg * 2 }]}>
+          <ScrollView contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator>
         {/* Language first: the reader confirms their language BEFORE the
             legally-relevant consent copy below. Each label is in its own
             tongue; switching re-renders this whole modal instantly and
@@ -73,7 +85,7 @@ export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', s
                 <Pressable
                   key={code}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
+                  accessibilityState={{ checked: active }}
                   accessibilityLabel={LANGUAGE_NATIVE_LABELS[code]}
                   style={({ pressed, focused }: WebPressableState) => [
                     styles.languageChip,
@@ -123,9 +135,11 @@ export function ConsentModal({ onAccept, onDecline, copyKeyPrefix = 'consent', s
           </Pressable>
         </View>
 
-        <Text style={styles.footnote}>{t(`${copyKeyPrefix}.footnote`)}</Text>
+            <Text style={styles.footnote}>{t(`${copyKeyPrefix}.footnote`)}</Text>
+          </ScrollView>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
@@ -155,7 +169,9 @@ const styles = StyleSheet.create({
     backgroundColor: palette.nightPanel,
     borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
+    borderColor: palette.cardBorder
+  },
+  cardContent: {
     padding: space.lg,
     gap: space.sm
   },

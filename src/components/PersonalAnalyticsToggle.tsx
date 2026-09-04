@@ -54,6 +54,9 @@ export function PersonalAnalyticsToggle() {
         accessibilityRole="switch"
         accessibilityState={{ checked: isOn }}
         accessibilityLabel={t('personalAnalyticsConsent.toggleLabel')}
+        // Programmatically associate the visible disclosures with the switch
+        // (WCAG 1.3.1): same reviewed copy, composed, no new text.
+        accessibilityHint={`${t('personalAnalyticsConsent.whatIncludes')} ${t('personalAnalyticsConsent.whatNeverIncludes')}`}
         style={({ pressed, focused }: WebPressableState) => [
           styles.toggleTrack,
           isOn ? styles.toggleTrackOn : null,
@@ -107,7 +110,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: palette.chipSurface,
     borderWidth: 1,
-    borderColor: palette.borderHairlineStrong,
+    // cardBorderStrong: ~4.0:1 vs card so the OFF state's boundary meets
+    // WCAG 1.4.11 non-text contrast (knob position perceivable).
+    borderColor: palette.cardBorderStrong,
     padding: 2,
     justifyContent: 'center',
     marginTop: 2
@@ -136,7 +141,8 @@ const styles = StyleSheet.create({
   privacyLink: {
     alignSelf: 'flex-start',
     marginTop: 4,
-    paddingVertical: 2
+    minHeight: 44,
+    justifyContent: 'center'
   },
   privacyLinkText: {
     ...typography.caption,
