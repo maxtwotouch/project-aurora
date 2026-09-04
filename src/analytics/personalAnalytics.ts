@@ -33,7 +33,7 @@ export type PersonalAnalyticsEventProps = {
   /** Which alert tier the user opted into -- never fired for opting out. */
   alerts_opt_in: { tier: 'ge45' | 'ge70' };
   language_set: { language: string };
-  /** The toggle state only -- Trip mode's own presence events are never sent here, ever. */
+  /** Trip Mode session started/ended (product feature state only). */
   trip_mode_toggled: { enabled: boolean };
 };
 

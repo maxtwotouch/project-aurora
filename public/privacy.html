@@ -105,7 +105,7 @@
   <header>
     <p class="eyebrow">Legal</p>
     <h1>Privacy Policy — Tromsø Northern Lights</h1>
-    <p class="updated">Last updated: <span class="placeholder">[DATE — set at publication]</span></p>
+    <p class="updated">Last updated: 2026-09-04</p>
   </header>
 
   <div class="note-box">
@@ -127,26 +127,31 @@
   <h2>What we collect</h2>
   <p>
     By default, this app collects <strong>nothing</strong> about you or your device. There
-    are three, entirely separate, optional data-collection features, each off unless you
-    explicitly turn it on: a small anonymous usage counter (see &ldquo;Consent&rdquo;
-    below), person-level product analytics (see &ldquo;Person-level product
-    analytics&rdquo; below), and Trip mode (see &ldquo;Trip mode&rdquo; below). Turning one
-    on never turns another on, and none of them are ever joined together — see
-    &ldquo;Product analytics: two separate pipelines&rdquo; just below for how the first
-    two relate to each other.
+    are three, entirely separate, optional data-collection choices, each off unless you say
+    yes to it: tourism insights (see &ldquo;Tourism insights&rdquo; below), a small
+    anonymous usage counter (see &ldquo;Consent&rdquo; below), and person-level product
+    analytics (see &ldquo;Person-level product analytics&rdquo; below). Saying yes to one
+    never turns another on, and none of them are ever joined together. There is also one
+    optional feature, Trip Mode (see &ldquo;Trip Mode&rdquo; below), that uses your
+    location on your phone only — it is a feature, not a data-collection choice, and
+    nothing is sent because of it.
   </p>
   <p>
     If you opt in to the anonymous usage counter, the app may send an anonymous event each
-    time you view a spot or tap &ldquo;navigate&rdquo; for a spot. Each event contains only:
+    time you view a spot, tap &ldquo;navigate&rdquo; for a spot, or share a spot. Each event
+    contains only:
   </p>
   <ul>
-    <li>an event type (spot viewed, or navigate tapped), and</li>
+    <li>an event type (spot viewed, navigate tapped, or spot shared), and</li>
     <li>the id of the spot involved (one of the app&rsquo;s fixed, named viewing spots).</li>
   </ul>
   <p>
     These events are aggregated immediately into counts grouped by spot and by hour —
     for example, &ldquo;spot X was viewed N times between 20:00 and 21:00 UTC.&rdquo; No
-    individual event is ever stored or retained; only the running counts exist.
+    individual event is ever stored or retained; only the running counts exist. The same
+    counters also hold the tourism-insights events (presence, long presence, visit summary,
+    recommendation outcome, and coarse area) described under &ldquo;Tourism insights&rdquo;
+    below — those are sent only if you have separately said yes to tourism insights.
   </p>
   <p>Specifically, and always, regardless of whether you opt in:</p>
   <ul>
@@ -154,7 +159,7 @@
     <li><strong>No names or other identifying profile information</strong> are ever collected.</li>
     <li><strong>No IP addresses</strong> are stored or logged in connection with app usage.</li>
     <li><strong>No advertising identifiers (IDFA/GAID), device IDs, or push tokens used for tracking</strong> are ever collected. The one exception to &ldquo;no identifier of any kind&rdquo; is the pseudonymous per-install identifier used by person-level product analytics, and only if you separately opt into that specific feature — see &ldquo;Person-level product analytics&rdquo; below for exactly what it is and is not.</li>
-    <li><strong>No precise location is ever collected — including by Trip mode.</strong> Unless you opt into Trip mode, the app does not request or read your GPS coordinates at all. If you do opt into Trip mode, your device&rsquo;s precise location is used, but only to compare it locally against fixed spot coordinates already stored in the app and — only outside those spots, away from the Tromsø town area, and only after dark — to work out which coarse, roughly 5&nbsp;km&sup2; map cell you&rsquo;re currently in, for the sole purpose of spotting new viewing areas; it is all processed entirely on your device and your coordinates are never sent anywhere; see &ldquo;Trip mode&rdquo; below for exactly what does leave your device in that case. Outside of Trip mode, the only &ldquo;location&rdquo; concept in the app&rsquo;s anonymous counters is which named, fixed viewing spot you interacted with — never coordinates, and never your own position.</li>
+    <li><strong>No precise location ever leaves your device.</strong> The app reads your position only in two situations: (a) while Trip Mode is running, to show you nearby spots on your phone, and (b) while the app is open, if you have said yes to tourism insights — and never in the background or while the app is closed. In both cases your precise location is processed entirely on your device: compared locally against fixed spot coordinates already stored in the app and — only outside those spots, away from the Tromsø town area, and only after dark — used to work out which coarse, roughly 5&nbsp;km&sup2; map cell you&rsquo;re currently in. Your coordinates are never sent anywhere; see &ldquo;Tourism insights&rdquo; below for exactly what does leave your device if you have said yes to it, and &ldquo;Trip Mode&rdquo; below for why nothing leaves because of Trip Mode. Otherwise, the only &ldquo;location&rdquo; concept in the app&rsquo;s anonymous counters is which named, fixed viewing spot you interacted with — never coordinates, and never your own position.</li>
     <li><strong>No cookies are used by the app itself.</strong></li>
     <li><strong>No third-party trackers or advertising SDKs</strong> are embedded in the app, other than the person-level analytics processor named in &ldquo;Person-level product analytics&rdquo; below, and only once you have separately opted into that specific feature.</li>
   </ul>
@@ -171,14 +176,18 @@
     <li><strong>Person-level product analytics</strong> (new — see &ldquo;Person-level product analytics&rdquo; further below). A pseudonymous identifier generated for your specific app install, used to understand individual usage patterns like whether people come back to the app and where they tend to stop partway through common flows — something the aggregate counters above structurally cannot show, because they never distinguish one person&rsquo;s activity from another&rsquo;s.</li>
   </ul>
   <p>
-    Trip mode (see &ldquo;Trip mode&rdquo; below) is a third, separate, opt-in feature, and
-    is never joined with either analytics pipeline either.
+    Tourism insights (see &ldquo;Tourism insights&rdquo; below) feeds the first,
+    identity-free pipeline under its own separate opt-in, and is never joined with the
+    second. Trip Mode (see &ldquo;Trip Mode&rdquo; below) is a feature, not a pipeline: it
+    sends nothing to either.
   </p>
 
   <h2>Consent (aggregate usage counters)</h2>
   <p>
     The first time you open the app, you are asked whether you want to share anonymous
-    usage counts as described above. Both choices are equally easy to make.
+    usage counts as described above (on a phone, this comes right after the
+    tourism-insights question — each is its own question with its own answer). Both
+    choices are equally easy to make.
   </p>
   <ul>
     <li>If you decline, or simply close the prompt, <strong>zero usage data is collected or sent</strong> — nothing changes about how the app works.</li>
@@ -189,7 +198,9 @@
   <p>
     This consent choice covers the aggregate usage counters only. Person-level product
     analytics is a separate opt-in, asked about separately, and answering this question
-    one way or the other has no effect on it — see the next section.
+    one way or the other has no effect on it — see the next section. The same is true of
+    tourism insights: it has its own question and its own toggle, and neither answer
+    affects the other.
   </p>
 
   <h2>Person-level product analytics (separate, optional, off by default)</h2>
@@ -212,7 +223,7 @@
     <li><code>spot_shared</code></li>
     <li><code>alerts_opt_in</code></li>
     <li><code>language_set</code></li>
-    <li><code>trip_mode_toggled</code> (only whether you switched Trip mode&rsquo;s Settings toggle on or off — never any of Trip mode&rsquo;s own presence, visit, recommendation-outcome, or area-discovery events; those stay entirely within the identity-free pipeline described in &ldquo;Trip mode&rdquo; below and are never sent here, under any circumstances)</li>
+    <li><code>trip_mode_toggled</code> (only that you started or ended a Trip Mode session — never your position, and never any of tourism insights&rsquo; presence, visit, recommendation-outcome, or area-discovery events; those stay entirely within the identity-free pipeline described in &ldquo;Tourism insights&rdquo; below and are never sent here, under any circumstances)</li>
   </ul>
   <p>
     Each event is tagged with the pseudonymous per-install identifier described above and
@@ -236,7 +247,7 @@
   </p>
   <p><strong>What this never includes, under any circumstances:</strong></p>
   <ul>
-    <li>your precise GPS coordinates, or any location data at all — this pipeline never receives location information of any kind, the same as the rest of the app outside of Trip mode;</li>
+    <li>your precise GPS coordinates, or any location data at all — this pipeline never receives location information of any kind; the only location-derived data the app ever sends is the coarse tourism-insights events described below, and those go to our own server only;</li>
     <li>advertising identifiers (IDFA/GAID) or anything capable of linking your activity in this app to your activity in a different company&rsquo;s app or website — this is product analytics, not ad tracking. Because none of that cross-app linking happens, Apple&rsquo;s App Tracking Transparency prompt is correctly not triggered by this feature;</li>
     <li>session replay or screen recording of any kind;</li>
     <li>autocapture. When this feature is switched on, it only ever sends the exact named events listed above — it does not automatically record every tap, scroll, or on-screen element the way some analytics tools do by default.</li>
@@ -262,7 +273,7 @@
   </p>
   <p>
     <strong>Your rights over this data specifically.</strong> Unlike the aggregate usage
-    counters and Trip mode&rsquo;s presence counters (see &ldquo;Your rights (GDPR)&rdquo;
+    counters and tourism insights&rsquo; presence counters (see &ldquo;Your rights (GDPR)&rdquo;
     further below), this pipeline is linked to a persistent identifier, so individual
     data-subject rights under GDPR genuinely apply and can be honored here. You can request
     access to, or deletion of, the data tied to your pseudonymous identifier via
@@ -276,34 +287,43 @@
     <span class="placeholder">[Operator name and contact — to be completed by the owner]</span>.
   </p>
 
-  <h2>Trip mode (separate, optional, off by default)</h2>
+  <h2>Tourism insights (optional, asked when you first open the app)</h2>
   <p>
-    Trip mode is a <strong>second, independent</strong> opt-in from the anonymous usage
-    counter described above. It is designed for the moment you are actually heading out to
-    look for the northern lights, and is switched on with its own separate toggle in
-    Settings — never bundled with, inferred from, or turned on by your usage-sharing
-    choice, and never shown as a first-open prompt.
+    <strong>What it is.</strong> Tourism insights is an optional way to help us — and, as
+    anonymous statistics, Tromsø kommune — understand which northern-lights viewing spots
+    and areas people actually go to, and when. If you say yes, then while the app is open
+    on your phone, your device compares its own precise position — processed entirely
+    <strong>on your device</strong> — against the fixed coordinates of the app&rsquo;s named
+    viewing spots, and, only when you are outside every named spot and away from the Tromsø
+    town area after dark, works out which coarse, roughly 5&nbsp;km&sup2; map cell you are
+    in. Only the small, spot- or area-level results described below ever leave your phone.
   </p>
   <p>
-    <strong>Note:</strong> Trip mode is not yet available in this version of the app. This
-    section describes it in advance, before any of its collection code exists, so this
-    policy is accurate the moment it does ship.
+    <strong>How you are asked.</strong> The first time you open the app on an iPhone or
+    Android phone, before anything else, you see a short question — &ldquo;Help improve
+    tourism in Tromsø?&rdquo; — with two equally easy buttons: <strong>Allow</strong> and
+    <strong>Not now</strong>. Not now is a genuine no: nothing is measured, nothing is sent,
+    and the app works exactly the same. If you tap Allow, your phone then shows its own
+    location-permission prompt; if you decline that, nothing is measured either. Your
+    answer is stored only on your own device (never on a server), so the app remembers it
+    between visits, and you can change it at any time with the &ldquo;Tourism
+    insights&rdquo; toggle under &ldquo;Privacy &amp; data&rdquo; in Settings. This question
+    is not asked in the web version of the app, and the web version never collects any of
+    this.
   </p>
   <p>
-    <strong>What it is.</strong> While Trip mode is switched on, and only while the app is
-    open and in the foreground (never in the background), your phone compares your
-    device&rsquo;s precise location — processed entirely <strong>on your device</strong> —
-    against the fixed coordinates of the app&rsquo;s named viewing spots, so it can show you
-    an &ldquo;arrived at this spot&rdquo; card with tonight&rsquo;s score and best viewing
-    window for that spot.
+    <strong>When it runs.</strong> Only while the app is open and on screen. It never runs
+    in the background: the moment you switch to another app or lock your phone, measurement
+    stops. It never runs while the app is closed. It does not depend on Trip Mode (see the
+    next section) — it works the same way whether or not Trip Mode is running.
   </p>
   <p>
     <strong>What leaves your device.</strong> Four kinds of small, spot- or area-level
-    events, and only while Trip mode is on:
+    events, and only while tourism insights is on and the app is open:
   </p>
   <ul>
-    <li>that your device is currently near one of the app&rsquo;s named viewing spots (&ldquo;presence&rdquo;), and that it stayed continuously near that same spot for 20 minutes or more (&ldquo;long presence&rdquo;) — a spot identifier and the current UTC hour, nothing else, exactly as before;</li>
-    <li><strong>a visit summary</strong>, sent once a visit to a spot ends (you leave, you move straight to a different spot, or the trip session ends while you&rsquo;re still there): the spot identifier, the UTC hour you arrived, and which coarse duration bucket you stayed for — under 5 minutes, 5&ndash;15, 15&ndash;30, 30&ndash;60, or 60-plus minutes — never the exact number of minutes;</li>
+    <li>that your device is currently near one of the app&rsquo;s named viewing spots (&ldquo;presence&rdquo;), and that it stayed continuously near that same spot for 20 minutes or more (&ldquo;long presence&rdquo;) — a spot identifier and the current UTC hour, nothing else;</li>
+    <li><strong>a visit summary</strong>, sent once a visit to a spot ends (you leave, you move straight to a different spot, or you switch away from the app while you&rsquo;re still there — in that last case it is sent only if tourism insights is still on): the spot identifier, the UTC hour you arrived, and which coarse duration bucket you stayed for — under 5 minutes, 5&ndash;15, 15&ndash;30, 30&ndash;60, or 60-plus minutes — never the exact number of minutes;</li>
     <li><strong>which recommendation you acted on, if any</strong>: when the app has shown you a recommended spot and you later arrive there, your device compares &ldquo;shown&rdquo; and &ldquo;arrived&rdquo; entirely on its own and sends only the outcome — the spot identifier, which recommendation it was, and the UTC hour. We never reconstruct your journey on our servers; this outcome event stands entirely on its own;</li>
     <li><strong>a coarse area event, only to help us find new viewing areas we don&rsquo;t already know about</strong>: if your device dwells 15 minutes or more somewhere outside every named spot and away from the Tromsø town area, during dark hours only, it sends a single coarse map-cell identifier — roughly 5&nbsp;km&sup2; in size, deliberately too large to pinpoint an address or a cabin — plus the UTC hour and a coarse duration bucket, and at most once per area per night no matter how long you stay.</li>
   </ul>
@@ -323,9 +343,10 @@
     <li>your precise GPS coordinates — only the derived spot identifier, area-cell identifier, UTC hour, and coarse duration bucket described above are ever sent, never a latitude/longitude;</li>
     <li>any route, path, or sequence of spots or areas you visited — each event stands alone; the app does not send anything that could be reassembled into where you went before or after, and the recommendation &ldquo;shown vs. arrived&rdquo; comparison described above happens entirely on your device, never on our servers;</li>
     <li>any device or account identifier that could link two events together, or that could link a visit, recommendation-outcome, or area event to each other or to anything else this app sends;</li>
-    <li>anything at all while Trip mode is off, or while the app is backgrounded or closed — Trip mode never runs, and never collects anything, outside the app being open in the foreground;</li>
+    <li>whether Trip Mode was running — our server has no way of knowing, and no event says;</li>
+    <li>anything at all while tourism insights is off, or while the app is in the background or closed — measurement runs only while the app is open on screen, never otherwise;</li>
     <li>a coarse area event for anywhere inside a named spot&rsquo;s radius, inside the Tromsø town area, or outside dark hours — those conditions are all checked on your device before anything is sent, never filtered out afterwards;</li>
-    <li>before Trip mode launches, the path your device&rsquo;s request travels to reach our server is designed and audited so that no IP address or other request-identifying information (request IDs, session IDs, device metadata) capable of linking events together is retained at any point along it — specifically so individual presence, visit, recommendation-outcome, or area events cannot be reassembled into a sequence after the fact.</li>
+    <li>the path your device&rsquo;s request travels to reach our server is designed and audited so that no IP address or other request-identifying information (request IDs, session IDs, device metadata) capable of linking events together is retained at any point along it — specifically so individual presence, visit, recommendation-outcome, or area events cannot be reassembled into a sequence after the fact.</li>
   </ul>
   <p>
     <strong>On anonymity.</strong> We take a deliberately conservative position here,
@@ -339,29 +360,73 @@
     that actually meet that bar.
   </p>
   <p>
-    <strong>Consent and withdrawal.</strong> Trip mode is off by default. Turning its
-    Settings toggle off stops all further collection immediately. Because the aggregated
-    counts contain no identifier of any kind, there is no individual record to look up or
-    delete on your behalf when you withdraw — put plainly, once your presence event has been
-    folded into an hourly count, we have no way to find &ldquo;yours&rdquo; within it to
-    remove it, because there was never anything in it that pointed back to you.
+    <strong>Consent and withdrawal.</strong> Tourism insights is off unless you tap Allow.
+    Turning the &ldquo;Tourism insights&rdquo; toggle off in Settings stops all further
+    collection immediately, and any events waiting on your phone to be sent are discarded
+    rather than sent. Because the aggregated counts contain no identifier of any kind, there
+    is no individual record to look up or delete on your behalf when you withdraw — put
+    plainly, once your presence event has been folded into an hourly count, we have no way
+    to find &ldquo;yours&rdquo; within it to remove it, because there was never anything in
+    it that pointed back to you.
   </p>
   <p>
-    <strong>Retention.</strong> Trip mode&rsquo;s aggregated counts share the exact same
-    retention rules as the anonymous usage counters above (see &ldquo;Retention&rdquo;
-    below) — there is no separate, longer, or shorter retention period for Trip mode data.
+    <strong>If you answered an earlier &ldquo;Trip mode&rdquo; question.</strong> An earlier
+    version of this app asked, in Settings, for a &ldquo;Trip mode&rdquo; consent covering
+    this same kind of measurement — but only while a Trip mode switch was on. This version
+    measures whenever the app is open, which is a wider window than you were asked about
+    before. We do not carry your earlier answer over, in either direction: the old answer is
+    never read again, and everyone — including people who said yes before — is asked the
+    tourism-insights question once, the next time they open the app.
   </p>
   <p>
-    <strong>Sharing.</strong> Whether, and in what form, Trip mode&rsquo;s aggregated counts
-    might ever be shared with Tromsø kommune — the way the usage counters described above
-    may be — has not been decided. If and when that decision is made, this policy will be
-    updated before any sharing begins.
+    <strong>Retention.</strong> Tourism insights&rsquo; aggregated counts share the exact
+    same retention rules as the anonymous usage counters above (see &ldquo;Retention&rdquo;
+    below) — there is no separate, longer, or shorter retention period for this data.
+  </p>
+  <p>
+    <strong>Sharing.</strong> Whether, and in what form, tourism insights&rsquo; aggregated
+    counts might ever be shared with Tromsø kommune — the way the usage counters described
+    above may be — has not been decided. If and when that decision is made, this policy
+    will be updated before any sharing begins.
+  </p>
+
+  <h2>Trip Mode (a feature, not data collection)</h2>
+  <p>
+    Trip Mode is something you use, not something we collect. It is for the moment you are
+    actually heading out to look for the northern lights. You start it from a card on the
+    Tonight screen and end it when you are done.
+  </p>
+  <p>
+    <strong>What it does.</strong> While Trip Mode is running, the app uses your position
+    <strong>on your phone</strong> to show your area on a map with the viewing spots around
+    you, the best spot near you right now with its score and distance and a Navigate
+    button, the other spots nearby, tonight&rsquo;s best viewing window and conditions, and
+    the spots you have stopped at during this trip. Starting Trip Mode asks for your
+    phone&rsquo;s location permission if the app doesn&rsquo;t already have it; if you
+    decline, Trip Mode can&rsquo;t show you nearby spots, and nothing else changes.
+  </p>
+  <p>
+    <strong>Nothing is sent because of Trip Mode itself.</strong> Your position is used on
+    your device to draw the map and work out distances, and is discarded. The list of spots
+    visited during a trip is kept only in your phone&rsquo;s memory while Trip Mode is
+    running and is gone when you end it or close the app. Our server is never told that
+    Trip Mode is on, and no event says so. (If you have separately opted into person-level
+    product analytics, starting or ending Trip Mode is recorded there as the
+    <code>trip_mode_toggled</code> on/off event listed in that section — that is the only
+    trace, and it contains no location.)
+  </p>
+  <p>
+    <strong>Trip Mode and tourism insights are independent.</strong> If tourism insights is
+    off, Trip Mode still works fully and transmits nothing. If tourism insights is on, it
+    continues to work exactly the same way whether or not Trip Mode is running — Trip Mode
+    neither starts, stops, nor changes what it sends. In the web version, Trip Mode lists
+    spots by distance without a map.
   </p>
 
   <h2>How we use this data</h2>
   <p>
     This section covers the aggregate, identity-free pipelines only (the anonymous usage
-    counters and Trip mode&rsquo;s presence counters). Aggregated, anonymous counts (never
+    counters and tourism insights&rsquo; presence counters). Aggregated, anonymous counts (never
     individual records — there is nothing row-level to share) may be used to:
   </p>
   <ul>
@@ -403,9 +468,9 @@
     The anonymous usage counters described above are aggregated to hour-level
     granularity (never finer) and are retained for a maximum of 180 days (configurable
     via <code>USAGE_RETENTION_DAYS</code>), after which older counts are pruned
-    automatically. Trip mode&rsquo;s aggregated counts (see &ldquo;Trip mode&rdquo; above)
-    are retained under this exact same policy — there is no separate retention period for
-    Trip mode. Person-level product analytics has its own, separate retention period —
+    automatically. Tourism insights&rsquo; aggregated counts (see &ldquo;Tourism
+    insights&rdquo; above) are retained under this exact same policy — there is no separate
+    retention period for them. Person-level product analytics has its own, separate retention period —
     see &ldquo;Retention&rdquo; within &ldquo;Person-level product analytics&rdquo; above
     (24 months) — because it is a different kind of data (linked to a persistent
     identifier) processed by a different party (PostHog) under its own agreement.
@@ -413,10 +478,10 @@
 
   <h2>Your rights (GDPR)</h2>
   <p>
-    Where the anonymous usage counters, or Trip mode&rsquo;s presence counters, are
+    Where the anonymous usage counters, or tourism insights&rsquo; presence counters, are
     collected, the legal basis for each is your consent (GDPR Art. 6(1)(a)) — freely given
-    independently for each feature, and revocable at any time as described above and in
-    &ldquo;Trip mode&rdquo; above.
+    independently for each, and revocable at any time as described above and in
+    &ldquo;Tourism insights&rdquo; above.
   </p>
   <p>
     Because the counters are aggregated and contain no identifying information, we have
@@ -435,9 +500,9 @@
 
   <h2>Children</h2>
   <p>
-    Because the app collects no data at all unless you explicitly opt in — either to the
-    anonymous, aggregated usage counters, separately to person-level product analytics,
-    or separately to Trip mode — no separate age-verification or parental-consent
+    Because the app collects no data at all unless you explicitly opt in — to tourism
+    insights, separately to the anonymous, aggregated usage counters, or separately to
+    person-level product analytics — no separate age-verification or parental-consent
     mechanism is in place.
   </p>
 

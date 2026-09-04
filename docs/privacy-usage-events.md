@@ -9,17 +9,33 @@ This feature is privacy-sensitive per `CLAUDE.md` and requires human review befo
 
 ## What is collected
 
-Three anonymous, allowlisted event types, sent by the app when a user views a spot,
-taps navigate, or shares a spot:
+Eight anonymous, allowlisted event types. Three are usage events, sent by the app when a
+user views a spot, taps navigate, or shares a spot (gated on the anonymous-usage consent):
 
 - `spot_view`
 - `navigate_pressed`
 - `spot_shared`
 
+Five are tourism-insights events, derived on-device from location and gated on the
+separate tourism-insights consent (`docs/design-trip-tracking.md`,
+`docs/decision-tourism-baseline.md`; foreground only, no identifiers):
+
+- `spot_presence` — device entered a named spot's geofence
+- `spot_presence_long` — stayed continuously inside for 20 minutes or more
+- `spot_visit` — a visit ended; carries a coarse dwell bucket
+- `recommended_spot_visit` — arrived at a spot the app had recommended (attributed on-device)
+- `zone_dwell` — dwelt 15 minutes or more in a coarse H3 resolution-7 cell outside every
+  spot and outside the urban zone, dark hours only, at most once per cell per night
+
 Each event carries only:
 
-- `type` — one of the three values above (anything else is rejected with HTTP 400)
-- `spotId` — validated against the real spot catalog (invalid ids are rejected with HTTP 400)
+- `type` — one of the eight values above (anything else is rejected with HTTP 400)
+- `spotId` — validated against the real spot catalog (invalid ids are rejected with HTTP 400);
+  present on every type except `zone_dwell`
+- `h3Cell` — `zone_dwell` only: an H3 resolution-7 cell id (~5 km²), validated by shape
+- `utcHour` — tourism types only: the client's UTC hour, validated as an integer 0–23
+- `dwellBucket` — `spot_visit` and `zone_dwell` only: one of a fixed set of coarse buckets
+- `recommendationId` — `recommended_spot_visit` only: a small, allowlist-shaped string
 
 On arrival, the event is **immediately aggregated** into an in-memory counter keyed by
 `(type, spotId, hourBucket)`, where `hourBucket` is the current UTC hour formatted as
@@ -49,7 +65,12 @@ contains `{ type, spotId, hourBucket } -> count` entries.
   such field and returns none (204 No Content, no headers set beyond the standard ones).
 - No user agent or other request headers are stored or logged.
 - No precise coordinates — only the coarse `spotId` (a small, fixed set of named viewing
-  spots), never lat/lon of the requester.
+  spots), never lat/lon of the requester. Caveat: `zone_dwell` carries an `h3Cell`, an H3
+  resolution-7 cell id — a hexagon of roughly 5 km², deliberately too coarse to identify a
+  cabin or an address, only for cells outside every named spot and outside the excluded
+  urban zone, and at most once per cell per night per device (enforced on-device). It is a
+  coarse area, not a coordinate, but it is the one field in the schema that describes
+  *where the requester was* rather than which catalog spot they interacted with.
 - No timestamps finer than the hour. There is no minute/second/millisecond precision
   anywhere in storage — only the UTC hour bucket.
 - No free-text fields. There is nowhere in the schema for a user-submitted string.
@@ -64,8 +85,9 @@ in that same hour for that same spot. Practically, retention is bounded by:
   new keys are dropped and a data-quality warning is logged (the service degrades rather
   than crashing or silently growing memory without bound).
 - The JSON mirror file (`backend/data/usage-stats.json`) grows roughly with the number of
-  distinct spot/hour/type combinations actually seen — at 3 event types and today's spot
-  catalog size, this is a small, slowly growing file, not an unbounded log.
+  distinct spot/hour/type combinations actually seen — at 8 event types and today's spot
+  catalog size (plus a bounded set of H3 cells for `zone_dwell`), this is a small, slowly
+  growing file, not an unbounded log.
 
 Hour-bucket keys older than `USAGE_RETENTION_DAYS` (default 180 days) are pruned from
 memory on `load()` (server boot) and again on every `flush()` (every 30s and on

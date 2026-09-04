@@ -319,12 +319,30 @@
     "whatNeverIncludes": "Ce que cela n'inclut jamais : votre position exacte, les identifiants publicitaires, le suivi entre applications, les enregistrements de session, ou la capture automatique de tout ce que vous touchez."
   },
   "tripMode": {
-    "toggleLabel": "Mode voyage",
-    "description": "Une manière distincte et facultative de vous aider une fois sur place — uniquement au niveau du site, jamais vos coordonnées exactes. Désactivé par défaut, et vous pouvez le désactiver à nouveau à tout moment.",
-    "whatLeaves": "Ce qui quitte votre téléphone : quels sites vous visitez et environ combien de temps vous y restez, vers quel site recommandé vous vous êtes réellement rendu, et des zones approximatives où vous vous arrêtez un moment la nuit en explorant — jamais votre position exacte, et jamais associé à vous.",
-    "toggleOnHelper": "Partagera la présence au niveau du site dès que les fonctionnalités du mode voyage seront disponibles.",
-    "toggleOffHelper": "Désactivé. Rien n'est partagé.",
-    "comingSoonNote": "Ce réglage est prêt à l'avance — le mode voyage lui-même s'activera lorsque ses fonctionnalités arriveront dans une prochaine mise à jour."
+    "title": "Mode Trip",
+    "eyebrow": "En route",
+    "introBody": "Transformez votre position en guide en direct pour ce soir : les meilleurs spots d’aurores près de vous, leur distance et le bon moment pour y être. Votre position n’est utilisée que sur votre téléphone.",
+    "startButton": "Démarrer le mode Trip",
+    "endButton": "Terminer le mode Trip",
+    "permissionDenied": "Le mode Trip a besoin de l’accès à la position pour trouver des spots près de vous. Activez-le dans les réglages de votre téléphone.",
+    "locating": "Recherche de votre position…",
+    "yourArea": "Votre zone",
+    "bestNearby": "Meilleur spot à proximité",
+    "otherNearby": "Autres à proximité",
+    "tonightSection": "Ce soir",
+    "visitedSection": "Visités pendant ce trip",
+    "visitedNone": "Aucun spot visité pour l’instant — ils apparaîtront ici à votre arrivée.",
+    "distanceAway": "à {{km}} km",
+    "scoreLabel": "Score d’aurore {{score}}",
+    "bestWindow": "Meilleur créneau {{start}} – {{end}}",
+    "cloudLabel": "Nuages",
+    "kpLabel": "Kp",
+    "noForecast": "Prévision indisponible pour le moment.",
+    "noNearby": "Aucun spot d’aurores à portée de votre position pour l’instant.",
+    "activeSince": "Actif depuis {{time}}",
+    "webNote": "La carte n’est pas disponible sur le web — les spots sont listés par distance.",
+    "mapA11y": "Carte des spots d’aurores autour de votre position",
+    "navigateTo": "Ouvrir la navigation vers {{name}}"
   },
   "languagePicker": {
     "label": "Language / Sprache / Langue / Idioma / 语言"
@@ -332,13 +350,16 @@
   "settings": {
     "title": "Paramètres",
     "languageSection": "Langue",
-    "privacySection": "Confidentialité",
+    "privacySection": "Confidentialité et données",
     "aboutSection": "À propos",
     "aboutAppName": "Tromsø Northern Lights",
     "aboutDataSources": "MET Norway · NOAA · Tromsø kommune",
     "designPreviewSection": "Aperçu",
     "designPreviewLabel": "Aperçu du design (données d'exemple)",
-    "designPreviewHelper": "Affiche une prévision d'exemple de la saison des aurores au lieu des données en direct. Désactive le suivi d'utilisation tant que c'est actif."
+    "designPreviewHelper": "Affiche une prévision d'exemple de la saison des aurores au lieu des données en direct. Désactive le suivi d'utilisation tant que c'est actif.",
+    "tourismSection": "Aperçus touristiques",
+    "productAnalyticsSection": "Analyse produit",
+    "usageCountsSection": "Comptages d’usage anonymes"
   },
   "preview": {
     "banner": "Données d'exemple — pas une prévision réelle"
@@ -377,5 +398,29 @@
       "genericLine1": "Tu prévois un voyage pour voir les aurores à Tromsø ?",
       "genericLine2": "Consulte les prévisions du soir et le meilleur site."
     }
+  },
+  "tourismConsent": {
+    "eyebrow": "Avant de commencer",
+    "title": "Aider à améliorer le tourisme à Tromsø ?",
+    "body": "Aurora peut utiliser votre position pour comprendre quelles zones et quels spots d’aurores sont réellement visités. Votre position précise reste sur votre téléphone — l’application n’envoie que des notes anonymes au niveau de la zone, comme « quelqu’un a passé un moment à Ersfjordbotn ce soir », jamais vos coordonnées ni qui vous êtes. Uniquement quand l’application est ouverte. Vous pouvez refuser et tout fonctionne pareil.",
+    "acceptButton": "Autoriser",
+    "declineButton": "Pas maintenant",
+    "footnote": "Vous pouvez changer cela à tout moment dans les Réglages.",
+    "toggleLabel": "Aperçus touristiques",
+    "description": "Aidez Aurora à comprendre quelles zones et quels spots d’aurores sont visités. La position est traitée sur votre appareil — votre position précise n’est jamais envoyée à Aurora. Seules des informations anonymes au niveau du spot et de la zone sont partagées, et uniquement quand l’application est ouverte.",
+    "whatLeaves": "Ce qui quitte votre téléphone : quels spots vous visitez et à peu près combien de temps vous y restez, quel spot recommandé vous avez réellement rejoint, et des zones approximatives où vous vous arrêtez un moment la nuit en explorant — jamais votre position exacte, et jamais relié à vous.",
+    "toggleOnHelper": "Partage de visites anonymes au niveau du spot et de la zone quand l’application est ouverte.",
+    "toggleOffHelper": "Désactivé. Aucune donnée dérivée de la position n’est partagée.",
+    "permissionMissingHelper": "L’accès à la position est désactivé pour cette application, donc rien n’est mesuré. Activez-le dans les réglages de votre téléphone pour contribuer."
+  },
+  "tonightTripCard": {
+    "title": "Vous sortez ce soir ?",
+    "body": "Démarrez le mode Trip pour les meilleurs spots près de vous, en direct.",
+    "cta": "Démarrer le mode Trip",
+    "activeTitle": "Le mode Trip est activé",
+    "activeBody_one": "{{count}} spot visité jusqu’ici.",
+    "activeBody_other": "{{count}} spots visités jusqu’ici.",
+    "activeBodyNone": "Surveille les spots près de vous.",
+    "openCta": "Ouvrir le mode Trip"
   }
 }

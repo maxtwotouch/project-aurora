@@ -7,14 +7,14 @@ import type { PersonalAnalyticsConsentState } from './core';
 /**
  * Opt-in consent for person-level product analytics (docs/analytics-pivot.md,
  * PR 2) -- a THIRD, INDEPENDENT consent dimension from both the aggregate
- * usage-events consent in ./consent.ts and the Trip mode consent in
- * ./tripModeConsent.ts. Deliberately its own module with its own storage key
+ * usage-events consent in ./consent.ts and the tourism-insights consent in
+ * ./tourismConsent.ts. Deliberately its own module with its own storage key
  * and module-level state so it can never be accidentally read from, written
  * to, or defaulted from either of the other two:
  *
  * - Storage key: 'aurora.personalAnalyticsConsent.v1' (usage consent uses
- *   'aurora.analyticsConsent.v1', Trip mode uses 'aurora.tripModeConsent.v1'
- *   -- never shared).
+ *   'aurora.analyticsConsent.v1', tourism insights uses
+ *   'aurora.tourismConsent.v1' -- never shared).
  * - Default: 'unset' for every install, including people who already
  *   answered the aggregate usage-counter question -- this is what
  *   implements re-consent for the new scope (docs/analytics-pivot.md
@@ -103,7 +103,7 @@ export function subscribePersonalAnalyticsConsent(listener: Listener): () => voi
 }
 
 // Kick off the storage read as soon as this module is imported, same
-// pattern as consent.ts / tripModeConsent.ts -- but this is a fully
+// pattern as consent.ts / tourismConsent.ts -- but this is a fully
 // separate read from a separate key, not a shared load.
 void loadPersonalAnalyticsConsent();
 

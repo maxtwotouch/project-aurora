@@ -29,6 +29,7 @@ gantt
     Spot reviews R1 — scope call (owner) + build :p3, 2026-10-05, 21d
     Nowcast v2 — TGO magnetometer (if access granted) :p4, 2026-11-02, 21d
     Trip mode — design doc + owner decision     :p5, 2026-11-02, 14d
+    %% 2026-09-04: shipped early as a product feature; tourism measurement consented at first launch — see decision doc
 
     section Data & Science
     Validation loop recording (needs deploy)    :crit, d1, 2026-08-14, 110d
@@ -63,6 +64,9 @@ gantt
 4. **Nov:** deeper science (TGO if UiT grants access), Trip-mode decision
    (privacy-gated — design doc first, owner sign-off, no code before that),
    and the municipality B2B aggregate stats — the first monetization lever.
+   *2026-09-04: shipped early as a product feature; tourism measurement
+   consented at first launch — see decision doc
+   (`docs/decision-tourism-baseline.md`).*
 5. **Dec:** peak tourist season — stability over features, holiday marketing
    push, and the year-end calibration report that sets up the April 2027
    traction checkpoint.
@@ -73,3 +77,5 @@ gantt
 - The eats sibling app (concept doc exists; separate effort).
 - Any location tracking beyond the aggregate, consented events we ship today —
   Trip mode enters only as a *design doc* in November, not as code.
+  *2026-09-04: shipped early as a product feature; tourism measurement
+  consented at first launch — see decision doc.*

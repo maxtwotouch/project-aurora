@@ -145,54 +145,67 @@ export function dropQueueOnRevoke<T>(): T[] {
 }
 
 /**
- * Trip mode consent -- a SECOND, INDEPENDENT consent dimension (see
- * docs/design-trip-tracking.md section 6.2 / 8 decision #4). This is
- * distinct from ConsentState/isPersistedConsentState/
+ * Tourism-insights consent -- a SECOND, INDEPENDENT consent dimension (see
+ * docs/design-trip-tracking.md and docs/analytics-pivot.md section 3's
+ * amendment). This is distinct from ConsentState/isPersistedConsentState/
  * resolveLoadedConsentState above:
  *
- * - different storage key (aurora.tripModeConsent.v1, owned by
- *   ./tripModeConsent.ts -- never aurora.analyticsConsent.v1),
- * - different UI surface (a Settings-only toggle -- never the first-open
- *   ConsentModal),
- * - never inferred from, defaulted from, or written alongside the usage
- *   consent above.
+ * - different storage key (aurora.tourismConsent.v1, owned by
+ *   ./tourismConsent.ts -- never aurora.analyticsConsent.v1),
+ * - asked once, at first launch, on native only (ConsentGate) -- never
+ *   bundled into the usage-counter or personal-analytics questions -- with
+ *   a Settings-only toggle (TourismConsentToggle) for changing the choice
+ *   afterwards,
+ * - independent of Trip Mode (src/trip/tripSession.ts), which is a product
+ *   feature's session state, not a consent dimension: starting or ending a
+ *   Trip Mode session neither grants nor requires this consent. This
+ *   consent alone decides whether location-derived events may ever be
+ *   TRANSMITTED (src/trip/tripEventGate.ts); Trip Mode only ever affects
+ *   whether the presence engine SAMPLES locally (src/hooks/useTripPresence.ts).
+ * - never inferred from, defaulted from, or written alongside the usage or
+ *   personal-analytics consents above.
  *
  * The underlying tri-state shape ('unset' | 'accepted' | 'declined') and
- * fail-closed defaulting rule are intentionally identical to usage
- * consent's (an unrecognized/missing persisted value always resolves to
- * 'unset', never 'accepted'), so the two dimensions behave predictably the
- * same way in isolation -- but they are two separate pieces of state, not
- * one. Toggling one must never read, write, or otherwise touch the other.
+ * fail-closed defaulting rule are intentionally identical to the other
+ * dimensions' (an unrecognized/missing persisted value always resolves to
+ * 'unset', never 'accepted' -- 'unset' fails closed, exactly like the
+ * others), so they all behave predictably the same way in isolation -- but
+ * they are separate pieces of state, not one. Toggling one must never read,
+ * write, or otherwise touch another.
  *
- * No event emission or geofencing logic exists yet -- this only models the
- * consent choice itself (docs/design-trip-tracking.md ship gate 6.2, which
- * must ship before any collection code).
+ * This module only models the consent CHOICE. The old
+ * 'aurora.tripModeConsent.v1' key (the previous "Trip-mode consent", when
+ * the collection window was "while Trip mode is on") is intentionally never
+ * read again -- the collection window changed to "whenever the app is
+ * open", so everyone is re-asked under the new key per CLAUDE.md's
+ * "re-consent when scope expands".
  */
-export type TripModeConsentState = 'unset' | 'accepted' | 'declined';
+export type TourismConsentState = 'unset' | 'accepted' | 'declined';
 
-/** Narrows a raw value read back from storage to a real persisted trip-mode choice. */
-export function isPersistedTripModeConsentState(value: string | null): value is 'accepted' | 'declined' {
+/** Narrows a raw value read back from storage to a real persisted tourism-insights choice. */
+export function isPersistedTourismConsentState(value: string | null): value is 'accepted' | 'declined' {
   return value === 'accepted' || value === 'declined';
 }
 
 /**
- * Resolves what the in-memory trip-mode consent state should become once
- * the persisted value has been read back from storage (or the read failed,
- * in which case the caller passes `null`). 'unset' is the only fallback.
+ * Resolves what the in-memory tourism-insights consent state should become
+ * once the persisted value has been read back from storage (or the read
+ * failed, in which case the caller passes `null`). 'unset' is the only
+ * fallback.
  */
-export function resolveLoadedTripModeConsentState(stored: string | null): TripModeConsentState {
-  return isPersistedTripModeConsentState(stored) ? stored : 'unset';
+export function resolveLoadedTourismConsentState(stored: string | null): TourismConsentState {
+  return isPersistedTourismConsentState(stored) ? stored : 'unset';
 }
 
 /**
  * Person-level product analytics consent -- a THIRD, INDEPENDENT consent
  * dimension (see docs/analytics-pivot.md sections 2 and 4, PR 2 of the
  * analytics pivot). Distinct from both ConsentState (aggregate usage
- * counters, above) and TripModeConsentState (above):
+ * counters, above) and TourismConsentState (above):
  *
  * - different storage key (aurora.personalAnalyticsConsent.v1, owned by
  *   ./personalAnalyticsConsent.ts -- never aurora.analyticsConsent.v1 or
- *   aurora.tripModeConsent.v1),
+ *   aurora.tourismConsent.v1),
  * - different UI surface: a SECOND, separately-actioned question in the
  *   first-open consent flow (see ConsentGate/ConsentModal) in addition to a
  *   Settings-only toggle (PersonalAnalyticsToggle) for changing the choice
@@ -268,6 +281,10 @@ export const PERSONAL_ANALYTICS_EVENT_ALLOWLIST = [
   'spot_shared',
   'alerts_opt_in',
   'language_set',
+  // The user started/ended a Trip Mode session (product feature state
+  // only) -- src/trip/tripSession.ts. NOT a consent signal, and never
+  // carries any of Trip Mode's own location-derived events, which stay
+  // entirely within the identity-free pipeline and are never sent here.
   'trip_mode_toggled'
 ] as const;
 

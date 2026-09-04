@@ -93,9 +93,13 @@ same owner-merged PR set → then code. Currently approved:
   (`docs/analytics-pivot.md`): pseudonymous per-install id, explicit event
   allowlist, SDK hard-gated on its own consent (zero bytes before
   acceptance).
-- **Identity-free spot presence** (`docs/design-trip-tracking.md`):
-  spot-level, no identifiers, our backend only. The two pipelines stay
-  unjoined unless a new decision doc + policy rewrite says otherwise.
+- **Identity-free spot presence / tourism insights**
+  (`docs/design-trip-tracking.md`, `docs/decision-tourism-baseline.md`):
+  spot- and zone-level, no identifiers, our backend only; consented at
+  first launch (own toggle in Settings), foreground only, independent of
+  Trip Mode. Trip Mode is a product feature, not a consent. The two
+  pipelines stay unjoined unless a new decision doc + policy rewrite says
+  otherwise.
 - If a change might touch personal data in a way no decision doc covers,
   stop and flag it in the PR for a human decision.
 
