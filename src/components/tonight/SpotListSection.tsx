@@ -2,6 +2,7 @@ import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
 import { SpotCard } from '../SpotCard';
 import { palette } from '../../theme/palette';
+import { focusRing } from '../../theme/focusRing';
 import { radius, space, type WebPressableState } from '../../theme/tokens';
 import { typography } from '../../theme/type';
 import type { Spot, SpotScoreResult } from '../../types';
@@ -69,7 +70,7 @@ export function SpotListSection({
         {totalCount > results.length ? (
           <Pressable
             accessibilityRole="link"
-            style={({ pressed, focused }: WebPressableState) => [styles.inlineCta, focused ? styles.focusRing : null, pressed ? styles.buttonPressed : null]}
+            style={({ pressed, focused }: WebPressableState) => [styles.inlineCta, focused ? focusRing : null, pressed ? styles.buttonPressed : null]}
             onPress={onCtaPress}
           >
             <Text style={styles.inlineCtaText}>{ctaLabel}</Text>
@@ -120,10 +121,5 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.985 }]
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });

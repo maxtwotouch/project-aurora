@@ -10,6 +10,7 @@ import { UsageConsentToggle } from '../components/UsageConsentToggle';
 import { PRIVACY_POLICY_URL } from '../constants/legal';
 import { useTranslation } from '../i18n/useTranslation';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 
@@ -44,7 +45,7 @@ export function SettingsScreen() {
           accessibilityLabel={t('consent.privacyPolicyLink')}
           style={({ pressed, focused }: WebPressableState) => [
             styles.linkRow,
-            focused ? styles.focusRing : null,
+            focused ? focusRing : null,
             pressed ? styles.linkRowPressed : null
           ]}
           onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
@@ -117,11 +118,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: palette.textPrimary
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   aboutAppName: {
     ...typography.bodyStrong,
     color: palette.textPrimary,

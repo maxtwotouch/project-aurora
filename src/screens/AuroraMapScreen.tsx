@@ -1,9 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Image,
+  LayoutChangeEvent,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type AccessibilityActionEvent
+} from 'react-native';
 
 import { useBottomTabBarSpace } from '../hooks/useBottomTabBarSpace';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTranslation } from '../i18n/useTranslation';
+import { focusRing } from '../theme/focusRing';
 import { palette } from '../theme/palette';
+import { type WebPressableState } from '../theme/tokens';
 import type { KpTrend } from '../types';
 
 type Props = {
@@ -21,6 +37,7 @@ function buildFrameUrl(hourOffset: number, refreshBucket: number) {
 
 export function AuroraMapScreen({ kp }: Props) {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const tabBarSpace = useBottomTabBarSpace();
   const introAnim = useRef(new Animated.Value(0)).current;
   const [hourOffset, setHourOffset] = useState<number>(0);
@@ -39,6 +56,19 @@ export function AuroraMapScreen({ kp }: Props) {
     const ratio = clamped / timelineWidth;
     const index = Math.round(ratio * maxIndex);
     setHourOffset(AVAILABLE_HOUR_OFFSETS[index]);
+  };
+
+  const currentOffsetLabel =
+    hourOffset === 0 ? t('auroraMap.now') : t('auroraMap.plusHours', { hours: hourOffset });
+
+  const onScrubberAccessibilityAction = (event: AccessibilityActionEvent) => {
+    if (event.nativeEvent.actionName === 'increment') {
+      const next = Math.min(maxIndex, selectedIndex + 1);
+      setHourOffset(AVAILABLE_HOUR_OFFSETS[next]);
+    } else if (event.nativeEvent.actionName === 'decrement') {
+      const next = Math.max(0, selectedIndex - 1);
+      setHourOffset(AVAILABLE_HOUR_OFFSETS[next]);
+    }
   };
 
   const onTimelineLayout = (event: LayoutChangeEvent) => {
@@ -80,13 +110,18 @@ export function AuroraMapScreen({ kp }: Props) {
   }, [peakIndex]);
 
   useEffect(() => {
+    if (reducedMotion) {
+      introAnim.setValue(1);
+      return;
+    }
+
     Animated.timing(introAnim, {
       toValue: 1,
       duration: 420,
       easing: Easing.out(Easing.exp),
       useNativeDriver: true
     }).start();
-  }, [introAnim]);
+  }, [introAnim, reducedMotion]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -174,6 +209,16 @@ export function AuroraMapScreen({ kp }: Props) {
                   source={{ uri: url }}
                   style={[styles.frameImage, visible ? styles.frameVisible : styles.frameHidden]}
                   resizeMode="cover"
+                  accessible={visible}
+                  accessibilityRole={visible ? 'image' : undefined}
+                  accessibilityLabel={
+                    visible
+                      ? t('auroraMap.frameA11y', {
+                          mode: hourOffset === 0 ? t('auroraMap.modeNowcast') : t('auroraMap.modeForecastHours', { hours: hourOffset })
+                        })
+                      : undefined
+                  }
+                  aria-hidden={!visible}
                   onLoad={() => {
                     setLoadedFrameUrls((current) => ({ ...current, [url]: true }));
                   }}
@@ -188,13 +233,21 @@ export function AuroraMapScreen({ kp }: Props) {
           <View style={styles.frameFallback}>
             <Text style={styles.frameFallbackTitle}>{t('auroraMap.frameUnavailableTitle')}</Text>
             <Text style={styles.frameFallbackText}>{t('auroraMap.frameUnavailableText')}</Text>
-            <Pressable style={styles.sourceButton} onPress={() => void Linking.openURL(AURORA_SOURCE_URL)}>
+            <Pressable
+              accessibilityRole="link"
+              style={({ pressed, focused }: WebPressableState) => [
+                styles.sourceButton,
+                focused ? focusRing : null,
+                pressed ? { opacity: 0.9 } : null
+              ]}
+              onPress={() => void Linking.openURL(AURORA_SOURCE_URL)}
+            >
               <Text style={styles.sourceButtonText}>{t('auroraMap.openSource')}</Text>
             </Pressable>
           </View>
         )}
         {!isCurrentFrameLoaded && !hasCurrentFrameFailed ? (
-          <View style={styles.loadingOverlay}>
+          <View style={styles.loadingOverlay} accessibilityLiveRegion="polite">
             <ActivityIndicator size="small" color={palette.auroraGreen} />
             <Text style={styles.loadingText}>{t('auroraMap.loadingFrame')}</Text>
           </View>
@@ -226,15 +279,42 @@ export function AuroraMapScreen({ kp }: Props) {
           onMoveShouldSetResponder={() => true}
           onResponderGrant={(e) => updateFromX(e.nativeEvent.locationX)}
           onResponderMove={(e) => updateFromX(e.nativeEvent.locationX)}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel={t('auroraMap.timeLabel')}
+          accessibilityHint={t('auroraMap.scrubberMeta')}
+          aria-valuemin={0}
+          aria-valuemax={maxIndex}
+          aria-valuenow={selectedIndex}
+          aria-valuetext={currentOffsetLabel}
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={onScrubberAccessibilityAction}
         >
-          <View style={[styles.timelineFill, { width: `${(selectedIndex / maxIndex) * 100}%` }]} />
-          <View style={[styles.timelineThumb, { left: (selectedIndex / maxIndex) * timelineWidth - 12 }]} />
+          <View
+            style={[styles.timelineFill, { width: `${(selectedIndex / maxIndex) * 100}%` }]}
+            aria-hidden
+          />
+          <View
+            style={[styles.timelineThumb, { left: (selectedIndex / maxIndex) * timelineWidth - 12 }]}
+            aria-hidden
+          />
         </View>
-        <View style={styles.timelineLabels}>
+        <View style={styles.timelineLabels} accessibilityRole="radiogroup" accessibilityLabel={t('auroraMap.timeLabel')}>
           {AVAILABLE_HOUR_OFFSETS.map((offset) => {
             const active = hourOffset === offset;
             return (
-              <Pressable key={offset} style={styles.timelineLabelPill} onPress={() => setHourOffset(offset)}>
+              <Pressable
+                key={offset}
+                accessibilityRole="radio"
+                aria-checked={active}
+                style={({ pressed, focused }: WebPressableState) => [
+                  styles.timelineLabelPill,
+                  active ? styles.timelineLabelPillActive : null,
+                  focused ? focusRing : null,
+                  pressed ? styles.pillPressed : null
+                ]}
+                onPress={() => setHourOffset(offset)}
+              >
                 <Text style={[styles.timelineLabel, active ? styles.timelineLabelActive : null]}>
                   {offset === 0 ? t('auroraMap.now') : t('auroraMap.plusHours', { hours: offset })}
                 </Text>
@@ -401,7 +481,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#0d1923',
     borderWidth: 1,
-    borderColor: '#335163',
+    borderColor: palette.cardBorderStrong,
     justifyContent: 'center'
   },
   timelineFill: {
@@ -430,9 +510,20 @@ const styles = StyleSheet.create({
   timelineLabelPill: {
     flex: 1,
     alignItems: 'center',
+    minHeight: 44,
     paddingVertical: 8,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: '#152835'
+    backgroundColor: '#152835',
+    borderWidth: 1,
+    borderColor: 'transparent'
+  },
+  timelineLabelPillActive: {
+    borderColor: palette.auroraGreen
+  },
+  pillPressed: {
+    opacity: 0.9
   },
   timelineLabel: {
     color: palette.textSecondary,

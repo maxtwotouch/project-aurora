@@ -16,6 +16,7 @@ import { trackUnlessPreview } from '../preview/trackUnlessPreview';
 import { dressLevelFromColdScore } from '../scoring/score';
 import { mapDarkStyle } from '../theme/mapDarkStyle';
 import { palette } from '../theme/palette';
+import { focusRing } from '../theme/focusRing';
 import { elevation, radius, space, type WebPressableState } from '../theme/tokens';
 import { typography } from '../theme/type';
 import type { HourlyForecast, Spot, SpotScoreResult } from '../types';
@@ -200,7 +201,7 @@ export function SpotDetailScreen({ spot, result, forecast }: Props) {
             accessibilityLabel={t('common.openNavigationTo', { name: spot.name })}
             style={({ pressed, focused }: WebPressableState) => [
               styles.primaryButton,
-              focused ? styles.focusRing : null,
+              focused ? focusRing : null,
               pressed ? styles.buttonPressed : null
             ]}
             onPress={navigateToSpot}
@@ -310,7 +311,7 @@ function JumpButton({ label, onPress }: { label: string; onPress: () => void }) 
       accessibilityRole="link"
       style={({ pressed, focused }: WebPressableState) => [
         styles.jumpButton,
-        focused ? styles.focusRing : null,
+        focused ? focusRing : null,
         pressed ? styles.buttonPressed : null
       ]}
       onPress={onPress}
@@ -469,11 +470,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scale: 0.985 }]
   },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any,
   primaryButton: {
     minHeight: 50,
     alignItems: 'center',

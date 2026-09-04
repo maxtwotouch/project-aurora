@@ -39,12 +39,14 @@ const styles = StyleSheet.create({
     ...elevation.sm
   },
   sm: {
-    width: 42,
-    height: 42
+    minWidth: 42,
+    minHeight: 42,
+    paddingHorizontal: 8
   },
   lg: {
-    width: 64,
-    height: 64
+    minWidth: 64,
+    minHeight: 64,
+    paddingHorizontal: 12
   },
   text: {
     color: palette.textOnAurora,

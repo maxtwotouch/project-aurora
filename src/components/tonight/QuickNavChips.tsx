@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../../i18n/useTranslation';
 import { radius, space, type WebPressableState } from '../../theme/tokens';
 import { palette } from '../../theme/palette';
+import { focusRing } from '../../theme/focusRing';
 import { typography } from '../../theme/type';
 
 type Props = {
@@ -19,28 +20,28 @@ export function QuickNavChips({ opacity }: Props) {
     <Animated.View style={[styles.quickNavRow, { opacity }]}>
       <Pressable
         accessibilityRole="link"
-        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? focusRing : null]}
         onPress={() => navigation.navigate('AllSpots')}
       >
         <Text style={styles.quickNavChipText}>{t('tonight.quickNav.fullSpotList')}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="link"
-        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? focusRing : null]}
         onPress={() => navigation.navigate('SpotsMap')}
       >
         <Text style={styles.quickNavChipText}>{t('tonight.quickNav.map')}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="link"
-        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? focusRing : null]}
         onPress={() => navigation.navigate('Live')}
       >
         <Text style={styles.quickNavChipText}>{t('tonight.quickNav.cameras')}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="link"
-        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? styles.focusRing : null]}
+        style={({ focused }: WebPressableState) => [styles.quickNavChip, focused ? focusRing : null]}
         onPress={() => navigation.navigate('AuroraMap')}
       >
         <Text style={styles.quickNavChipText}>{t('tonight.quickNav.auroraMap')}</Text>
@@ -69,10 +70,5 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     fontWeight: '700',
     color: palette.auroraMint
-  },
-  focusRing: {
-    outlineWidth: 2,
-    outlineColor: palette.auroraGreen,
-    outlineOffset: 2
-  } as any
+  }
 });
